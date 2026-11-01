@@ -72,13 +72,12 @@
     });
   }
 
-  function cardHtml(p) {
-    return '<a class="card" href="/piece/' + esc(p.slug) + '/">' +
-      '<div class="ph">' + esc(p.name) + '</div>' +
-      '<p class="name">' + esc(p.name) + '</p>' +
-      '<span class="meta">' + esc(p.category) + '</span>' +
-      '<span class="meta price" data-price-for="' + esc(p.slug) + '"></span>' +
-      '</a>';
+  function cardHtml(p, i) {
+    return '<a class="card" href="/piece/' + esc(p.slug) + '/" data-tone="' + (i % 6) + '">' +
+      '<div class="plate"><img class="mark" src="/assets/logo-icon-navy.png" alt="" width="434" height="436">' +
+      '<span class="plate-name">' + esc(p.name) + '</span></div>' +
+      '<div class="info"><span class="cat">' + esc(p.category) + '</span>' +
+      '<span class="price" data-price-for="' + esc(p.slug) + '"></span></div></a>';
   }
 
   /* Shop page */
@@ -90,6 +89,7 @@
     var active = params.get("category") || "All";
     var cats = ["All"];
     catalog.forEach(function (p) { if (cats.indexOf(p.category) === -1) cats.push(p.category); });
+    if (cats.indexOf(active) === -1) active = "All";
 
     function render() {
       var q = search.value.trim().toLowerCase();
@@ -98,7 +98,9 @@
         var okQ = !q || (p.name + " " + p.category + " " + p.arc).toLowerCase().indexOf(q) !== -1;
         return okCat && okQ;
       });
-      grid.innerHTML = list.length ? list.map(cardHtml).join("") : '<p class="empty">No Pieces match that search.</p>';
+      grid.innerHTML = list.length
+        ? list.map(cardHtml).join("")
+        : '<p class="empty">No Pieces match that search. Try a different word or choose All.</p>';
       applyPrices();
     }
 
@@ -158,16 +160,18 @@
         var line = p.prices[currency] * l.qty;
         total += line;
         return '<div class="cart-line">' +
-          '<div><a href="/piece/' + esc(p.slug) + '/">' + esc(p.name) + '</a>' +
-          '<div class="meta">' + esc(l.color) + ', ' + esc(l.size) + '</div>' +
-          '<div class="qty"><button type="button" data-act="dec" data-i="' + i + '" aria-label="Fewer">-</button>' +
-          '<span>' + l.qty + '</span>' +
-          '<button type="button" data-act="inc" data-i="' + i + '" aria-label="More">+</button>' +
+          '<div><a class="nm" href="/piece/' + esc(p.slug) + '/">' + esc(p.name) + '</a>' +
+          '<div class="opt">' + esc(l.color) + ', ' + esc(l.size) + '</div>' +
+          '<div class="qty">' +
+          '<button type="button" class="step" data-act="dec" data-i="' + i + '" aria-label="Fewer">-</button>' +
+          '<span class="num">' + l.qty + '</span>' +
+          '<button type="button" class="step" data-act="inc" data-i="' + i + '" aria-label="More">+</button>' +
           '<button type="button" class="remove" data-act="rm" data-i="' + i + '">Remove</button></div></div>' +
-          '<div>' + money(line) + '</div></div>';
+          '<div class="amount">' + money(line) + '</div></div>';
       }).join("");
-      html += '<div class="cart-total"><span>Subtotal</span><span>' + money(total) + '</span></div>' +
-        '<button type="button" class="btn" id="checkout">Checkout</button>';
+      html += '<div class="cart-total"><span>Subtotal</span><strong>' + money(total) + '</strong></div>' +
+        '<button type="button" class="btn" id="checkout">Checkout</button>' +
+        '<p class="fine">Payment is handled on a secure Stripe page.</p>';
       box.innerHTML = html;
     }
 
@@ -205,7 +209,6 @@
       }
     });
 
-    box.rerender = render;
     render();
     return render;
   }
