@@ -588,3 +588,38 @@ figcaption { font-size: 13px; color: var(--ink-soft); margin-top: 10px; max-widt
 @media (max-width: 720px) { .facts { grid-template-columns: 1fr; } }
 .story-tag { font-family: var(--serif); font-size: clamp(28px, 4vw, 56px); letter-spacing: -0.03em; line-height: 1.05; margin-top: 12px; color: var(--navy); }
 .story-lead { font-size: clamp(18px, 1.8vw, 24px); color: var(--ink-soft); }
+
+/* Branded Register section */
+.register-band { background: var(--navy); color: var(--white); scroll-margin-top: 90px; }
+.register-band .display { color: var(--white); font-size: clamp(48px, 7vw, 108px); }
+.register-band .reg-lead { color: var(--sky); font-size: clamp(18px, 1.7vw, 22px); max-width: 24em; margin-top: 24px; }
+.reg-points { list-style: none; padding: 0; margin: 32px 0 0; display: grid; gap: 14px; }
+.reg-points li { color: var(--white); padding-left: 28px; position: relative; font-size: 17px; }
+.reg-points li::before { content: ""; position: absolute; left: 0; top: .55em; width: 14px; height: 1px; background: var(--sky); }
+#register { scroll-margin-top: 90px; }
+.arrival { background: var(--white); color: var(--navy); border-radius: 20px; padding: clamp(24px, 3vw, 40px); position: relative; box-shadow: 0 30px 80px rgba(0, 0, 0, .28); overflow: hidden; }
+.arrival::before, .arrival::after { content: ""; position: absolute; top: 96px; width: 26px; height: 26px; border-radius: 50%; background: var(--navy); }
+.arrival::before { left: -13px; }
+.arrival::after { right: -13px; }
+.arr-head { display: flex; align-items: center; gap: 14px; padding-bottom: 24px; margin-bottom: 24px; border-bottom: 2px dotted var(--sky-2); }
+.arr-head img { width: 38px; height: auto; }
+.arr-head b { display: block; font-family: var(--serif); font-size: 22px; letter-spacing: -0.02em; line-height: 1.1; }
+.arr-head span { font-size: 13px; color: var(--ink-soft); }
+.arr-head .arr-tag { margin-left: auto; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; border: 1px solid var(--navy); border-radius: 6px; padding: 6px 10px; color: var(--navy); }
+.arrival .form-grid input, .arrival .form-grid select { background: var(--mist); border-color: transparent; }
+.arrival .form-grid input:focus, .arrival .form-grid select:focus { background: var(--white); border-color: var(--navy); }
+.arr-foot { display: flex; align-items: center; gap: 14px; margin-top: 28px; padding-top: 20px; border-top: 2px dotted var(--sky-2); font-size: 13px; color: var(--ink-soft); }
+.arr-foot img { width: 44px; height: auto; }
+.mrz { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 11px; letter-spacing: .12em; color: var(--sky-2); margin-top: 18px; white-space: nowrap; overflow: hidden; }
+.register-page { max-width: 640px; }
+
+/* Portrait cropper */
+.cropper { margin-top: 20px; max-width: 281px; }
+.cropper canvas { width: 281px; max-width: 100%; height: auto; aspect-ratio: 562 / 724; border-radius: 24px; display: block; cursor: grab; touch-action: none; background: var(--sky); box-shadow: 0 10px 30px rgba(17, 28, 68, .18); }
+.cropper canvas:active { cursor: grabbing; }
+.cropper .zoom { display: flex; align-items: center; gap: 12px; margin-top: 14px; font-size: 13px; }
+.cropper .zoom input { flex: 1; accent-color: var(--navy); }
+.cropper .small { margin-top: 10px; }
+
+/* Larger founder signature */
+.note .signature { font-size: clamp(120px, 16vw, 220px); margin-top: .1em; line-height: .9; }

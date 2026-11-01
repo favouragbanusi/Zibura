@@ -908,7 +908,7 @@
           currentCard = d.card;
           drawCard(document.getElementById("card-canvas"), d.card);
         } else if (a && a.status === "pending") {
-          sub.textContent = "Application received.";
+          sub.textContent = "Application received. Check back in a few days.";
           show(null, "v-pending");
         } else if (a && a.status === "declined") {
           sub.textContent = "A decision has been made.";
@@ -949,32 +949,75 @@
     authForm("f-signup", "/api/auth/signup");
     authForm("f-login", "/api/auth/login");
 
+    // Portrait cropper: drag to position, slide to zoom. The frame matches the card's photo window.
     var photo = document.getElementById("a-photo");
-    var prev = document.getElementById("a-prev");
-    var blob = null;
+    var crop = document.getElementById("a-crop");
+    var cv = document.getElementById("a-canvas");
+    var zoom = document.getElementById("a-zoom");
+    var cimg = null, cs = { base: 1, z: 1, ox: 0, oy: 0 }, haveCrop = false;
+    function clampCrop() {
+      var s = cs.base * cs.z, w = cimg.width * s, h = cimg.height * s;
+      cs.ox = Math.min(0, Math.max(cv.width - w, cs.ox));
+      cs.oy = Math.min(0, Math.max(cv.height - h, cs.oy));
+    }
+    function drawCrop() {
+      var ctx = cv.getContext("2d");
+      ctx.fillStyle = "#d2eaff"; ctx.fillRect(0, 0, cv.width, cv.height);
+      var s = cs.base * cs.z;
+      ctx.drawImage(cimg, cs.ox, cs.oy, cimg.width * s, cimg.height * s);
+    }
     photo.addEventListener("change", function () {
-      blob = null;
-      if (!photo.files[0]) { prev.hidden = true; return; }
-      prepPhoto(photo.files[0]).then(function (b) {
-        blob = b;
-        $("img", prev).src = URL.createObjectURL(b);
-        prev.hidden = false;
-      }).catch(function () { prev.hidden = true; $(".msg", document.getElementById("f-apply")).textContent = "That photo could not be read. Please choose a JPG, PNG, or WebP image."; });
+      haveCrop = false;
+      var f = photo.files[0];
+      if (!f) { crop.hidden = true; return; }
+      var url = URL.createObjectURL(f);
+      loadImg(url).then(function (im) {
+        cimg = im;
+        cs.base = Math.max(cv.width / im.width, cv.height / im.height);
+        cs.z = 1; zoom.value = 1;
+        cs.ox = (cv.width - im.width * cs.base) / 2;
+        cs.oy = (cv.height - im.height * cs.base) / 4;
+        clampCrop(); drawCrop();
+        crop.hidden = false; haveCrop = true;
+      }).catch(function () { crop.hidden = true; $(".msg", document.getElementById("f-apply")).textContent = "That photo could not be read. Please choose a JPG, PNG, or WebP image."; });
     });
+    zoom.addEventListener("input", function () {
+      if (!cimg) return;
+      var cx = cv.width / 2, cy = cv.height / 2;
+      var oldS = cs.base * cs.z;
+      var px = (cx - cs.ox) / oldS, py = (cy - cs.oy) / oldS;
+      cs.z = parseFloat(zoom.value);
+      var newS = cs.base * cs.z;
+      cs.ox = cx - px * newS; cs.oy = cy - py * newS;
+      clampCrop(); drawCrop();
+    });
+    var drag = null;
+    cv.addEventListener("pointerdown", function (e) { if (!cimg) return; drag = { x: e.clientX, y: e.clientY, ox: cs.ox, oy: cs.oy }; cv.setPointerCapture(e.pointerId); });
+    cv.addEventListener("pointermove", function (e) {
+      if (!drag) return;
+      var k = cv.width / cv.getBoundingClientRect().width;
+      cs.ox = drag.ox + (e.clientX - drag.x) * k;
+      cs.oy = drag.oy + (e.clientY - drag.y) * k;
+      clampCrop(); drawCrop();
+    });
+    cv.addEventListener("pointerup", function () { drag = null; });
+    cv.addEventListener("pointercancel", function () { drag = null; });
     var fa = document.getElementById("f-apply");
     fa.addEventListener("submit", function (e) {
       e.preventDefault();
       var msg = $(".msg", fa), btn = $("button[type=submit]", fa);
-      if (!blob) { msg.textContent = "Please choose a portrait photo."; return; }
+      if (!haveCrop) { msg.textContent = "Please choose a portrait photo."; return; }
+      btn.disabled = true; msg.textContent = "Sending your application.";
+      cv.toBlob(function (blob) {
       var fd = new FormData();
       fd.append("name", fa.elements.name.value);
       fd.append("photo", blob, "portrait.jpg");
-      btn.disabled = true; msg.textContent = "Sending your application.";
       api("/api/apply", { method: "POST", body: fd }).then(function (d) {
         btn.disabled = false;
         if (d.ok) { msg.textContent = ""; render(); }
         else msg.textContent = d.error || "Something went wrong. Please try again.";
       }).catch(function () { btn.disabled = false; msg.textContent = "Something went wrong. Please try again."; });
+      }, "image/jpeg", 0.92);
     });
 
     document.getElementById("reapply").addEventListener("click", function () { show(null, "v-apply"); sub.textContent = "Upload a new portrait to apply again."; });

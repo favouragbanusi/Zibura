@@ -301,11 +301,13 @@ async function me(request, env) {
   const user = await currentUser(request, env);
   if (!user) return json({ user: null }, 200, { "cache-control": "no-store" });
   const app = await env.DB.prepare("SELECT status, name, submitted_at, decided_at, card_id, title FROM applications WHERE user_id = ?").bind(user.id).first();
+  // A card is released on its release date, which is set when the application arrives.
+  const released = !!(app && app.status === "approved" && app.decided_at && new Date(app.decided_at) <= new Date());
   return json({
     user: { first: user.first, last: user.last, email: user.email },
     open: env.APPLICATIONS_OPEN !== "false",
-    application: app ? { status: app.status, name: app.name, submitted_at: app.submitted_at } : null,
-    card: cardView(app, env)
+    application: app ? { status: released ? app.status : (app.status === "approved" ? "pending" : app.status), name: app.name, submitted_at: app.submitted_at } : null,
+    card: released ? cardView(app, env) : null
   }, 200, { "cache-control": "no-store" });
 }
 
@@ -325,7 +327,7 @@ async function apply(request, env) {
     return json({ error: "Please upload a JPG, PNG, or WebP photo." }, 400);
   }
   const existing = await env.DB.prepare("SELECT status FROM applications WHERE user_id = ?").bind(user.id).first();
-  if (existing && existing.status === "approved") return json({ error: "Your card has already been issued." }, 409);
+  if (existing && existing.status === "approved") return json({ error: "Your application is already with the Ministry." }, 409);
   const key = "photos/" + user.id;
   await env.PHOTOS.put(key, await file.arrayBuffer(), { httpMetadata: { contentType: file.type } });
   const now = new Date().toISOString();
@@ -338,7 +340,8 @@ async function apply(request, env) {
   }
   if (env.AUTO_APPROVE !== "false") {
     const row = await env.DB.prepare("SELECT id FROM applications WHERE user_id = ?").bind(user.id).first();
-    await approveApplication(env, row.id);
+    const hours = env.CARD_DELAY_HOURS !== undefined && env.CARD_DELAY_HOURS !== "" ? parseFloat(env.CARD_DELAY_HOURS) : 48;
+    await approveApplication(env, row.id, new Date(Date.now() + (isNaN(hours) ? 48 : hours) * 3600 * 1000));
   }
   return json({ ok: true });
 }
@@ -395,11 +398,11 @@ async function adminDecide(request, env) {
 
 const SCRIPT_LINES = ["Zi Wanderer", "Zi Dreamer", "Zi Trailblazer", "Zi Daydreamer", "Zi Muse", "Zi Maverick", "Zi Storyteller", "Zi Explorer", "Zi Stylist", "Zi Visionary", "Zi Free Spirit", "Zi Rhythm", "Zi Spark", "Zi Dazzler", "Zi Voyager", "Zi Tastemaker", "Zi Glow Getter", "Zi Moonwalker", "Zi Firefly", "Zi Original"];
 
-async function approveApplication(env, id) {
+async function approveApplication(env, id, when) {
   const row = await env.DB.prepare("SELECT u.email FROM applications a JOIN users u ON u.id = a.user_id WHERE a.id = ?").bind(id).first();
   const founder = env.FOUNDER_EMAIL && row && row.email === String(env.FOUNDER_EMAIL).trim().toLowerCase();
   const title = founder ? "Zi-in-Chief" : SCRIPT_LINES[crypto.getRandomValues(new Uint32Array(1))[0] % SCRIPT_LINES.length];
-  const now = new Date();
+  const now = when || new Date();
   for (let attempt = 0; attempt < 5; attempt++) {
     const last = await env.DB.prepare("SELECT COALESCE(MAX(card_seq), 0) AS m FROM applications").first();
     const seq = last.m + 1;

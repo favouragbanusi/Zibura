@@ -11,4 +11,3 @@ Files in the main folder:
 - logo files and favicon.png hold the brand marks.
 
 Cloudflare Pages settings: Build command node build.js, Build output directory dist, secret STRIPE_SECRET_KEY.
-

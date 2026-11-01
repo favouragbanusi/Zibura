@@ -109,6 +109,22 @@ function subscribeForm(id) {
     </form>`;
 }
 
+function arrivalCard(id) {
+  return `<div class="arrival">
+    <div class="arr-head">
+      <img src="/assets/logo-icon-navy.png" alt="" width="434" height="436">
+      <div><b>Zi Republic</b><span>Bureau of Arrivals</span></div>
+      <span class="arr-tag">Arrival card</span>
+    </div>
+    ${waitlistForm(id)}
+    <div class="arr-foot">
+      <img src="/assets/zi-card-seal.png" alt="" width="304" height="300">
+      <span>Signal I opens its borders April 18, 2027</span>
+    </div>
+    <p class="mrz" aria-hidden="true">ZI&lt;REPUBLIC&lt;&lt;ARRIVALS&lt;&lt;SIGNAL&lt;I&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;</p>
+  </div>`;
+}
+
 const MODAL = `<dialog id="wl-modal" aria-labelledby="wl-title">
   <button class="close" type="button" aria-label="Close" data-close-waitlist>&times;</button>
   <h2 class="display" id="wl-title">Get the Zi Gazette.</h2>
@@ -254,14 +270,30 @@ write(
     <h1 class="display rise">${words("Your expression,")}<br>${words("your world.")}</h1>
     <p class="lede fade">Zi Republic is a fashion country for people with more than one side. The borders open April 18, 2027.</p>
     <div class="actions fade">
-      <a class="btn" href="/brand/">Enter Zi Republic</a>
-      <a class="btn line" href="/shop/">Shop Signal I</a>
+      <a class="btn" href="#register">Join the Register</a>
+      <a class="btn line" href="/brand/">Enter Zi Republic</a>
     </div>
   </div>
   <div class="foot"><span>Signal I, Arc I</span><a class="text-link" href="#pieces">Scroll</a></div>
 </section>
 
 <section class="ticker" aria-hidden="true"><div class="track"><ul>${TICK}</ul><ul>${TICK}</ul></div></section>
+
+<section class="section register-band" id="register">
+  <div class="wrap split">
+    <div data-reveal>
+      <h2 class="display">Join the Register.</h2>
+      <p class="reg-lead">The Bureau of Arrivals is taking names. Add yours and your name goes on the register of Zi Republic, ahead of the day Signal I opens its borders.</p>
+      <ul class="reg-points">
+        <li>Your name on the register before the borders open</li>
+        <li>First word on Signal I, April 18, 2027</li>
+        <li>The Zi Gazette, straight to your inbox</li>
+      </ul>
+    </div>
+    <div data-reveal>${arrivalCard("h")}</div>
+  </div>
+</section>
+
 
 <section class="section" id="pieces">
   <div class="wrap">
@@ -306,16 +338,6 @@ ${TAX.map((c) => {
 
 <section class="wrap" data-reveal style="margin-bottom:clamp(56px,8vw,120px)">
   ${film("signal-1-home-film", "Signal I, in motion. The first day of the republic.")}
-</section>
-
-<section class="section" id="register">
-  <div class="wrap split">
-    <div data-reveal>
-      <h2 class="display">Join the Register.</h2>
-      <p class="reg-lead">The Bureau of Arrivals is taking names. Add yours and you will hear first when Signal I opens its borders on April 18, 2027.</p>
-    </div>
-    <div class="form-card" data-reveal>${waitlistForm("h")}</div>
-  </div>
 </section>
 
 <section class="section navy-band">
@@ -695,7 +717,7 @@ write(
   <p class="fade">The Bureau of Arrivals is taking names. Add yours and you will hear first when Signal I opens its borders.</p>
 </div></section>
 <section class="section" style="padding-top:clamp(16px,3vw,40px)"><div class="wrap">
-  <div class="form-card">${waitlistForm("p")}</div>
+  <div class="register-page">${arrivalCard("p")}</div>
 </div></section>
 </main>`
   })
@@ -786,16 +808,20 @@ write(
         <div class="full"><label for="a-name">Name as it will appear on your card</label><input id="a-name" name="name" maxlength="40" required></div>
         <div class="full"><label for="a-photo">Portrait photo (JPG, PNG, or WebP)</label><input id="a-photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" required></div>
       </div>
-      <div class="crop-prev" id="a-prev" hidden><img alt="Portrait preview" width="281" height="362"></div>
-      <p class="small">Use a clear, front facing portrait. It is cropped to the card frame automatically.</p>
+      <div class="cropper" id="a-crop" hidden>
+        <canvas id="a-canvas" width="562" height="724" aria-label="Portrait frame. Drag to position."></canvas>
+        <label class="zoom">Zoom <input type="range" id="a-zoom" min="1" max="3" step="0.01" value="1"></label>
+        <p class="small">Drag the photo to place your face inside the frame, then use the slider to zoom. This is exactly how it will appear on your card.</p>
+      </div>
+      <p class="small">Use a clear, front facing portrait with your face and shoulders in view.</p>
       <button class="btn" type="submit">Submit my application</button>
       <div class="msg" role="status"></div>
     </form>
   </div>
 
   <div id="v-pending" class="form-card" hidden>
-    <h2 class="display" style="font-size:clamp(28px,3.4vw,40px)">Your application is with the Ministry.</h2>
-    <p class="sub">The Ministry of Zi Interior is reviewing your application. Check back soon.</p>
+    <h2 class="display" style="font-size:clamp(28px,3.4vw,40px)">We are processing your application.</h2>
+    <p class="sub">The Ministry of Zi Interior is reviewing it now. Check your account in a few days to see if you have been approved.</p>
   </div>
 
   <div id="v-declined" class="form-card" hidden>
