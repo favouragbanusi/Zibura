@@ -72,12 +72,12 @@
     });
   }
 
-  function cardHtml(p, i) {
-    return '<a class="card" href="/piece/' + esc(p.slug) + '/" data-tone="' + (i % 6) + '">' +
-      '<div class="plate"><img class="mark" src="/assets/logo-icon-navy.png" alt="" width="434" height="436">' +
-      '<span class="plate-name">' + esc(p.name) + '</span></div>' +
-      '<div class="info"><span class="cat">' + esc(p.category) + '</span>' +
-      '<span class="price" data-price-for="' + esc(p.slug) + '"></span></div></a>';
+  function cardHtml(p) {
+    return '<a class="card" href="/piece/' + esc(p.slug) + '/">' +
+      '<div class="plate"><img class="mark" src="/assets/logo-icon-navy.png" alt="" width="434" height="436"></div>' +
+      '<div class="info"><span class="nm">' + esc(p.name) + '</span>' +
+      '<span class="price" data-price-for="' + esc(p.slug) + '"></span>' +
+      '<span class="cat">' + esc(p.category) + '</span></div></a>';
   }
 
   /* Shop page */
@@ -100,7 +100,7 @@
       });
       grid.innerHTML = list.length
         ? list.map(cardHtml).join("")
-        : '<p class="empty">No Pieces match that search. Try a different word or choose All.</p>';
+        : '<p class="empty">Nothing matches that search yet. Try another word, or choose All.</p>';
       applyPrices();
     }
 
@@ -139,7 +139,7 @@
       });
       if (!found) cart.push({ slug: slug, color: color, size: size, qty: 1 });
       setCart(cart);
-      msg.innerHTML = 'Added to your cart. <a href="/cart/">View cart</a>';
+      msg.innerHTML = 'In your cart. <a href="/cart/">View cart</a>';
     });
   }
 
@@ -151,7 +151,7 @@
     function render() {
       var cart = getCart().filter(function (l) { return bySlug(l.slug); });
       if (!cart.length) {
-        box.innerHTML = '<p class="empty">Your cart is empty. <a href="/shop/">Browse the Pieces</a>.</p>';
+        box.innerHTML = '<p class="empty">Your cart is waiting for its first Piece. <a href="/shop/">Start in the shop</a>.</p>';
         return;
       }
       var total = 0;
@@ -213,8 +213,177 @@
     return render;
   }
 
+  function initWaitlist() {
+    $all(".waitlist-form").forEach(function (form) {
+      var msg = $(".wl-msg", form);
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var data = {
+          first: form.elements.first.value,
+          last: form.elements.last.value,
+          email: form.elements.email.value,
+          country: form.elements.country.value,
+          city: form.elements.city.value,
+          website: form.elements.website.value
+        };
+        var btn = $("button[type=submit]", form);
+        btn.disabled = true;
+        msg.textContent = "Sending.";
+        fetch("/api/waitlist", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(data) })
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            if (d.ok) {
+              form.reset();
+              try { localStorage.setItem("zibura_joined", "1"); } catch (x) {}
+              msg.textContent = "You are on the list. Signal I will find you first.";
+            } else {
+              msg.textContent = d.error || "Something went wrong. Please try again.";
+              btn.disabled = false;
+            }
+          })
+          .catch(function () { msg.textContent = "Something went wrong. Please try again."; btn.disabled = false; });
+      });
+    });
+  }
+
+  function initModal() {
+    var modal = $("#wl-modal");
+    if (!modal || !modal.showModal) return;
+    function open() { if (!modal.open) modal.showModal(); }
+    function close() { modal.close(); try { sessionStorage.setItem("zibura_wl_seen", "1"); } catch (x) {} }
+    $all("[data-open-waitlist]").forEach(function (a) {
+      a.addEventListener("click", function (e) { e.preventDefault(); open(); });
+    });
+    $all("[data-close-waitlist]").forEach(function (b) { b.addEventListener("click", close); });
+    modal.addEventListener("click", function (e) { if (e.target === modal) close(); });
+    if (document.body.getAttribute("data-page") === "home") {
+      var seen = false;
+      try { seen = sessionStorage.getItem("zibura_wl_seen") === "1" || localStorage.getItem("zibura_joined") === "1"; } catch (x) {}
+      if (!seen) setTimeout(open, 1800);
+    }
+  }
+
+  /* Interaction: motion that answers the visitor */
+  function initFx() {
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // Scroll reveal
+    var items = $all("[data-reveal]");
+    if ("IntersectionObserver" in window && !reduce) {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); } });
+      }, { threshold: 0.12 });
+      items.forEach(function (el) { io.observe(el); });
+    } else {
+      items.forEach(function (el) { el.classList.add("in"); });
+    }
+
+    // Header slides away on scroll down, returns on scroll up
+    var header = $(".site-header");
+    var lastY = window.scrollY;
+    window.addEventListener("scroll", function () {
+      var y = window.scrollY;
+      if (header) header.classList.toggle("away", y > lastY && y > 240);
+      lastY = y;
+      lit();
+    }, { passive: true });
+
+    // Hero shapes drift with the pointer
+    var hero = $("[data-hero]");
+    if (hero && !reduce) {
+      var zs = $all(".z", hero);
+      hero.addEventListener("mousemove", function (e) {
+        var r = hero.getBoundingClientRect();
+        var x = (e.clientX - r.left) / r.width - 0.5;
+        var y = (e.clientY - r.top) / r.height - 0.5;
+        zs.forEach(function (z, i) {
+          var d = parseFloat(z.getAttribute("data-depth")) || 20;
+          var base = i === 0 ? "rotate(-12deg)" : "rotate(14deg)";
+          z.style.transform = "translate(" + (x * d * 2) + "px," + (y * d * 2) + "px) " + base;
+        });
+      });
+    }
+
+    // Scroll-lit statement
+    var sw = $("[data-scrollwords]");
+    var swords = [];
+    if (sw) {
+      var txt = sw.textContent.trim().split(/\s+/);
+      sw.innerHTML = txt.map(function (w) { return '<span class="sw">' + esc(w) + "</span>"; }).join(" ");
+      swords = $all(".sw", sw);
+    }
+    function lit() {
+      if (!swords.length) return;
+      var r = sw.getBoundingClientRect();
+      var vh = window.innerHeight;
+      var p = (vh * 0.85 - r.top) / (r.height + vh * 0.35);
+      p = Math.max(0, Math.min(1, p));
+      var n = Math.round(p * swords.length);
+      swords.forEach(function (s, i) { s.classList.toggle("on", i < n); });
+    }
+    lit();
+
+    // Piece rail: arrows and drag
+    var rail = $("[data-rail-track]");
+    if (rail) {
+      $all("[data-rail]").forEach(function (b) {
+        b.addEventListener("click", function () {
+          var dir = parseInt(b.getAttribute("data-rail"), 10);
+          rail.scrollBy({ left: dir * rail.clientWidth * 0.7, behavior: "smooth" });
+        });
+      });
+      var down = false, sx = 0, sl = 0, moved = false;
+      rail.addEventListener("mousedown", function (e) { down = true; moved = false; sx = e.pageX; sl = rail.scrollLeft; });
+      window.addEventListener("mouseup", function () { down = false; rail.classList.remove("drag"); });
+      rail.addEventListener("mousemove", function (e) {
+        if (!down) return;
+        var dx = e.pageX - sx;
+        if (Math.abs(dx) > 5) { moved = true; rail.classList.add("drag"); }
+        rail.scrollLeft = sl - dx;
+      });
+      rail.addEventListener("click", function (e) { if (moved) { e.preventDefault(); moved = false; } }, true);
+    }
+
+    // Cursor follower on the category list
+    var cats = $("[data-cats]");
+    if (cats && window.matchMedia("(hover: hover)").matches) {
+      var f = document.createElement("div");
+      f.className = "follower";
+      document.body.appendChild(f);
+      $all("a", cats).forEach(function (a) {
+        a.addEventListener("mouseenter", function () { f.innerHTML = esc(a.getAttribute("data-count")) + "<br>Explore"; f.classList.add("on"); });
+        a.addEventListener("mouseleave", function () { f.classList.remove("on"); });
+      });
+      window.addEventListener("mousemove", function (e) { f.style.transform = "translate(" + e.clientX + "px," + e.clientY + "px) scale(" + (f.classList.contains("on") ? 1 : 0.4) + ")"; });
+    }
+
+    // Zi Card: tilts with the pointer, turns over on click
+    $all("[data-flip]").forEach(function (fl) {
+      var inner = $(".inner", fl);
+      function turn() { fl.classList.toggle("turned"); }
+      fl.addEventListener("click", turn);
+      fl.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); turn(); } });
+      if (reduce) return;
+      fl.addEventListener("mousemove", function (e) {
+        var r = fl.getBoundingClientRect();
+        var x = (e.clientX - r.left) / r.width - 0.5;
+        var y = (e.clientY - r.top) / r.height - 0.5;
+        fl.classList.add("moving");
+        fl.style.setProperty("--ry", (x * 14) + "deg");
+        fl.style.setProperty("--rx", (-y * 12) + "deg");
+      });
+      fl.addEventListener("mouseleave", function () {
+        fl.classList.remove("moving");
+        fl.style.setProperty("--ry", "0deg");
+        fl.style.setProperty("--rx", "0deg");
+      });
+    });
+  }
+
   function init() {
     var page = document.body.getAttribute("data-page");
+    initModal();
+    initFx();
     var select = $("#currency");
 
     Promise.all([detectCurrency(), loadCatalog()]).then(function (res) {
@@ -227,6 +396,7 @@
       if (page === "piece") initPiece();
       if (page === "cart") rerender = initCart();
       if (page === "thanks") setCart([]);
+      initWaitlist();
       applyPrices();
 
       if (select) {

@@ -91,6 +91,40 @@ async function checkout(request, env) {
   return json({ url: result.data.url });
 }
 
+
+async function waitlist(request, env) {
+  if (!env.DB) {
+    return json({ error: "The waitlist is being set up. Please check back soon." }, 503);
+  }
+  let body;
+  try {
+    body = await request.json();
+  } catch (e) {
+    return json({ error: "The form could not be read." }, 400);
+  }
+  if (body.website) return json({ ok: true });
+  const clean = (v, n) => String(v || "").trim().slice(0, n);
+  const first = clean(body.first, 60);
+  const last = clean(body.last, 60);
+  const email = clean(body.email, 160).toLowerCase();
+  const country = clean(body.country, 60);
+  const city = clean(body.city, 80);
+  if (!first || !last || !country || !city || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    return json({ error: "Please complete every field with a valid email." }, 400);
+  }
+  try {
+    await env.DB.prepare(
+      "INSERT INTO waitlist (email, first, last, country, city, created_at) VALUES (?, ?, ?, ?, ?, ?)"
+    ).bind(email, first, last, country, city, new Date().toISOString()).run();
+  } catch (e) {
+    if (String(e).includes("UNIQUE")) {
+      return json({ ok: true, again: true });
+    }
+    return json({ error: "Something went wrong. Please try again." }, 500);
+  }
+  return json({ ok: true });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -99,6 +133,9 @@ export default {
     }
     if (url.pathname === "/api/checkout" && request.method === "POST") {
       return checkout(request, env);
+    }
+    if (url.pathname === "/api/waitlist" && request.method === "POST") {
+      return waitlist(request, env);
     }
     return env.ASSETS.fetch(request);
   }
