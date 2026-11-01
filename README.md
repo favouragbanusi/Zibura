@@ -19,3 +19,4 @@ A static storefront with two small functions, hosted on Cloudflare Pages.
 ## Next
 
 The Pieces in data/products.json are samples. The catalog will move to Sanity, then to an Excel upload.
+
