@@ -132,6 +132,31 @@ async function waitlist(request, env) {
         .bind(province, day, month, phone || null, smsOk, email).run();
       return json({ ok: true, again: true });
     }
+    if (String(e).includes("no such column") || String(e).includes("no such table")) {
+      return json({ error: "The database needs its update. Run update.sql in the D1 Console, then try again." }, 500);
+    }
+    return json({ error: "Something went wrong. Please try again." }, 500);
+  }
+  return json({ ok: true });
+}
+
+async function subscribe(request, env) {
+  if (!env.DB) return json({ error: "Sign up is being set up. Please check back soon." }, 503);
+  let body;
+  try { body = await request.json(); } catch (e) { return json({ error: "The form could not be read." }, 400); }
+  if (body.website) return json({ ok: true });
+  const clean = (v, n) => String(v || "").trim().slice(0, n);
+  const first = clean(body.first, 60);
+  const email = clean(body.email, 160).toLowerCase();
+  const province = ["Ripple", "Glow", "Blaze", "Bloom", "Dash", "Swirl"].includes(body.province) ? body.province : null;
+  if (!first || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return json({ error: "Please add your name and a valid email." }, 400);
+  if (!body.email_consent) return json({ error: "Please tick the box to receive news from Zi Republic." }, 400);
+  try {
+    await env.DB.prepare("INSERT INTO subscribers (email, first, province, created_at) VALUES (?, ?, ?, ?)")
+      .bind(email, first, province, new Date().toISOString()).run();
+  } catch (e) {
+    if (String(e).includes("UNIQUE")) return json({ ok: true, again: true });
+    if (String(e).includes("no such table")) return json({ error: "The database needs its update. Run update.sql in the D1 Console, then try again." }, 500);
     return json({ error: "Something went wrong. Please try again." }, 500);
   }
   return json({ ok: true });
@@ -424,6 +449,7 @@ export default {
     if (url.pathname === "/api/admin/photo" && request.method === "GET") return adminPhoto(request, env);
     if (url.pathname === "/api/admin/reset" && request.method === "POST") return adminReset(request, env);
     if (url.pathname === "/api/admin/decide" && request.method === "POST") return adminDecide(request, env);
+    if (url.pathname === "/api/subscribe" && request.method === "POST") return subscribe(request, env);
     if (url.pathname === "/api/waitlist" && request.method === "POST") {
       return waitlist(request, env);
     }

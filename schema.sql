@@ -55,3 +55,11 @@ CREATE TABLE IF NOT EXISTS applications (
   card_id TEXT UNIQUE,
   title TEXT
 );
+
+CREATE TABLE IF NOT EXISTS subscribers (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT NOT NULL UNIQUE,
+  first TEXT NOT NULL,
+  province TEXT,
+  created_at TEXT NOT NULL
+);

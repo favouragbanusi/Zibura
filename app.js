@@ -535,6 +535,34 @@
   }
 
   var openWaitlistLinks = function () {};
+  function initSubscribe() {
+    $all(".subscribe-form").forEach(function (form) {
+      var msg = $(".sub-msg", form);
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var data = {
+          first: form.elements.first.value,
+          email: form.elements.email.value,
+          email_consent: form.elements.email_consent.checked,
+          province: (function () { try { return localStorage.getItem("zibura_province") || ""; } catch (x) { return ""; } })(),
+          website: form.elements.website.value
+        };
+        var btn = $("button[type=submit]", form);
+        btn.disabled = true; msg.textContent = "Sending.";
+        fetch("/api/subscribe", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(data) })
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            if (d.ok) {
+              form.reset();
+              try { localStorage.setItem("zibura_joined", "1"); } catch (x) {}
+              msg.textContent = "Thank you. The next Zi Gazette is on its way to you.";
+            } else { msg.textContent = d.error || "Something went wrong. Please try again."; btn.disabled = false; }
+          })
+          .catch(function () { msg.textContent = "Something went wrong. Please try again."; btn.disabled = false; });
+      });
+    });
+  }
+
   function initModal() {
     var modal = $("#wl-modal");
     if (!modal || !modal.showModal) return;
@@ -818,8 +846,12 @@
       ctx.moveTo(949.5, 270); ctx.quadraticCurveTo(949.5, 277, 956, 277);
       ctx.quadraticCurveTo(949.5, 277, 949.5, 284); ctx.quadraticCurveTo(949.5, 277, 943, 277);
       ctx.quadraticCurveTo(949.5, 277, 949.5, 270); ctx.fill();
+      // "ZI REPUBLIC" runs top to bottom, centred on the same axis as the rule above and the seal below
       ctx.save();
-      ctx.translate(955, 381);
+      ctx.font = "500 15px " + SANS;
+      if ("letterSpacing" in ctx) ctx.letterSpacing = "0px";
+      var cap = ctx.measureText("Z").actualBoundingBoxAscent || 10.5;
+      ctx.translate(949.5 - cap / 2, 380);
       ctx.rotate(Math.PI / 2);
       spaced("ZI REPUBLIC", 0, 0, SANS, "500", 10.5, 133);
       ctx.restore();
@@ -1069,7 +1101,7 @@
       var p = P[best];
       try { localStorage.setItem("zibura_province", p.n); } catch (x) {}
       box.hidden = true; res.hidden = false;
-      res.innerHTML = '<div class="r-dot" style="background:' + p.hex + '"></div><p class="small">Your home province is</p><h2 class="display">' + p.n + '</h2><p class="r-line">' + p.line + '</p><p class="prose">' + p.note + '</p><ul>' + p.traits.map(function (t) { return "<li>" + t + "</li>"; }).join("") + '</ul><div class="r-actions"><a class="btn" href="/waitlist/" data-open-waitlist>Join the Register as ' + p.n + '</a><button type="button" class="btn line" id="retake">Take it again</button></div>';
+      res.innerHTML = '<div class="r-dot" style="background:' + p.hex + '"></div><p class="small">Your home province is</p><h2 class="display">' + p.n + '</h2><p class="r-line">' + p.line + '</p><p class="prose">' + p.note + '</p><ul>' + p.traits.map(function (t) { return "<li>" + t + "</li>"; }).join("") + '</ul><div class="r-actions"><a class="btn" href="/waitlist/">Join the Register as ' + p.n + '</a><button type="button" class="btn line" id="retake">Take it again</button></div>';
       $("#retake").addEventListener("click", start);
       openWaitlistLinks();
       res.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1104,6 +1136,7 @@
       if (page === "cart") rerender = initCart();
       if (page === "thanks") setCart([]);
       initWaitlist();
+      initSubscribe();
       applyPrices();
 
       if (select) {
