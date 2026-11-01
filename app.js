@@ -606,6 +606,335 @@
     });
   }
 
+  // ---------- Account, application, and Zi Card ----------
+  function api(path, opts) {
+    opts = opts || {};
+    opts.credentials = "same-origin";
+    return fetch(path, opts).then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { d._ok = r.ok; return d; }); });
+  }
+  function show(ids, on) {
+    ["v-auth", "v-apply", "v-pending", "v-declined", "v-card"].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.hidden = id !== on;
+    });
+  }
+
+  function loadImg(src) {
+    return new Promise(function (res, rej) {
+      var im = new Image();
+      im.onload = function () { res(im); };
+      im.onerror = rej;
+      im.src = src;
+    });
+  }
+  function cover(ctx, im, x, y, w, h) {
+    var s = Math.max(w / im.width, h / im.height);
+    var dw = im.width * s, dh = im.height * s;
+    ctx.drawImage(im, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
+  }
+  function rrect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function drawCard(canvas, card) {
+    var NAVY = "#111c44";
+    return Promise.all([
+      document.fonts.load('600 52px "Lexend Exa"'),
+      document.fonts.load('400 17px "Lexend Exa"'),
+      document.fonts.load('700 17px "Public Sans"'),
+      document.fonts.load('400 26px "Public Sans"'),
+      document.fonts.load('34px "Caveat"')
+    ]).catch(function () {}).then(function () {
+      return Promise.all([
+        loadImg("/assets/zi-card-bg.png"),
+        loadImg("/assets/logo-icon-navy.png"),
+        loadImg("/assets/zi-card-seal.png"),
+        loadImg("/api/photo?t=" + Date.now()).catch(function () { return null; })
+      ]);
+    }).then(function (im) {
+      var ctx = canvas.getContext("2d");
+      var k = canvas.width / 1011;
+      ctx.setTransform(k, 0, 0, k, 0, 0);
+      ctx.clearRect(0, 0, 1011, 637);
+      ctx.save();
+      rrect(ctx, 0, 0, 1011, 637, 44);
+      ctx.clip();
+      cover(ctx, im[0], 0, 0, 1011, 637);
+      ctx.fillStyle = NAVY;
+      ctx.textBaseline = "top";
+      function text(t, x, y, font, spacing) {
+        ctx.font = font;
+        if ("letterSpacing" in ctx) ctx.letterSpacing = spacing || "0px";
+        ctx.fillText(t, x, y);
+      }
+      text("ZI CARD", 56, 66, '600 52px "Lexend Exa", sans-serif', "1px");
+      text("YOUR EXPRESSION, YOUR WORLD.", 56, 120, '400 13.5px "Lexend Exa", sans-serif', "1.4px");
+      ctx.drawImage(im[1], 614, 74, 52, 52 * im[1].height / im[1].width);
+      text("ISSUED BY ZI REPUBLIC", 681, 80, '400 17px "Lexend Exa", sans-serif', "2px");
+      text("MINISTRY OF ZI INTERIOR", 681, 107, '400 17px "Lexend Exa", sans-serif', "2px");
+      ctx.save();
+      rrect(ctx, 55, 187, 281, 362, 24);
+      ctx.clip();
+      ctx.fillStyle = "#d2eaff";
+      ctx.fillRect(55, 187, 281, 362);
+      if (im[3]) cover(ctx, im[3], 55, 187, 281, 362);
+      ctx.restore();
+      ctx.fillStyle = NAVY;
+      var rows = [
+        ["NAME", card.name, 187, 394, 482],
+        ["ID NUMBER", card.id, 301, 394, 482],
+        ["STATUS", card.status, 414, 394, 482],
+        ["ISSUED", card.issued, 529, 394, 214],
+        ["VALIDITY", card.validity, 529, 661, 219]
+      ];
+      rows.forEach(function (r) {
+        var labX = r[3] - 4, labY = r[2];
+        text(r[0], labX, labY, '700 17px "Public Sans", sans-serif');
+        var boxY = r[2] + 26;
+        ctx.save();
+        ctx.fillStyle = "rgba(255,255,255,0.62)";
+        rrect(ctx, r[3], boxY, r[4], 56, 10);
+        ctx.fill();
+        ctx.restore();
+        var size = 26;
+        ctx.font = size + 'px "Public Sans", sans-serif';
+        while (ctx.measureText(r[1]).width > r[4] - 20 && size > 12) { size -= 1; ctx.font = size + 'px "Public Sans", sans-serif'; }
+        ctx.textBaseline = "middle";
+        ctx.fillText(r[1], r[3] + 7, boxY + 29);
+        ctx.textBaseline = "top";
+      });
+      ctx.fillRect(951, 196, 1, 320);
+      ctx.save();
+      ctx.translate(951, 372);
+      ctx.rotate(Math.PI / 2);
+      ctx.textBaseline = "middle";
+      text("ZI REPUBLIC", 0, 0, '400 17px "Lexend Exa", sans-serif', "2.4px");
+      ctx.restore();
+      if (card.title) {
+        ctx.save();
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        var ts = 34;
+        ctx.font = ts + 'px "Caveat", cursive';
+        while (ctx.measureText(card.title).width > 270 && ts > 14) { ts -= 1; ctx.font = ts + 'px "Caveat", cursive'; }
+        ctx.fillText(card.title, 195.5, 580);
+        ctx.restore();
+      }
+      ctx.drawImage(im[2], 912, 540, 76, 76 * im[2].height / im[2].width);
+      ctx.restore();
+    });
+  }
+
+  // Resize and centre-crop the chosen photo to the card's portrait frame.
+  function prepPhoto(file) {
+    return new Promise(function (res, rej) {
+      var url = URL.createObjectURL(file);
+      var im = new Image();
+      im.onload = function () {
+        var c = document.createElement("canvas");
+        c.width = 562; c.height = 724;
+        cover(c.getContext("2d"), im, 0, 0, 562, 724);
+        URL.revokeObjectURL(url);
+        c.toBlob(function (blob) { blob ? res(blob) : rej(); }, "image/jpeg", 0.9);
+      };
+      im.onerror = function () { rej(); };
+      im.src = url;
+    });
+  }
+
+  function initAccount() {
+    var heading = document.getElementById("acct-h");
+    var sub = document.getElementById("acct-sub");
+    var out = document.getElementById("acct-out");
+    var currentCard = null;
+
+    function render() {
+      return api("/api/me").then(function (d) {
+        document.getElementById("acct-loading").hidden = true;
+        if (d.error) { sub.textContent = d.error; return; }
+        if (!d.user) {
+          out.hidden = true;
+          show(null, "v-auth");
+          return;
+        }
+        out.hidden = false;
+        document.getElementById("acct-who").textContent = d.user.first + " " + d.user.last + ", " + d.user.email + ".";
+        var nm = document.getElementById("a-name");
+        if (nm && !nm.value) nm.value = (d.user.first + " " + d.user.last).toUpperCase();
+        var a = d.application;
+        if (d.card) {
+          sub.textContent = "Welcome, Zi Resident. Your card is ready.";
+          show(null, "v-card");
+          currentCard = d.card;
+          drawCard(document.getElementById("card-canvas"), d.card);
+        } else if (a && a.status === "pending") {
+          sub.textContent = "Application received.";
+          show(null, "v-pending");
+        } else if (a && a.status === "declined") {
+          sub.textContent = "A decision has been made.";
+          show(null, "v-declined");
+        } else if (d.open === false) {
+          sub.textContent = "Applications are paused right now. Your account is saved.";
+          show(null, "none");
+        } else {
+          sub.textContent = "Upload your portrait and apply for your Zi Card.";
+          show(null, "v-apply");
+        }
+      });
+    }
+
+    $all(".tab[data-tab]").forEach(function (t) {
+      t.addEventListener("click", function () {
+        $all(".tab[data-tab]").forEach(function (x) { x.classList.toggle("on", x === t); });
+        document.getElementById("f-signup").hidden = t.getAttribute("data-tab") !== "signup";
+        document.getElementById("f-login").hidden = t.getAttribute("data-tab") !== "login";
+      });
+    });
+
+    function authForm(id, path) {
+      var f = document.getElementById(id);
+      f.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var msg = $(".msg", f), btn = $("button[type=submit]", f);
+        var body = {};
+        Array.prototype.forEach.call(f.elements, function (el) { if (el.name) body[el.name] = el.value; });
+        btn.disabled = true; msg.textContent = "One moment.";
+        api(path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }).then(function (d) {
+          btn.disabled = false;
+          if (d.ok) { msg.textContent = ""; f.reset(); updateAcctLink(); render(); }
+          else msg.textContent = d.error || "Something went wrong. Please try again.";
+        }).catch(function () { btn.disabled = false; msg.textContent = "Something went wrong. Please try again."; });
+      });
+    }
+    authForm("f-signup", "/api/auth/signup");
+    authForm("f-login", "/api/auth/login");
+
+    var photo = document.getElementById("a-photo");
+    var prev = document.getElementById("a-prev");
+    var blob = null;
+    photo.addEventListener("change", function () {
+      blob = null;
+      if (!photo.files[0]) { prev.hidden = true; return; }
+      prepPhoto(photo.files[0]).then(function (b) {
+        blob = b;
+        $("img", prev).src = URL.createObjectURL(b);
+        prev.hidden = false;
+      }).catch(function () { prev.hidden = true; $(".msg", document.getElementById("f-apply")).textContent = "That photo could not be read. Please choose a JPG, PNG, or WebP image."; });
+    });
+    var fa = document.getElementById("f-apply");
+    fa.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var msg = $(".msg", fa), btn = $("button[type=submit]", fa);
+      if (!blob) { msg.textContent = "Please choose a portrait photo."; return; }
+      var fd = new FormData();
+      fd.append("name", fa.elements.name.value);
+      fd.append("photo", blob, "portrait.jpg");
+      btn.disabled = true; msg.textContent = "Sending your application.";
+      api("/api/apply", { method: "POST", body: fd }).then(function (d) {
+        btn.disabled = false;
+        if (d.ok) { msg.textContent = ""; render(); }
+        else msg.textContent = d.error || "Something went wrong. Please try again.";
+      }).catch(function () { btn.disabled = false; msg.textContent = "Something went wrong. Please try again."; });
+    });
+
+    document.getElementById("reapply").addEventListener("click", function () { show(null, "v-apply"); sub.textContent = "Upload a new portrait to apply again."; });
+    document.getElementById("signout").addEventListener("click", function () {
+      api("/api/auth/logout", { method: "POST" }).then(function () { updateAcctLink(); render(); });
+    });
+    document.getElementById("dl-card").addEventListener("click", function () {
+      var c = document.getElementById("card-canvas");
+      c.toBlob(function (b) {
+        var a = document.createElement("a");
+        a.href = URL.createObjectURL(b);
+        a.download = (currentCard ? currentCard.id : "zi-card") + ".png";
+        document.body.appendChild(a); a.click(); a.remove();
+      }, "image/png");
+    });
+    render();
+  }
+
+  function updateAcctLink() {
+    var link = document.getElementById("acct-link");
+    if (!link) return;
+    api("/api/me").then(function (d) { link.textContent = d.user ? "My account" : "Sign in"; }).catch(function () {});
+  }
+
+  function initAdmin() {
+    var keyForm = document.getElementById("adm-key");
+    var desk = document.getElementById("adm-desk");
+    var list = document.getElementById("adm-list");
+    var key = "";
+    try { key = sessionStorage.getItem("zibura_adm") || ""; } catch (x) {}
+    var status = "pending";
+    function h() { return { "x-admin-key": key }; }
+    function load() {
+      fetch("/api/admin/applications?status=" + status, { headers: h() }).then(function (r) {
+        if (r.status === 401) { desk.hidden = true; keyForm.hidden = false; $(".msg", keyForm).textContent = "That key was not accepted."; return null; }
+        return r.json();
+      }).then(function (d) {
+        if (!d) return;
+        keyForm.hidden = true; desk.hidden = false;
+        list.innerHTML = "";
+        if (!d.applications.length) { list.innerHTML = '<p class="small">Nothing here.</p>'; return; }
+        d.applications.forEach(function (a) {
+          var row = document.createElement("div");
+          row.className = "adm-row";
+          row.innerHTML = '<img alt="" width="140" height="180"><div><b></b><span class="small"></span><span class="small card-id"></span></div><div class="adm-act"></div>';
+          $("b", row).textContent = a.name;
+          $("span", row).textContent = a.first + " " + a.last + ", " + a.email + ", submitted " + a.submitted_at.slice(0, 10);
+          $(".card-id", row).textContent = a.card_id ? "Card " + a.card_id : "";
+          fetch("/api/admin/photo?id=" + a.id, { headers: h() }).then(function (r) { return r.blob(); }).then(function (b) { $("img", row).src = URL.createObjectURL(b); });
+          var act = $(".adm-act", row);
+          if (a.status !== "approved") {
+            var ok = document.createElement("button"); ok.className = "btn"; ok.textContent = "Approve";
+            ok.onclick = function () { decide(a.id, "approve"); };
+            act.appendChild(ok);
+          }
+          if (a.status === "pending") {
+            var no = document.createElement("button"); no.className = "btn line"; no.textContent = "Decline";
+            no.onclick = function () { decide(a.id, "decline"); };
+            act.appendChild(no);
+          }
+          list.appendChild(row);
+        });
+      });
+    }
+    function decide(id, decision) {
+      fetch("/api/admin/decide", { method: "POST", headers: { "content-type": "application/json", "x-admin-key": key }, body: JSON.stringify({ id: id, decision: decision }) })
+        .then(function (r) { return r.json(); }).then(function () { load(); });
+    }
+    keyForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      key = document.getElementById("adm-k").value;
+      try { sessionStorage.setItem("zibura_adm", key); } catch (x) {}
+      load();
+    });
+    $all(".tab[data-st]").forEach(function (t) {
+      t.addEventListener("click", function () {
+        status = t.getAttribute("data-st");
+        $all(".tab[data-st]").forEach(function (x) { x.classList.toggle("on", x === t); });
+        load();
+      });
+    });
+    var rf = document.getElementById("adm-reset");
+    rf.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var m = $(".msg", rf);
+      fetch("/api/admin/reset", { method: "POST", headers: { "content-type": "application/json", "x-admin-key": key }, body: JSON.stringify({ email: rf.elements.email.value, password: rf.elements.password.value }) })
+        .then(function (r) { return r.json(); }).then(function (d) {
+          m.textContent = d.ok ? "Password updated. Share it with the member privately." : (d.error || "Something went wrong.");
+          if (d.ok) rf.reset();
+        });
+    });
+    if (key) load();
+  }
+
   function init() {
     var page = document.body.getAttribute("data-page");
     initModal();
@@ -625,6 +954,8 @@
         });
       }
       if (page === "piece") initPiece();
+      if (page === "account") initAccount(); else updateAcctLink();
+      if (page === "admin") initAdmin();
       if (page !== "shop") loadRatings();
       if (page === "cart") rerender = initCart();
       if (page === "thanks") setCart([]);

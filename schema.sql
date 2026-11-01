@@ -18,3 +18,32 @@ CREATE TABLE IF NOT EXISTS reviews (
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS reviews_slug ON reviews (slug);
+
+CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT NOT NULL UNIQUE,
+  first TEXT NOT NULL,
+  last TEXT NOT NULL,
+  salt TEXT NOT NULL,
+  pass_hash TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS sessions (
+  token_hash TEXT PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  expires_at INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS applications (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL UNIQUE,
+  status TEXT NOT NULL,
+  name TEXT NOT NULL,
+  photo_key TEXT NOT NULL,
+  submitted_at TEXT NOT NULL,
+  decided_at TEXT,
+  card_seq INTEGER UNIQUE,
+  card_id TEXT UNIQUE,
+  title TEXT
+);

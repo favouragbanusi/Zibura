@@ -77,11 +77,12 @@ function zcard() {
   <img class="z-mark" src="/assets/logo-icon-navy.png" alt="" width="434" height="436">
   <div class="z-issued">ISSUED BY ZI REPUBLIC<br>MINISTRY OF ZI INTERIOR</div>
   <div class="z-photo"><span>YOUR PORTRAIT</span></div>
+  <div class="z-script">Your own title</div>
   <div class="z-lab" style="top:calc(var(--u)*187);left:calc(var(--u)*390)">NAME</div><div class="z-box" style="top:calc(var(--u)*213);left:calc(var(--u)*394);width:calc(var(--u)*482)"><span>YOUR NAME</span></div>
   <div class="z-lab" style="top:calc(var(--u)*301);left:calc(var(--u)*390)">ID NUMBER</div><div class="z-box" style="top:calc(var(--u)*328);left:calc(var(--u)*394);width:calc(var(--u)*482)"><span>ZIYYMM000000</span></div>
   <div class="z-lab" style="top:calc(var(--u)*414);left:calc(var(--u)*390)">STATUS</div><div class="z-box" style="top:calc(var(--u)*442);left:calc(var(--u)*394);width:calc(var(--u)*482)"><span>ZI RESIDENT</span></div>
   <div class="z-lab" style="top:calc(var(--u)*529);left:calc(var(--u)*390)">ISSUED</div><div class="z-box" style="top:calc(var(--u)*555);left:calc(var(--u)*394);width:calc(var(--u)*214)"><span>MONTH YEAR</span></div>
-  <div class="z-lab" style="top:calc(var(--u)*529);left:calc(var(--u)*661)">VALIDITY</div><div class="z-box" style="top:calc(var(--u)*555);left:calc(var(--u)*661);width:calc(var(--u)*219)"><span>PERPETUAL</span></div>
+  <div class="z-lab" style="top:calc(var(--u)*529);left:calc(var(--u)*661)">VALIDITY</div><div class="z-box" style="top:calc(var(--u)*555);left:calc(var(--u)*661);width:calc(var(--u)*219)"><span>MON YEAR</span></div>
   <div class="z-side"><i></i><b>ZI REPUBLIC</b></div>
   <img class="z-seal" src="/assets/zi-card-seal.png" alt="" width="80" height="80">
 </div>`;
@@ -125,7 +126,7 @@ function layout({ title, description, page, body }) {
 <link rel="icon" href="/assets/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..700&family=Public+Sans:wght@400;500;600&family=Lexend+Exa:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..700&family=Public+Sans:wght@400;500;600&family=Lexend+Exa:wght@400;600&family=Caveat:wght@500&display=swap">
 <link rel="stylesheet" href="/assets/styles.css">
 <script>document.documentElement.className = "js";</script>
 </head>
@@ -141,6 +142,7 @@ function layout({ title, description, page, body }) {
     <a class="brand" href="/" aria-label="Zibura home"><img src="/assets/logo-wordmark-navy.png" alt="Zibura" width="636" height="120"></a>
     <nav class="nav right" aria-label="Account and cart">
       <a href="/zi-card/">Zi Card</a>
+      <a href="/account/" id="acct-link">Sign in</a>
       <a href="/cart/">Cart (<span id="cart-count">0</span>)</a>
       <select id="currency" aria-label="Currency">
         <option value="CAD">CAD</option>
@@ -411,9 +413,9 @@ write(
     <ol class="steps">
       <li><div><b>Create your account.</b><span>Your first step into the republic.</span></div></li>
       <li><div><b>Upload your portrait and apply.</b><span>Every application is read by the Ministry of Zi Interior.</span></div></li>
-      <li><div><b>Check back in two days.</b><span>If you are approved, your Zi Card will be waiting in your account, ready to download and carry everywhere.</span></div></li>
+      <li><div><b>Collect your Zi Card.</b><span>Your Zi Card appears in your account the moment your application is accepted, ready to download and carry everywhere.</span></div></li>
     </ol>
-    <p style="margin-top:40px"><a class="btn" href="#" aria-disabled="true">Applications open soon</a></p>
+    <p style="margin-top:40px"><a class="btn" href="/account/">Start your application</a></p>
     <p class="small" style="margin-top:16px">Want first word when they open? <a href="/waitlist/" data-open-waitlist>Join the waitlist</a>.</p>
   </div>
 </div></section>
@@ -427,6 +429,105 @@ write(
 </div></section>
 </main>`
   })
+);
+
+
+// Account and application
+write(
+  "account/index.html",
+  layout({
+    title: "Your account | Zibura",
+    description: "Sign in to apply for your Zi Card or collect it once approved.",
+    page: "account",
+    body: `<main>
+<section class="page-head"><div class="wrap">
+  <h1 class="display rise" id="acct-h">${words("Your Zi account.")}</h1>
+  <p class="fade" id="acct-sub">Create an account to apply for your Zi Card.</p>
+</div></section>
+<section class="section" style="padding-top:clamp(16px,3vw,40px)"><div class="wrap">
+  <div id="acct-loading" class="small">Loading.</div>
+
+  <div id="v-auth" class="form-card" hidden>
+    <div class="tabs" role="tablist">
+      <button type="button" class="tab on" data-tab="signup">Create account</button>
+      <button type="button" class="tab" data-tab="login">Sign in</button>
+    </div>
+    <form id="f-signup" class="acct-form">
+      <div class="form-grid">
+        <div><label for="s-first">First name</label><input id="s-first" name="first" autocomplete="given-name" required></div>
+        <div><label for="s-last">Last name</label><input id="s-last" name="last" autocomplete="family-name" required></div>
+        <div class="full"><label for="s-email">Email</label><input id="s-email" name="email" type="email" autocomplete="email" required></div>
+        <div class="full"><label for="s-pass">Password (8 characters or more)</label><input id="s-pass" name="password" type="password" minlength="8" autocomplete="new-password" required></div>
+      </div>
+      <button class="btn" type="submit">Create account</button>
+      <div class="msg" role="status"></div>
+    </form>
+    <form id="f-login" class="acct-form" hidden>
+      <div class="form-grid">
+        <div class="full"><label for="l-email">Email</label><input id="l-email" name="email" type="email" autocomplete="email" required></div>
+        <div class="full"><label for="l-pass">Password</label><input id="l-pass" name="password" type="password" autocomplete="current-password" required></div>
+      </div>
+      <button class="btn" type="submit">Sign in</button>
+      <div class="msg" role="status"></div>
+    </form>
+  </div>
+
+  <div id="v-apply" class="form-card" hidden>
+    <form id="f-apply" class="acct-form">
+      <div class="form-grid">
+        <div class="full"><label for="a-name">Name as it will appear on your card</label><input id="a-name" name="name" maxlength="40" required></div>
+        <div class="full"><label for="a-photo">Portrait photo (JPG, PNG, or WebP)</label><input id="a-photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" required></div>
+      </div>
+      <div class="crop-prev" id="a-prev" hidden><img alt="Portrait preview" width="281" height="362"></div>
+      <p class="small">Use a clear, front facing portrait. It is cropped to the card frame automatically.</p>
+      <button class="btn" type="submit">Submit my application</button>
+      <div class="msg" role="status"></div>
+    </form>
+  </div>
+
+  <div id="v-pending" class="form-card" hidden>
+    <h2 class="display" style="font-size:clamp(28px,3.4vw,40px)">Your application is with the Ministry.</h2>
+    <p class="sub">The Ministry of Zi Interior reads every application. Applications are being reviewed. Check back soon.</p>
+  </div>
+
+  <div id="v-declined" class="form-card" hidden>
+    <h2 class="display" style="font-size:clamp(28px,3.4vw,40px)">Not this time.</h2>
+    <p class="sub">The Ministry did not approve this application. You are welcome to apply again with a new portrait.</p>
+    <button class="btn" type="button" id="reapply">Apply again</button>
+  </div>
+
+  <div id="v-card" hidden>
+    <div class="card-out"><canvas id="card-canvas" width="2022" height="1274" aria-label="Your Zi Card"></canvas></div>
+    <p style="margin-top:28px"><button class="btn" type="button" id="dl-card">Download your Zi Card</button></p>
+  </div>
+
+  <p id="acct-out" class="small" style="margin-top:40px" hidden><span id="acct-who"></span> <button type="button" class="linkbtn" id="signout">Sign out</button></p>
+</div></section>
+</main>`
+  })
+);
+
+// Ministry review page
+write(
+  "admin/index.html",
+  layout({
+    title: "Ministry | Zibura",
+    description: "Ministry of Zi Interior review desk.",
+    page: "admin",
+    body: `<main>
+<section class="page-head"><div class="wrap">
+  <h1 class="display">Ministry of Zi Interior.</h1>
+</div></section>
+<section class="section" style="padding-top:16px"><div class="wrap">
+  <form id="adm-key" class="form-card"><div class="form-grid"><div class="full"><label for="adm-k">Admin key</label><input id="adm-k" type="password" autocomplete="off"></div></div><button class="btn" type="submit" style="margin-top:20px">Open desk</button><div class="msg" role="status"></div></form>
+  <div id="adm-desk" hidden>
+    <div class="tabs"><button class="tab on" data-st="pending">Pending</button><button class="tab" data-st="approved">Approved</button><button class="tab" data-st="declined">Declined</button></div>
+    <div id="adm-list" class="adm-list"></div>
+    <form id="adm-reset" class="form-card" style="margin-top:56px"><h2 class="display" style="font-size:28px;margin-bottom:16px">Reset a member's password</h2><div class="form-grid"><div class="full"><label for="r-e">Member email</label><input id="r-e" name="email" type="email" required></div><div class="full"><label for="r-p">New password (8 characters or more)</label><input id="r-p" name="password" type="text" minlength="8" required></div></div><button class="btn" type="submit" style="margin-top:20px">Set new password</button><div class="msg" role="status"></div></form>
+  </div>
+</div></section>
+</main>`
+  }).replace("<head>", '<head>\n<meta name="robots" content="noindex,nofollow">')
 );
 
 // Founder's note
