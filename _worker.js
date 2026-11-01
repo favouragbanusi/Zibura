@@ -125,6 +125,50 @@ async function waitlist(request, env) {
   return json({ ok: true });
 }
 
+async function reviewsGet(url, env) {
+  if (!env.DB) return json({ reviews: [], count: 0, avg: 0, dist: [0, 0, 0, 0, 0] });
+  const slug = String(url.searchParams.get("slug") || "").slice(0, 80);
+  const rows = await env.DB.prepare(
+    "SELECT name, rating, title, body, created_at FROM reviews WHERE slug = ? ORDER BY id DESC LIMIT 100"
+  ).bind(slug).all();
+  const list = rows.results || [];
+  const dist = [0, 0, 0, 0, 0];
+  let sum = 0;
+  list.forEach((r) => { dist[r.rating - 1] += 1; sum += r.rating; });
+  return json({ reviews: list, count: list.length, avg: list.length ? sum / list.length : 0, dist }, 200, { "cache-control": "no-store" });
+}
+
+async function ratingsGet(env) {
+  if (!env.DB) return json({});
+  const rows = await env.DB.prepare("SELECT slug, COUNT(*) AS n, AVG(rating) AS avg FROM reviews GROUP BY slug").all();
+  const out = {};
+  (rows.results || []).forEach((r) => { out[r.slug] = { count: r.n, avg: r.avg }; });
+  return json(out, 200, { "cache-control": "public, max-age=60" });
+}
+
+async function reviewPost(request, env) {
+  if (!env.DB) return json({ error: "Reviews are being set up. Please check back soon." }, 503);
+  let body;
+  try { body = await request.json(); } catch (e) { return json({ error: "The review could not be read." }, 400); }
+  if (body.website) return json({ ok: true });
+  const clean = (v, n) => String(v || "").trim().slice(0, n);
+  const slug = clean(body.slug, 80);
+  const name = clean(body.name, 60);
+  const title = clean(body.title, 100);
+  const text = clean(body.body, 1500);
+  const rating = parseInt(body.rating, 10);
+  if (!slug || !name || !title || text.length < 10 || !(rating >= 1 && rating <= 5)) {
+    return json({ error: "Please add a rating, your name, a headline, and a comment of at least 10 characters." }, 400);
+  }
+  const origin = new URL(request.url).origin;
+  const cat = await (await env.ASSETS.fetch(new URL("/catalog.json", origin))).json();
+  if (!cat.some((p) => p.slug === slug)) return json({ error: "That Piece could not be found." }, 400);
+  await env.DB.prepare(
+    "INSERT INTO reviews (slug, name, rating, title, body, created_at) VALUES (?, ?, ?, ?, ?, ?)"
+  ).bind(slug, name, rating, title, text, new Date().toISOString()).run();
+  return json({ ok: true });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -134,6 +178,9 @@ export default {
     if (url.pathname === "/api/checkout" && request.method === "POST") {
       return checkout(request, env);
     }
+    if (url.pathname === "/api/reviews" && request.method === "GET") return reviewsGet(url, env);
+    if (url.pathname === "/api/reviews" && request.method === "POST") return reviewPost(request, env);
+    if (url.pathname === "/api/ratings" && request.method === "GET") return ratingsGet(env);
     if (url.pathname === "/api/waitlist" && request.method === "POST") {
       return waitlist(request, env);
     }

@@ -1,134 +1,308 @@
 [
-  {
-    "slug": "halo",
-    "name": "Halo",
-    "category": "Ready to Wear",
-    "signal": "Signal I",
-    "arc": "Arc I",
-    "description": "A long wool coat with a wide collar and deep pockets. Sample Piece.",
-    "prices": { "CAD": 420, "USD": 310, "GBP": 245, "NGN": 465000 },
-    "colors": ["Black", "Sand", "Ripple Blue"],
-    "sizes": ["XS", "S", "M", "L", "XL"]
+ {
+  "slug": "halo",
+  "name": "Halo",
+  "category": "Clothing",
+  "signal": "Signal I",
+  "arc": "Arc I",
+  "description": "A long wool coat with a wide collar and deep pockets. Sample Piece.",
+  "prices": {
+   "CAD": 420,
+   "USD": 310,
+   "GBP": 245,
+   "NGN": 465000
   },
-  {
-    "slug": "meridian",
-    "name": "Meridian",
-    "category": "Ready to Wear",
-    "signal": "Signal I",
-    "arc": "Arc I",
-    "description": "High waisted trousers with a straight leg and a pressed crease. Sample Piece.",
-    "prices": { "CAD": 190, "USD": 140, "GBP": 110, "NGN": 210000 },
-    "colors": ["Black", "Olive", "Cream"],
-    "sizes": ["XS", "S", "M", "L", "XL"]
+  "colors": [
+   "Black",
+   "Sand",
+   "Ripple Blue"
+  ],
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "audience": "Women",
+  "type": "Outerwear"
+ },
+ {
+  "slug": "meridian",
+  "name": "Meridian",
+  "category": "Clothing",
+  "signal": "Signal I",
+  "arc": "Arc I",
+  "description": "High waisted trousers with a straight leg and a pressed crease. Sample Piece.",
+  "prices": {
+   "CAD": 190,
+   "USD": 140,
+   "GBP": 110,
+   "NGN": 210000
   },
-  {
-    "slug": "tidal",
-    "name": "Tidal",
-    "category": "Ready to Wear",
-    "signal": "Signal I",
-    "arc": "Arc II",
-    "description": "A flowing midi dress with a gathered waist and short sleeves. Sample Piece.",
-    "prices": { "CAD": 240, "USD": 175, "GBP": 140, "NGN": 262000 },
-    "colors": ["Ripple Blue", "Blaze Red", "Cream"],
-    "sizes": ["XS", "S", "M", "L", "XL"]
+  "colors": [
+   "Black",
+   "Olive",
+   "Cream"
+  ],
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "audience": "Men",
+  "type": "Bottomwear"
+ },
+ {
+  "slug": "tidal",
+  "name": "Tidal",
+  "category": "Clothing",
+  "signal": "Signal I",
+  "arc": "Arc II",
+  "description": "A flowing midi dress with a gathered waist and short sleeves. Sample Piece.",
+  "prices": {
+   "CAD": 240,
+   "USD": 175,
+   "GBP": 140,
+   "NGN": 262000
   },
-  {
-    "slug": "ember",
-    "name": "Ember",
-    "category": "Ready to Wear",
-    "signal": "Signal I",
-    "arc": "Arc II",
-    "description": "A cotton blouse with a relaxed fit and oversized cuffs. Sample Piece.",
-    "prices": { "CAD": 130, "USD": 95, "GBP": 75, "NGN": 142000 },
-    "colors": ["White", "Dash Orange", "Black"],
-    "sizes": ["XS", "S", "M", "L", "XL"]
+  "colors": [
+   "Ripple Blue",
+   "Blaze Red",
+   "Cream"
+  ],
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "audience": "Women",
+  "type": "Fullwear"
+ },
+ {
+  "slug": "ember",
+  "name": "Ember",
+  "category": "Clothing",
+  "signal": "Signal I",
+  "arc": "Arc II",
+  "description": "A cotton blouse with a relaxed fit and oversized cuffs. Sample Piece.",
+  "prices": {
+   "CAD": 130,
+   "USD": 95,
+   "GBP": 75,
+   "NGN": 142000
   },
-  {
-    "slug": "orbit",
-    "name": "Orbit",
-    "category": "Accessories",
-    "signal": "Signal I",
-    "arc": "Arc I",
-    "description": "Sculpted hoop earrings in brushed metal. Sample Piece.",
-    "prices": { "CAD": 85, "USD": 62, "GBP": 49, "NGN": 93000 },
-    "colors": ["Gold", "Silver"],
-    "sizes": ["One size"]
+  "colors": [
+   "White",
+   "Dash Orange",
+   "Black"
+  ],
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "audience": "Men",
+  "type": "Topwear"
+ },
+ {
+  "slug": "orbit",
+  "name": "Orbit",
+  "category": "Accessories",
+  "signal": "Signal I",
+  "arc": "Arc I",
+  "description": "Sculpted hoop earrings in brushed metal. Sample Piece.",
+  "prices": {
+   "CAD": 85,
+   "USD": 62,
+   "GBP": 49,
+   "NGN": 93000
   },
-  {
-    "slug": "kite",
-    "name": "Kite",
-    "category": "Accessories",
-    "signal": "Signal I",
-    "arc": "Arc II",
-    "description": "A printed silk scarf that ties at the neck, the wrist, or a bag handle. Sample Piece.",
-    "prices": { "CAD": 95, "USD": 70, "GBP": 55, "NGN": 105000 },
-    "colors": ["Bloom Green", "Swirl Purple", "Glow Yellow"],
-    "sizes": ["One size"]
+  "colors": [
+   "Gold",
+   "Silver"
+  ],
+  "sizes": [
+   "One size"
+  ],
+  "audience": "Everyone",
+  "type": "Jewelry"
+ },
+ {
+  "slug": "kite",
+  "name": "Kite",
+  "category": "Accessories",
+  "signal": "Signal I",
+  "arc": "Arc II",
+  "description": "A printed silk scarf that ties at the neck, the wrist, or a bag handle. Sample Piece.",
+  "prices": {
+   "CAD": 95,
+   "USD": 70,
+   "GBP": 55,
+   "NGN": 105000
   },
-  {
-    "slug": "cove",
-    "name": "Cove",
-    "category": "Bags and Footwear",
-    "signal": "Signal I",
-    "arc": "Arc I",
-    "description": "A structured crossbody bag with an adjustable strap. Sample Piece.",
-    "prices": { "CAD": 280, "USD": 205, "GBP": 160, "NGN": 307000 },
-    "colors": ["Black", "Tan", "Ripple Blue"],
-    "sizes": ["One size"]
+  "colors": [
+   "Bloom Green",
+   "Swirl Purple",
+   "Glow Yellow"
+  ],
+  "sizes": [
+   "One size"
+  ],
+  "audience": "Everyone",
+  "type": "Scarves"
+ },
+ {
+  "slug": "cove",
+  "name": "Cove",
+  "category": "Bags",
+  "signal": "Signal I",
+  "arc": "Arc I",
+  "description": "A structured crossbody bag with an adjustable strap. Sample Piece.",
+  "prices": {
+   "CAD": 280,
+   "USD": 205,
+   "GBP": 160,
+   "NGN": 307000
   },
-  {
-    "slug": "stride",
-    "name": "Stride",
-    "category": "Bags and Footwear",
-    "signal": "Signal I",
-    "arc": "Arc II",
-    "description": "Leather loafers with a chunky sole. Sample Piece.",
-    "prices": { "CAD": 310, "USD": 228, "GBP": 180, "NGN": 342000 },
-    "colors": ["Black", "Oxblood"],
-    "sizes": ["36", "37", "38", "39", "40", "41", "42"]
+  "colors": [
+   "Black",
+   "Tan",
+   "Ripple Blue"
+  ],
+  "sizes": [
+   "One size"
+  ],
+  "audience": "Women",
+  "type": "Crossbody"
+ },
+ {
+  "slug": "stride",
+  "name": "Stride",
+  "category": "Footwear",
+  "signal": "Signal I",
+  "arc": "Arc II",
+  "description": "Leather loafers with a chunky sole. Sample Piece.",
+  "prices": {
+   "CAD": 310,
+   "USD": 228,
+   "GBP": 180,
+   "NGN": 342000
   },
-  {
-    "slug": "dusk",
-    "name": "Dusk",
-    "category": "Fragrance",
-    "signal": "Signal I",
-    "arc": "Arc I",
-    "description": "A warm perfume with amber, fig, and cedar. Sample Piece.",
-    "prices": { "CAD": 140, "USD": 105, "GBP": 82, "NGN": 157000 },
-    "colors": ["Original"],
-    "sizes": ["50 ml", "100 ml"]
+  "colors": [
+   "Black",
+   "Oxblood"
+  ],
+  "sizes": [
+   "36",
+   "37",
+   "38",
+   "39",
+   "40",
+   "41",
+   "42"
+  ],
+  "audience": "Men",
+  "type": "Loafers"
+ },
+ {
+  "slug": "dusk",
+  "name": "Dusk",
+  "category": "Fragrance",
+  "signal": "Signal I",
+  "arc": "Arc I",
+  "description": "A warm perfume with amber, fig, and cedar. Sample Piece.",
+  "prices": {
+   "CAD": 140,
+   "USD": 105,
+   "GBP": 82,
+   "NGN": 157000
   },
-  {
-    "slug": "hearth",
-    "name": "Hearth",
-    "category": "Fragrance",
-    "signal": "Signal I",
-    "arc": "Arc II",
-    "description": "A hand poured candle that burns for about forty hours. Sample Piece.",
-    "prices": { "CAD": 58, "USD": 42, "GBP": 33, "NGN": 63000 },
-    "colors": ["Original"],
-    "sizes": ["One size"]
+  "colors": [
+   "Original"
+  ],
+  "sizes": [
+   "50 ml",
+   "100 ml"
+  ],
+  "audience": "Everyone",
+  "type": "Perfume"
+ },
+ {
+  "slug": "hearth",
+  "name": "Hearth",
+  "category": "Fragrance",
+  "signal": "Signal I",
+  "arc": "Arc II",
+  "description": "A hand poured candle that burns for about forty hours. Sample Piece.",
+  "prices": {
+   "CAD": 58,
+   "USD": 42,
+   "GBP": 33,
+   "NGN": 63000
   },
-  {
-    "slug": "margin",
-    "name": "Margin",
-    "category": "Lifestyle and Objects",
-    "signal": "Signal I",
-    "arc": "Arc I",
-    "description": "A hardcover journal with dotted pages and a ribbon marker. Sample Piece.",
-    "prices": { "CAD": 36, "USD": 26, "GBP": 21, "NGN": 39000 },
-    "colors": ["Black", "Ripple Blue", "Blaze Red"],
-    "sizes": ["One size"]
+  "colors": [
+   "Original"
+  ],
+  "sizes": [
+   "One size"
+  ],
+  "audience": "Everyone",
+  "type": "Candles"
+ },
+ {
+  "slug": "margin",
+  "name": "Margin",
+  "category": "Objects",
+  "signal": "Signal I",
+  "arc": "Arc I",
+  "description": "A hardcover journal with dotted pages and a ribbon marker. Sample Piece.",
+  "prices": {
+   "CAD": 36,
+   "USD": 26,
+   "GBP": 21,
+   "NGN": 39000
   },
-  {
-    "slug": "pocket",
-    "name": "Pocket",
-    "category": "Lifestyle and Objects",
-    "signal": "Signal I",
-    "arc": "Arc II",
-    "description": "A soft touch phone case with a raised edge. Sample Piece.",
-    "prices": { "CAD": 42, "USD": 31, "GBP": 24, "NGN": 46000 },
-    "colors": ["Black", "Swirl Purple", "Cream"],
-    "sizes": ["iPhone 16", "iPhone 16 Pro"]
-  }
+  "colors": [
+   "Black",
+   "Ripple Blue",
+   "Blaze Red"
+  ],
+  "sizes": [
+   "One size"
+  ],
+  "audience": "Everyone",
+  "type": "Stationery"
+ },
+ {
+  "slug": "pocket",
+  "name": "Pocket",
+  "category": "Objects",
+  "signal": "Signal I",
+  "arc": "Arc II",
+  "description": "A soft touch phone case with a raised edge. Sample Piece.",
+  "prices": {
+   "CAD": 42,
+   "USD": 31,
+   "GBP": 24,
+   "NGN": 46000
+  },
+  "colors": [
+   "Black",
+   "Swirl Purple",
+   "Cream"
+  ],
+  "sizes": [
+   "iPhone 16",
+   "iPhone 16 Pro"
+  ],
+  "audience": "Everyone",
+  "type": "Tech"
+ }
 ]

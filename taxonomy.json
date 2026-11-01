@@ -1,0 +1,138 @@
+[
+ {
+  "name": "Clothing",
+  "blurb": "Everything you wear, head to toe.",
+  "types": [
+   {
+    "name": "Topwear",
+    "blurb": "Shirts, tees, knits, and everything worn from the waist up."
+   },
+   {
+    "name": "Bottomwear",
+    "blurb": "Trousers, skirts, shorts, and everything worn below the waist."
+   },
+   {
+    "name": "Fullwear",
+    "blurb": "Dresses, jumpsuits, and one-piece looks."
+   },
+   {
+    "name": "Outerwear",
+    "blurb": "Coats and jackets, the final layer."
+   },
+   {
+    "name": "Setwear",
+    "blurb": "Matching Pieces made to be worn together."
+   }
+  ]
+ },
+ {
+  "name": "Footwear",
+  "blurb": "Everything you wear on your feet.",
+  "types": [
+   {
+    "name": "Sneakers",
+    "blurb": "Everyday shoes built for movement."
+   },
+   {
+    "name": "Sandals",
+    "blurb": "Open shoes for warm days."
+   },
+   {
+    "name": "Loafers",
+    "blurb": "Slip-on shoes with polish."
+   },
+   {
+    "name": "Boots",
+    "blurb": "Shoes that rise above the ankle."
+   },
+   {
+    "name": "Heels",
+    "blurb": "Shoes with height."
+   }
+  ]
+ },
+ {
+  "name": "Bags",
+  "blurb": "Everything you carry.",
+  "types": [
+   {
+    "name": "Totes",
+    "blurb": "Roomy bags for everything you need."
+   },
+   {
+    "name": "Crossbody",
+    "blurb": "Bags worn across the body, hands free."
+   },
+   {
+    "name": "Mini",
+    "blurb": "Small bags for the essentials."
+   },
+   {
+    "name": "Travel",
+    "blurb": "Bags made for the journey."
+   }
+  ]
+ },
+ {
+  "name": "Accessories",
+  "blurb": "Everything that finishes a look.",
+  "types": [
+   {
+    "name": "Jewelry",
+    "blurb": "Earrings, necklaces, rings, and bracelets."
+   },
+   {
+    "name": "Scarves",
+    "blurb": "Silk and soft wraps for neck, wrist, or hair."
+   },
+   {
+    "name": "Headwear",
+    "blurb": "Hats, caps, and headbands."
+   },
+   {
+    "name": "Eyewear",
+    "blurb": "Sunglasses and frames."
+   },
+   {
+    "name": "Belts",
+    "blurb": "Belts that define a waist or a line."
+   }
+  ]
+ },
+ {
+  "name": "Fragrance",
+  "blurb": "Everything that scents your world.",
+  "types": [
+   {
+    "name": "Perfume",
+    "blurb": "Signature scents to wear."
+   },
+   {
+    "name": "Body Mist",
+    "blurb": "Light scents for every day."
+   },
+   {
+    "name": "Candles",
+    "blurb": "Scent for the room."
+   }
+  ]
+ },
+ {
+  "name": "Objects",
+  "blurb": "Everything for the life around you.",
+  "types": [
+   {
+    "name": "Stationery",
+    "blurb": "Journals, pens, and paper goods."
+   },
+   {
+    "name": "Tech",
+    "blurb": "Cases and carry for your devices."
+   },
+   {
+    "name": "Home",
+    "blurb": "Pieces for the spaces you live in."
+   }
+  ]
+ }
+]

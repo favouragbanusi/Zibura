@@ -31,10 +31,11 @@ function write(rel, content) {
   fs.writeFileSync(file, content);
 }
 
-const categories = [];
-products.forEach((p) => {
-  if (!categories.includes(p.category)) categories.push(p.category);
-});
+const TAX = JSON.parse(fs.readFileSync(find("taxonomy.json"), "utf8"));
+const COLORS = JSON.parse(fs.readFileSync(find("colors.json"), "utf8"));
+const AUDIENCES = ["Women", "Men", "Everyone"];
+const categories = TAX.map((c) => c.name);
+const countIn = (fn) => products.filter(fn).length;
 
 // Splits a headline into words so each word can rise into place.
 function words(text) {
@@ -75,7 +76,7 @@ function zcard() {
   <div class="z-tag">YOUR EXPRESSION, YOUR WORLD.</div>
   <img class="z-mark" src="/assets/logo-icon-navy.png" alt="" width="434" height="436">
   <div class="z-issued">ISSUED BY ZI REPUBLIC<br>MINISTRY OF ZI INTERIOR</div>
-  <div class="z-photo"><img src="/assets/logo-icon-navy.png" alt="" width="434" height="436"></div>
+  <div class="z-photo"><span>YOUR PORTRAIT</span></div>
   <div class="z-lab" style="top:calc(var(--u)*187);left:calc(var(--u)*390)">NAME</div><div class="z-box" style="top:calc(var(--u)*213);left:calc(var(--u)*394);width:calc(var(--u)*482)"><span>YOUR NAME</span></div>
   <div class="z-lab" style="top:calc(var(--u)*301);left:calc(var(--u)*390)">ID NUMBER</div><div class="z-box" style="top:calc(var(--u)*328);left:calc(var(--u)*394);width:calc(var(--u)*482)"><span>ZIYYMM000000</span></div>
   <div class="z-lab" style="top:calc(var(--u)*414);left:calc(var(--u)*390)">STATUS</div><div class="z-box" style="top:calc(var(--u)*442);left:calc(var(--u)*394);width:calc(var(--u)*482)"><span>ZI RESIDENT</span></div>
@@ -96,6 +97,21 @@ function flipCard() {
   <span class="hint">Click to turn it over</span>
 </div>`;
 }
+
+const MEGA = `<div class="mega" id="mega">
+  <div class="mega-grid">
+    <div class="mega-col">
+      <a class="mega-h" href="/shop/">Every Piece</a>
+      ${AUDIENCES.map((a) => `<a href="/shop/?audience=${a}">${a}</a>`).join("")}
+    </div>
+${TAX.map(
+  (c) => `    <div class="mega-col">
+      <a class="mega-h" href="/shop/?category=${encodeURIComponent(c.name)}">${esc(c.name)}</a>
+${c.types.map((t) => `      <a href="/shop/?category=${encodeURIComponent(c.name)}&amp;type=${encodeURIComponent(t.name)}">${esc(t.name)}</a>`).join("\n")}
+    </div>`
+).join("\n")}
+  </div>
+</div>`;
 
 function layout({ title, description, page, body }) {
   return `<!doctype html>
@@ -118,7 +134,7 @@ function layout({ title, description, page, body }) {
 <header class="site-header" id="top">
   <div class="wrap">
     <nav class="nav" aria-label="Main">
-      <a href="/shop/">Shop</a>
+      <div class="has-mega"><a href="/shop/">Shop</a>${MEGA}</div>
       <a href="/brand/">Zi Republic</a>
       <a href="/note/">From the founder</a>
     </nav>
@@ -146,15 +162,17 @@ ${body}
       <div>
         <h3>Shop</h3>
         <a href="/shop/">Every Piece</a>
+${AUDIENCES.map((a) => `        <a href="/shop/?audience=${a}">${a}</a>`).join("\n")}
 ${categories.map((c) => `        <a href="/shop/?category=${encodeURIComponent(c)}">${esc(c)}</a>`).join("\n")}
       </div>
       <div>
         <h3>Zi Republic</h3>
         <a href="/brand/">The world</a>
+        <a href="/brand/#provinces">The provinces</a>
+        <a href="/brand/#calendar">The calendar</a>
         <a href="/note/">From the founder</a>
         <a href="/zi-card/">The Zi Card</a>
         <a href="/waitlist/" data-open-waitlist>Join the waitlist</a>
-        <a href="/cart/">Cart</a>
       </div>
       <div>
         <h3>The Embassy</h3>
@@ -173,15 +191,15 @@ ${MODAL}
 
 function card(p) {
   return `<a class="card" href="/piece/${esc(p.slug)}/">
-  <div class="plate"><img class="mark" src="/assets/logo-icon-navy.png" alt="" width="434" height="436"></div>
-  <div class="info"><span class="nm">${esc(p.name)}</span><span class="price" data-price-for="${esc(p.slug)}"></span><span class="cat">${esc(p.category)}</span></div>
+  <div class="plate"></div>
+  <div class="info"><span class="nm">${esc(p.name)}</span><span class="price" data-price-for="${esc(p.slug)}"></span><span class="cat">${esc(p.type)}</span><span class="rate" data-rating-for="${esc(p.slug)}"></span></div>
 </a>`;
 }
 
 fs.rmSync(dist, { recursive: true, force: true });
 fs.mkdirSync(dist, { recursive: true });
 
-const TICK = Array.from({ length: 5 }, () => `<li>Your expression, your world.</li><li class="gl"><img src="/assets/logo-icon-navy.png" alt="" width="434" height="436"></li>`).join("");
+const TICK = Array.from({ length: 5 }, () => `<li>Your expression, your world.</li><li class="gl"></li>`).join("");
 
 // Home
 write(
@@ -192,8 +210,9 @@ write(
     page: "home",
     body: `<main>
 <section class="hero" data-hero>
-  <img class="z z1" src="/assets/logo-icon-navy.png" alt="" width="434" height="436" data-depth="30">
-  <img class="z z2" src="/assets/logo-icon-sky.png" alt="" width="434" height="436" data-depth="-18">
+  <span class="orb o1" data-depth="34"></span>
+  <span class="orb o2" data-depth="-22"></span>
+  <span class="orb o3" data-depth="14"></span>
   <div class="center">
     <h1 class="display rise">${words("Your expression, your world.")}</h1>
     <p class="lede fade">Step into Zi Republic, where every Piece is another way of saying exactly who you are.</p>
@@ -215,21 +234,28 @@ write(
     </div>
   </div>
   <div class="rail" data-rail-track>
-${products.slice(0, 8).map((p) => card(p)).join("\n")}
+${products.slice(0, 8).map(card).join("\n")}
   </div>
   <div class="wrap" style="margin-top:36px"><a class="text-link" href="/shop/">See every Piece</a></div>
 </section>
 
-<section class="section">
+<section class="section" style="padding-top:0">
+  <div class="wrap">
+    <div class="section-head" data-reveal><h2>Who are you dressing?</h2></div>
+    <div class="who" data-reveal>
+${AUDIENCES.map((a) => `      <a href="/shop/?audience=${a}"><span>${a}</span><small>${countIn((p) => p.audience === a || p.audience === "Everyone")} Pieces</small></a>`).join("\n")}
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0">
   <div class="wrap">
     <div class="section-head" data-reveal><h2>Find your way in</h2></div>
     <div class="cats" data-cats>
-${categories
-  .map((c) => {
-    const n = products.filter((p) => p.category === c).length;
-    return `      <a href="/shop/?category=${encodeURIComponent(c)}" data-count="${n} ${n === 1 ? "Piece" : "Pieces"}">${esc(c)}</a>`;
-  })
-  .join("\n")}
+${TAX.map((c) => {
+  const n = countIn((p) => p.category === c.name);
+  return `      <a href="/shop/?category=${encodeURIComponent(c.name)}" data-count="${n} ${n === 1 ? "Piece" : "Pieces"}">${esc(c.name)}</a>`;
+}).join("\n")}
     </div>
   </div>
 </section>
@@ -245,9 +271,9 @@ ${categories
   <div class="wrap split">
     <div data-reveal>${flipCard()}</div>
     <div data-reveal>
-      <h2 class="display">Your passport to the republic.</h2>
-      <p class="lead">One card opens the door to standing, to Zillar, and to experiences money alone cannot buy.</p>
-      <p style="margin-top:32px"><a class="btn light" href="/zi-card/">Claim your Zi Card</a></p>
+      <h2 class="display">Residency is earned.</h2>
+      <p class="lead">Apply for your Zi Card and the Ministry of Zi Interior will take a look. Approved applicants receive standing, Zillar, and experiences money alone cannot buy.</p>
+      <p style="margin-top:32px"><a class="btn light" href="/zi-card/">Apply for your Zi Card</a></p>
     </div>
   </div>
 </section>
@@ -257,12 +283,17 @@ ${categories
 
 // Brand
 const PROVINCES = [
-  ["Ripple", "the capital"],
-  ["Glow", ""],
-  ["Blaze", ""],
-  ["Bloom", ""],
-  ["Dash", ""],
-  ["Swirl", ""]
+  ["Ripple", "Blue", "#111c44", "The capital. Composed, curious, magnetic.", "Ripple is the calm at the center of the republic. It is where ideas gather before they move, and where every big wave begins as one small ring in still water.", ["Composed", "Curious", "Magnetic"]],
+  ["Glow", "Yellow", "#ffce1b", "Warm, generous, impossible to miss.", "Glow walks into a room and the room remembers it. Generous with attention and quick with joy, Glow turns every gathering into an occasion.", ["Warm", "Generous", "Radiant"]],
+  ["Blaze", "Red", "#960018", "Bold, certain, unapologetic.", "Blaze says it first and says it loudest. Decisions come fast, taste comes strong, and apologies never come at all.", ["Bold", "Certain", "Fearless"]],
+  ["Bloom", "Green", "#3a5a54", "Patient, rooted, always growing.", "Bloom is soft on the surface and deeply rooted underneath. It takes its time, and it is always becoming something new.", ["Patient", "Grounded", "Growing"]],
+  ["Dash", "Orange", "#ff7900", "Quick, playful, already on to the next thing.", "Dash is mid-motion at all times. Ideas arrive fast, plans change faster, and the party is wherever Dash is headed.", ["Quick", "Playful", "Restless"]],
+  ["Swirl", "Purple", "#684787", "Dreamy, layered, a little mysterious.", "Swirl holds many versions of itself at once. Every look has a second meaning, and every answer opens another question.", ["Dreamy", "Layered", "Mysterious"]]
+];
+const CALENDAR = [
+  ["Founding Day", "The republic's birthday. One day each year to celebrate how it all began."],
+  ["Ziesta", "The republic's holiday. A day set aside to slow down, gather, and dress for joy."],
+  ["Signal Day", "The day a new Signal opens and the republic enters a new era."]
 ];
 write(
   "brand/index.html",
@@ -277,7 +308,7 @@ write(
 </div></section>
 
 <section class="section"><div class="wrap split">
-  <h2 class="display" data-reveal>A whole world, built for you.</h2>
+  <h2 class="display" data-reveal>A whole country, built for you.</h2>
   <div class="prose" data-reveal>
     <p class="big">Zi Republic is where everything we create lives.</p>
     <p>We open it to you in Signals, creative eras that begin when the vision is ready and end when it has been fully expressed. Each Signal holds Arcs, full collections with a story of their own.</p>
@@ -293,11 +324,27 @@ write(
   </div>
 </div></section>
 
-<section class="section" style="padding-top:0"><div class="wrap">
-  <div class="section-head" data-reveal><h2>Six provinces, one republic</h2></div>
-  <ul class="dotlist" data-reveal>
-${PROVINCES.map(([n, r]) => `    <li>${n}${r ? ` <span class="role">${r}</span>` : ""}</li>`).join("\n")}
-  </ul>
+<section class="section" id="provinces" style="padding-top:0"><div class="wrap">
+  <div class="section-head" data-reveal><h2>Six provinces, six personalities</h2><span class="small">Find your home province</span></div>
+  <div class="provinces" data-reveal>
+${PROVINCES.map(
+  ([n, c, hex, line, note, traits]) => `    <article class="province" tabindex="0" style="--pc:${hex}">
+      <span class="pdot"></span>
+      <div class="pbody">
+        <h3>${n}</h3>
+        <p class="pline">${line}</p>
+        <div class="pmore"><p>${note}</p><ul>${traits.map((t) => `<li>${t}</li>`).join("")}</ul></div>
+      </div>
+    </article>`
+).join("\n")}
+  </div>
+</div></section>
+
+<section class="section" id="calendar" style="padding-top:0"><div class="wrap split">
+  <h2 class="display" data-reveal>The calendar of the republic.</h2>
+  <dl class="plain-list" data-reveal>
+${CALENDAR.map(([n, d]) => `    <div><dt>${n}</dt><dd>${d}</dd><span class="tag-soon">Date announced soon</span></div>`).join("\n")}
+  </dl>
 </div></section>
 
 <section class="section" style="padding-top:0"><div class="wrap split">
@@ -312,7 +359,7 @@ ${PROVINCES.map(([n, r]) => `    <li>${n}${r ? ` <span class="role">${r}</span>`
 <section class="section" style="padding-top:0"><div class="wrap">
   <div class="section-head" data-reveal><h2>Everything you reach for</h2></div>
   <ul class="world-list" data-reveal>
-    <li>Ready to Wear</li><li>Accessories</li><li>Bags and Footwear</li><li>Fragrance</li><li>Lifestyle and Objects</li>
+${TAX.map((c) => `    <li><a href="/shop/?category=${encodeURIComponent(c.name)}">${esc(c.name)}</a></li>`).join("\n")}
   </ul>
 </div></section>
 
@@ -351,29 +398,29 @@ write(
   "zi-card/index.html",
   layout({
     title: "The Zi Card | Zibura",
-    description: "The Zi Card is your passport into Zi Republic.",
+    description: "Apply for the Zi Card, your passport into Zi Republic.",
     page: "zicard",
     body: `<main>
 <section class="page-head"><div class="wrap">
-  <h1 class="display rise">${words("Your passport to Zi Republic.")}</h1>
-  <p class="fade">Apply once, and in two days the republic has a card with your name on it.</p>
+  <h1 class="display rise">${words("Earn your place in Zi Republic.")}</h1>
+  <p class="fade">Residency is by application. Show us who you are, and the Ministry of Zi Interior will take it from there.</p>
 </div></section>
 <section class="section" style="padding-top:clamp(16px,3vw,40px)"><div class="wrap split">
   <div data-reveal>${flipCard()}</div>
   <div data-reveal>
     <ol class="steps">
-      <li><div><b>Create your account.</b><span>Your home inside the republic.</span></div></li>
-      <li><div><b>Apply with your portrait.</b><span>Show us your face and your name. We take it from there.</span></div></li>
-      <li><div><b>Collect your card.</b><span>Come back in two days. It will be waiting in your account, ready to download and carry everywhere.</span></div></li>
+      <li><div><b>Create your account.</b><span>Your first step into the republic.</span></div></li>
+      <li><div><b>Upload your portrait and apply.</b><span>Every application is read by the Ministry of Zi Interior.</span></div></li>
+      <li><div><b>Check back in two days.</b><span>If you are approved, your Zi Card will be waiting in your account, ready to download and carry everywhere.</span></div></li>
     </ol>
     <p style="margin-top:40px"><a class="btn" href="#" aria-disabled="true">Applications open soon</a></p>
-    <p class="small" style="margin-top:16px">Want the first word? <a href="/waitlist/" data-open-waitlist>Join the waitlist</a>.</p>
+    <p class="small" style="margin-top:16px">Want first word when they open? <a href="/waitlist/" data-open-waitlist>Join the waitlist</a>.</p>
   </div>
 </div></section>
 <section class="section navy-band"><div class="wrap split">
-  <h2 class="display" data-reveal>Arrive as a Resident. Become a Zitizen.</h2>
+  <h2 class="display" data-reveal>Arrive as a Resident. Earn your way to Zitizen.</h2>
   <dl class="plain-list light" data-reveal>
-    <div><dt>Zi Resident</dt><dd>Your way in. Every card holder begins here.</dd></div>
+    <div><dt>Zi Resident</dt><dd>Your way in. Every approved applicant begins here.</dd></div>
     <div><dt>Zitizen</dt><dd>The inner circle, earned by how you show up.</dd></div>
     <div><dt>Zillar</dt><dd>The republic's own currency, earned and spent your way.</dd></div>
   </dl>
@@ -393,7 +440,13 @@ write(
   <div class="photo" data-reveal><img src="/assets/ruova.jpg" alt="Ruova, founder of Zibura" width="1000" height="1500"></div>
   <div class="body">
     <h1 class="display rise" style="font-size:clamp(36px,5vw,72px)">${words("A letter from Ruova.")}</h1>
-    <p class="fade">Ruova is putting the words together. Come back soon.</p>
+    <div class="letter fade">
+      <p>Most of us carry more than one version of ourselves. The one who dresses for the day, the one who shows up at night, the one only close friends ever meet. I wanted a world where every one of them is welcome.</p>
+      <p>Zibura asks one thing of clothing: hold all of me. My mood, my personality, my story, all at once.</p>
+      <p>So we built a country around the answer. Zi Republic has provinces, Signals, Arcs, a currency of its own, and a card that makes you one of us. Every Piece is a small part of that country, made to be worn out loud.</p>
+      <p>Complexity is not contradiction. You can be soft and fierce, quiet and loud, playful and exact, and still be entirely yourself. Wear every version.</p>
+      <p>Welcome to Zi Republic. Your expression, your world.</p>
+    </div>
     <p class="sign">Ruova</p>
   </div>
 </main>`
@@ -409,53 +462,121 @@ write(
     page: "shop",
     body: `<main class="wrap">
 <div class="page-head" style="padding-left:0;padding-right:0"><h1 class="display rise">${words("Shop the republic.")}</h1><p class="fade">Signal I, Arc I. Choose your color, choose your size, make it yours.</p></div>
-<div class="filters" id="filters">
-  <input type="search" id="search" placeholder="Search Pieces" aria-label="Search Pieces">
+<div class="toolbar">
+  <button type="button" class="btn line small-btn" id="open-filters">Filters</button>
+  <p class="count" id="count" role="status"></p>
+  <label class="sort">Sort <select id="sort" aria-label="Sort Pieces">
+    <option value="new">Newest</option>
+    <option value="rated">Top rated</option>
+    <option value="low">Price, low to high</option>
+    <option value="high">Price, high to low</option>
+    <option value="az">Name, A to Z</option>
+  </select></label>
 </div>
-<div class="grid" id="grid"></div>
+<div class="chips" id="chips"></div>
+<div class="shop-layout">
+  <aside class="filters-pane" id="filters-pane" aria-label="Filters">
+    <div class="pane-head"><strong>Filters</strong><button type="button" class="close-pane" id="close-filters" aria-label="Close filters">&times;</button></div>
+    <div id="facets"></div>
+    <div class="pane-foot"><button type="button" class="btn" id="apply-filters">Show results</button></div>
+  </aside>
+  <div>
+    <div class="grid shop-grid" id="grid"></div>
+  </div>
+</div>
 <div style="height:clamp(56px,8vw,110px)"></div>
 </main>`
   })
 );
 
 // Piece pages
+function stars(avg) {
+  return `<span class="stars" style="--p:${Math.round((avg / 5) * 100)}%" aria-hidden="true">★★★★★</span>`;
+}
 products.forEach((p) => {
   const colors = p.colors
-    .map((c, k) => `<label><input type="radio" name="color" value="${esc(c)}"${k === 0 ? " checked" : ""}><span>${esc(c)}</span></label>`)
+    .map(
+      (c, k) =>
+        `<label class="swatch"><input type="radio" name="color" value="${esc(c)}"${k === 0 ? " checked" : ""}><span class="dot" style="background:${COLORS[c] || "#eef6ff"}" title="${esc(c)}"></span><span class="sr">${esc(c)}</span></label>`
+    )
     .join("\n        ");
   const sizes = p.sizes
     .map((s, k) => `<label><input type="radio" name="size" value="${esc(s)}"${k === 0 ? " checked" : ""}><span>${esc(s)}</span></label>`)
     .join("\n        ");
+  const related = products.filter((q) => q.slug !== p.slug && q.category === p.category).slice(0, 4);
+  const more = (related.length ? related : products.filter((q) => q.slug !== p.slug).slice(0, 4)).map(card).join("\n");
   write(
     `piece/${p.slug}/index.html`,
     layout({
       title: `${p.name} | Zibura`,
       description: p.description,
       page: "piece",
-      body: `<main class="wrap piece" data-slug="${esc(p.slug)}">
-  <div class="plate"><img class="mark" src="/assets/logo-icon-navy.png" alt="" width="434" height="436"></div>
-  <div>
-    <p class="crumb"><a href="/shop/?category=${encodeURIComponent(p.category)}">${esc(p.category)}</a>, ${esc(p.signal)}, ${esc(p.arc)}</p>
-    <h1 class="display">${esc(p.name)}</h1>
-    <span class="price" data-price-for="${esc(p.slug)}"></span>
-    <p class="desc">${esc(p.description)}</p>
-    <form id="add-form">
-      <fieldset class="field">
-        <legend>Color</legend>
-        <div class="opts">
+      body: `<main class="wrap piece-page" data-slug="${esc(p.slug)}">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/shop/">Shop</a> <span>/</span> <a href="/shop/?audience=${esc(p.audience)}">${esc(p.audience)}</a> <span>/</span> <a href="/shop/?category=${encodeURIComponent(p.category)}">${esc(p.category)}</a> <span>/</span> <a href="/shop/?category=${encodeURIComponent(p.category)}&amp;type=${encodeURIComponent(p.type)}">${esc(p.type)}</a></nav>
+  <div class="piece">
+    <div class="gallery" aria-label="Photos of ${esc(p.name)}">
+      <div class="ph big"></div><div class="ph"></div><div class="ph"></div><div class="ph"></div>
+    </div>
+    <div class="buy">
+      <p class="crumb">${esc(p.signal)}, ${esc(p.arc)}</p>
+      <h1 class="display">${esc(p.name)}</h1>
+      <a class="rate-line" href="#reviews" data-rating-for="${esc(p.slug)}" data-long="1"></a>
+      <span class="price" data-price-for="${esc(p.slug)}"></span>
+      <p class="desc">${esc(p.description)}</p>
+      <form id="add-form">
+        <fieldset class="field">
+          <legend>Color: <b id="color-name">${esc(p.colors[0])}</b></legend>
+          <div class="opts swatches">
         ${colors}
-        </div>
-      </fieldset>
-      <fieldset class="field">
-        <legend>Size</legend>
-        <div class="opts">
+          </div>
+        </fieldset>
+        <fieldset class="field">
+          <legend>Size</legend>
+          <div class="opts">
         ${sizes}
-        </div>
-      </fieldset>
-      <button class="btn" type="submit">Add to cart</button>
-      <div class="msg" id="msg" role="status"></div>
-    </form>
+          </div>
+        </fieldset>
+        <button class="btn wide" type="submit">Add to cart</button>
+        <div class="msg" id="msg" role="status"></div>
+      </form>
+    </div>
   </div>
+
+  <section class="reviews" id="reviews" aria-labelledby="rev-h">
+    <div class="rev-grid">
+      <div>
+        <h2 class="display" id="rev-h">Reviews</h2>
+        <div id="rev-summary" class="rev-summary"></div>
+      </div>
+      <div>
+        <div id="rev-list" class="rev-list"></div>
+        <form id="review-form" class="review-form" novalidate>
+          <h3>Share your take</h3>
+          <fieldset class="rate-input">
+            <legend>Your rating</legend>
+            <div class="rate-stars">
+              ${[5, 4, 3, 2, 1].map((n) => `<input type="radio" id="r${n}" name="rating" value="${n}"><label for="r${n}" title="${n} out of 5">★</label>`).join("")}
+            </div>
+          </fieldset>
+          <div class="form-grid">
+            <div class="full"><label for="rv-name">Your name</label><input id="rv-name" name="name" autocomplete="name" maxlength="60"></div>
+            <div class="full"><label for="rv-title">Headline</label><input id="rv-title" name="title" maxlength="100"></div>
+            <div class="full"><label for="rv-body">Your comment</label><textarea id="rv-body" name="body" rows="5" maxlength="1500"></textarea></div>
+            <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+          </div>
+          <button class="btn" type="submit">Post my review</button>
+          <div class="msg" id="rv-msg" role="status"></div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section class="more">
+    <div class="section-head"><h2>More from ${esc(p.category)}</h2><a class="text-link" href="/shop/?category=${encodeURIComponent(p.category)}">See all</a></div>
+    <div class="grid">
+${more}
+    </div>
+  </section>
 </main>`
     })
   );
@@ -485,7 +606,6 @@ write(
     description: "Your payment went through.",
     page: "thanks",
     body: `<main class="thanks">
-<img src="/assets/logo-icon-navy.png" alt="" width="434" height="436">
 <h1 class="display rise">${words("Welcome to the republic.")}</h1>
 <p class="fade">Your payment went through. Your Pieces are now part of your world.</p>
 <a class="btn" href="/shop/">Keep exploring</a>
@@ -493,14 +613,13 @@ write(
   })
 );
 
-// Assets and catalog
+// Assets and data
 write("assets/styles.css", fs.readFileSync(find("styles.css")));
 write("assets/app.js", fs.readFileSync(find("app.js")));
 for (const f of [
-  "logo-icon-navy.png",
-  "logo-icon-sky.png",
   "logo-wordmark-sky.png",
   "logo-wordmark-navy.png",
+  "logo-icon-navy.png",
   "favicon.png",
   "ruova.jpg",
   "zi-card-seal.png",
@@ -511,5 +630,7 @@ for (const f of [
 }
 write("_worker.js", fs.readFileSync(find("_worker.js")));
 write("catalog.json", JSON.stringify(products));
+write("taxonomy.json", JSON.stringify(TAX));
+write("colors.json", JSON.stringify(COLORS));
 
 console.log("Built " + products.length + " Pieces into dist/");

@@ -74,52 +74,213 @@
 
   function cardHtml(p) {
     return '<a class="card" href="/piece/' + esc(p.slug) + '/">' +
-      '<div class="plate"><img class="mark" src="/assets/logo-icon-navy.png" alt="" width="434" height="436"></div>' +
+      '<div class="plate"></div>' +
       '<div class="info"><span class="nm">' + esc(p.name) + '</span>' +
       '<span class="price" data-price-for="' + esc(p.slug) + '"></span>' +
-      '<span class="cat">' + esc(p.category) + '</span></div></a>';
+      '<span class="cat">' + esc(p.type) + '</span>' +
+      '<span class="rate" data-rating-for="' + esc(p.slug) + '"></span></div></a>';
   }
+
+  /* Ratings shown on cards and Piece pages */
+  var ratings = {};
+  function starsHtml(avg) {
+    return '<span class="stars" style="--p:' + Math.round((avg / 5) * 100) + '%" aria-hidden="true">★★★★★</span>';
+  }
+  function paintRatings() {
+    $all("[data-rating-for]").forEach(function (el) {
+      var r = ratings[el.getAttribute("data-rating-for")];
+      var long = el.getAttribute("data-long");
+      if (r && r.count > 0) {
+        var txt = r.avg.toFixed(1) + " (" + r.count + ")";
+        if (long) txt = r.avg.toFixed(1) + " out of 5, " + r.count + (r.count === 1 ? " review" : " reviews");
+        el.innerHTML = starsHtml(r.avg) + "<span>" + txt + "</span>";
+      } else {
+        el.innerHTML = long ? "<span>Be the first to review</span>" : "";
+      }
+    });
+  }
+  function loadRatings() {
+    if (!$("[data-rating-for]") && document.body.getAttribute("data-page") !== "shop") return Promise.resolve();
+    return fetch("/api/ratings").then(function (r) { return r.json(); }).then(function (d) { ratings = d || {}; paintRatings(); }).catch(function () {});
+  }
+
+  var SIZE_ORDER = ["XS", "S", "M", "L", "XL", "One size"];
+  function sizeRank(s) {
+    var i = SIZE_ORDER.indexOf(s);
+    if (i !== -1) return i;
+    var n = parseFloat(s);
+    return isNaN(n) ? 99 : 20 + n;
+  }
+  function uniq(list) { return list.filter(function (v, i) { return list.indexOf(v) === i; }); }
 
   /* Shop page */
-  function initShop() {
+  function initShop(tax, colorMap) {
     var grid = $("#grid");
-    var filters = $("#filters");
-    var search = $("#search");
+    var facets = $("#facets");
+    var chips = $("#chips");
+    var count = $("#count");
+    var sortSel = $("#sort");
+    var pane = $("#filters-pane");
+
+    var st = { audience: "", category: "", type: "", colors: [], sizes: [], min: "", max: "", sort: "new", q: "" };
     var params = new URLSearchParams(location.search);
-    var active = params.get("category") || "All";
-    var cats = ["All"];
-    catalog.forEach(function (p) { if (cats.indexOf(p.category) === -1) cats.push(p.category); });
-    if (cats.indexOf(active) === -1) active = "All";
+    st.audience = params.get("audience") || "";
+    st.category = params.get("category") || "";
+    st.type = params.get("type") || "";
+    st.colors = (params.get("color") || "").split(",").filter(Boolean);
+    st.sizes = (params.get("size") || "").split(",").filter(Boolean);
+    st.min = params.get("min") || "";
+    st.max = params.get("max") || "";
+    st.sort = params.get("sort") || "new";
+    st.q = params.get("q") || "";
+    sortSel.value = st.sort;
+
+    var allColors = uniq([].concat.apply([], catalog.map(function (p) { return p.colors; }))).filter(function (c) { return colorMap[c]; });
+    var allSizes = uniq([].concat.apply([], catalog.map(function (p) { return p.sizes; }))).sort(function (a, b) { return sizeRank(a) - sizeRank(b); });
+
+    function sync() {
+      var q = new URLSearchParams();
+      if (st.audience) q.set("audience", st.audience);
+      if (st.category) q.set("category", st.category);
+      if (st.type) q.set("type", st.type);
+      if (st.colors.length) q.set("color", st.colors.join(","));
+      if (st.sizes.length) q.set("size", st.sizes.join(","));
+      if (st.min) q.set("min", st.min);
+      if (st.max) q.set("max", st.max);
+      if (st.sort !== "new") q.set("sort", st.sort);
+      if (st.q) q.set("q", st.q);
+      var s = q.toString();
+      try { history.replaceState(null, "", location.pathname + (s ? "?" + s : "")); } catch (e) {}
+    }
+
+    function matches(p) {
+      if (st.audience && p.audience !== st.audience && p.audience !== "Everyone") return false;
+      if (st.category && p.category !== st.category) return false;
+      if (st.type && p.type !== st.type) return false;
+      if (st.colors.length && !p.colors.some(function (c) { return st.colors.indexOf(c) !== -1; })) return false;
+      if (st.sizes.length && !p.sizes.some(function (s) { return st.sizes.indexOf(s) !== -1; })) return false;
+      var price = p.prices[currency];
+      if (st.min !== "" && price < parseFloat(st.min)) return false;
+      if (st.max !== "" && price > parseFloat(st.max)) return false;
+      if (st.q) {
+        var hay = (p.name + " " + p.category + " " + p.type + " " + p.audience + " " + p.colors.join(" ") + " " + p.description).toLowerCase();
+        if (hay.indexOf(st.q.toLowerCase()) === -1) return false;
+      }
+      return true;
+    }
+
+    function sorted(list) {
+      var l = list.slice();
+      if (st.sort === "low") l.sort(function (a, b) { return a.prices[currency] - b.prices[currency]; });
+      if (st.sort === "high") l.sort(function (a, b) { return b.prices[currency] - a.prices[currency]; });
+      if (st.sort === "az") l.sort(function (a, b) { return a.name.localeCompare(b.name); });
+      if (st.sort === "rated") l.sort(function (a, b) {
+        var ra = ratings[a.slug] ? ratings[a.slug].avg : 0, rb = ratings[b.slug] ? ratings[b.slug].avg : 0;
+        return rb - ra;
+      });
+      return l;
+    }
+
+    function toggle(arr, v) { var i = arr.indexOf(v); if (i === -1) arr.push(v); else arr.splice(i, 1); }
+
+    function renderFacets() {
+      var h = "";
+      h += '<div class="facet"><div class="search"><input type="search" id="f-q" placeholder="Search Pieces" value="' + esc(st.q) + '" aria-label="Search Pieces"></div></div>';
+      h += '<div class="facet"><h3>Shop for</h3>';
+      ["", "Women", "Men", "Everyone"].forEach(function (a) {
+        h += '<button type="button" class="opt' + (st.audience === a ? " on" : "") + '" data-aud="' + a + '">' + (a || "All") + "</button>";
+      });
+      h += "</div>";
+      h += '<div class="facet"><h3>Category</h3>';
+      h += '<button type="button" class="opt' + (!st.category ? " on" : "") + '" data-cat="">All categories</button>';
+      tax.forEach(function (c) {
+        var on = st.category === c.name;
+        h += '<button type="button" class="opt' + (on ? " on" : "") + '" data-cat="' + esc(c.name) + '">' + esc(c.name) + "</button>";
+        h += '<div class="sub">';
+        c.types.forEach(function (t) {
+          h += '<button type="button" class="opt' + (on && st.type === t.name ? " on" : "") + '" data-cat="' + esc(c.name) + '" data-type="' + esc(t.name) + '" title="' + esc(t.blurb) + '">' + esc(t.name) + "</button>";
+        });
+        h += "</div>";
+      });
+      h += "</div>";
+      h += '<div class="facet"><h3>Color</h3><div class="row">';
+      allColors.forEach(function (c) {
+        h += '<button type="button" class="sw' + (st.colors.indexOf(c) !== -1 ? " on" : "") + '" data-color="' + esc(c) + '" style="background:' + colorMap[c] + '" title="' + esc(c) + '" aria-label="' + esc(c) + '" aria-pressed="' + (st.colors.indexOf(c) !== -1) + '"></button>';
+      });
+      h += "</div></div>";
+      h += '<div class="facet"><h3>Size</h3><div class="row">';
+      allSizes.forEach(function (s) {
+        h += '<button type="button" class="pill' + (st.sizes.indexOf(s) !== -1 ? " on" : "") + '" data-size="' + esc(s) + '" aria-pressed="' + (st.sizes.indexOf(s) !== -1) + '">' + esc(s) + "</button>";
+      });
+      h += "</div></div>";
+      h += '<div class="facet"><h3>Price <span>' + esc(currency) + '</span></h3><div class="price-row"><input type="number" min="0" inputmode="numeric" id="f-min" placeholder="Min" value="' + esc(st.min) + '" aria-label="Minimum price"><span>to</span><input type="number" min="0" inputmode="numeric" id="f-max" placeholder="Max" value="' + esc(st.max) + '" aria-label="Maximum price"></div></div>';
+      facets.innerHTML = h;
+    }
+
+    function renderChips() {
+      var h = "";
+      function chip(label, key, val) { h += '<button type="button" class="chip" data-clear="' + key + '" data-val="' + esc(val || "") + '">' + esc(label) + "</button>"; }
+      if (st.audience) chip(st.audience, "audience");
+      if (st.category) chip(st.category, "category");
+      if (st.type) chip(st.type, "type");
+      st.colors.forEach(function (c) { chip(c, "color", c); });
+      st.sizes.forEach(function (s) { chip("Size " + s, "size", s); });
+      if (st.min || st.max) chip((st.min || "0") + " to " + (st.max || "any") + " " + currency, "price");
+      if (st.q) chip("“" + st.q + "”", "q");
+      if (h) h += '<button type="button" class="chip clear" data-clear="all">Clear all</button>';
+      chips.innerHTML = h;
+    }
 
     function render() {
-      var q = search.value.trim().toLowerCase();
-      var list = catalog.filter(function (p) {
-        var okCat = active === "All" || p.category === active;
-        var okQ = !q || (p.name + " " + p.category + " " + p.arc).toLowerCase().indexOf(q) !== -1;
-        return okCat && okQ;
-      });
-      grid.innerHTML = list.length
-        ? list.map(cardHtml).join("")
-        : '<p class="empty">Nothing matches that search yet. Try another word, or choose All.</p>';
+      var list = sorted(catalog.filter(matches));
+      count.textContent = list.length + (list.length === 1 ? " Piece" : " Pieces");
+      grid.innerHTML = list.length ? list.map(cardHtml).join("") : '<p class="grid-empty">Nothing matches those filters yet. Loosen one, or clear them all.</p>';
       applyPrices();
+      paintRatings();
+      renderChips();
+      sync();
     }
 
-    function renderFilters() {
-      $all("button", filters).forEach(function (b) { b.remove(); });
-      cats.forEach(function (c) {
-        var b = document.createElement("button");
-        b.type = "button";
-        b.textContent = c;
-        b.setAttribute("aria-pressed", c === active ? "true" : "false");
-        b.addEventListener("click", function () { active = c; renderFilters(); render(); });
-        filters.insertBefore(b, search);
-      });
-    }
+    function refresh() { renderFacets(); render(); }
 
-    search.addEventListener("input", render);
-    renderFilters();
-    render();
+    facets.addEventListener("click", function (e) {
+      var b = e.target.closest("button");
+      if (!b) return;
+      if (b.hasAttribute("data-aud")) st.audience = b.getAttribute("data-aud");
+      else if (b.hasAttribute("data-cat")) { st.category = b.getAttribute("data-cat"); st.type = b.getAttribute("data-type") || ""; }
+      else if (b.hasAttribute("data-color")) toggle(st.colors, b.getAttribute("data-color"));
+      else if (b.hasAttribute("data-size")) toggle(st.sizes, b.getAttribute("data-size"));
+      else return;
+      refresh();
+    });
+    facets.addEventListener("input", function (e) {
+      if (e.target.id === "f-q") { st.q = e.target.value.trim(); render(); }
+      if (e.target.id === "f-min") { st.min = e.target.value; render(); }
+      if (e.target.id === "f-max") { st.max = e.target.value; render(); }
+    });
+    chips.addEventListener("click", function (e) {
+      var b = e.target.closest("button");
+      if (!b) return;
+      var k = b.getAttribute("data-clear"), v = b.getAttribute("data-val");
+      if (k === "all") { st.audience = st.category = st.type = st.min = st.max = st.q = ""; st.colors = []; st.sizes = []; }
+      if (k === "audience") st.audience = "";
+      if (k === "category") { st.category = ""; st.type = ""; }
+      if (k === "type") st.type = "";
+      if (k === "color") toggle(st.colors, v);
+      if (k === "size") toggle(st.sizes, v);
+      if (k === "price") { st.min = ""; st.max = ""; }
+      if (k === "q") st.q = "";
+      refresh();
+    });
+    sortSel.addEventListener("change", function () { st.sort = sortSel.value; render(); });
+    $("#open-filters").addEventListener("click", function () { pane.classList.add("open"); });
+    $("#close-filters").addEventListener("click", function () { pane.classList.remove("open"); });
+    $("#apply-filters").addEventListener("click", function () { pane.classList.remove("open"); });
+
+    shopRefresh = refresh;
+    refresh();
   }
+  var shopRefresh = null;
 
   /* Piece page */
   function initPiece() {
@@ -127,6 +288,10 @@
     var slug = main.getAttribute("data-slug");
     var form = $("#add-form");
     var msg = $("#msg");
+    var colorName = $("#color-name");
+    form.addEventListener("change", function (e) {
+      if (e.target.name === "color" && colorName) colorName.textContent = e.target.value;
+    });
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       var color = form.elements.color.value;
@@ -140,6 +305,67 @@
       if (!found) cart.push({ slug: slug, color: color, size: size, qty: 1 });
       setCart(cart);
       msg.innerHTML = 'In your cart. <a href="/cart/">View cart</a>';
+    });
+    initReviews(slug);
+  }
+
+  function initReviews(slug) {
+    var summary = $("#rev-summary");
+    var list = $("#rev-list");
+    var rform = $("#review-form");
+    var rmsg = $("#rv-msg");
+
+    function date(s) {
+      try { return new Date(s).toLocaleDateString("en", { year: "numeric", month: "long", day: "numeric" }); } catch (e) { return ""; }
+    }
+    function load() {
+      fetch("/api/reviews?slug=" + encodeURIComponent(slug))
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          ratings[slug] = { count: d.count, avg: d.avg };
+          paintRatings();
+          if (!d.count) {
+            summary.innerHTML = '<p class="of">No reviews yet. Yours could be the first.</p>';
+            list.innerHTML = "";
+            return;
+          }
+          var bars = "";
+          for (var n = 5; n >= 1; n--) {
+            var c = d.dist[n - 1];
+            bars += "<div><span>" + n + "★</span><i><b style=\"width:" + Math.round((c / d.count) * 100) + '%"></b></i><span>' + c + "</span></div>";
+          }
+          summary.innerHTML = '<div class="big-num">' + d.avg.toFixed(1) + "</div>" + starsHtml(d.avg) +
+            '<p class="of">' + d.count + (d.count === 1 ? " review" : " reviews") + '</p><div class="bars">' + bars + "</div>";
+          list.innerHTML = d.reviews.map(function (r) {
+            return '<article class="rev">' + starsHtml(r.rating) + "<h3>" + esc(r.title) + "</h3><p>" + esc(r.body) + '</p><p class="who">' + esc(r.name) + ", " + esc(date(r.created_at)) + "</p></article>";
+          }).join("");
+        })
+        .catch(function () {});
+    }
+    load();
+
+    rform.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var checked = rform.querySelector("input[name=rating]:checked");
+      var data = {
+        slug: slug,
+        rating: checked ? checked.value : "",
+        name: rform.elements.name.value,
+        title: rform.elements.title.value,
+        body: rform.elements.body.value,
+        website: rform.elements.website.value
+      };
+      var btn = $("button[type=submit]", rform);
+      btn.disabled = true;
+      rmsg.textContent = "Posting.";
+      fetch("/api/reviews", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(data) })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (d.ok) { rform.reset(); rmsg.textContent = "Thank you. Your review is live."; load(); }
+          else { rmsg.textContent = d.error || "Something went wrong. Please try again."; }
+          btn.disabled = false;
+        })
+        .catch(function () { rmsg.textContent = "Something went wrong. Please try again."; btn.disabled = false; });
     });
   }
 
@@ -392,8 +618,14 @@
       updateCount();
 
       var rerender = null;
-      if (page === "shop") initShop();
+      if (page === "shop") {
+        Promise.all([fetch("/taxonomy.json").then(function (r) { return r.json(); }), fetch("/colors.json").then(function (r) { return r.json(); })]).then(function (m) {
+          initShop(m[0], m[1]);
+          loadRatings();
+        });
+      }
       if (page === "piece") initPiece();
+      if (page !== "shop") loadRatings();
       if (page === "cart") rerender = initCart();
       if (page === "thanks") setCart([]);
       initWaitlist();
@@ -405,6 +637,7 @@
           save(CUR_KEY, currency);
           applyPrices();
           if (rerender) rerender();
+          if (shopRefresh) shopRefresh();
         });
       }
     });
