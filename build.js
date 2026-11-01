@@ -5,7 +5,16 @@ const path = require("path");
 
 const root = __dirname;
 const dist = path.join(root, "dist");
-const products = JSON.parse(fs.readFileSync(path.join(root, "data", "products.json"), "utf8"));
+// Finds a file in the project, whether it sits in the main folder or in a subfolder.
+function find(...candidates) {
+  for (const rel of candidates) {
+    const file = path.join(root, rel);
+    if (fs.existsSync(file)) return file;
+  }
+  throw new Error("Missing file. Looked for: " + candidates.join(", "));
+}
+
+const products = JSON.parse(fs.readFileSync(find("products.json", "data/products.json"), "utf8"));
 
 function esc(s) {
   return String(s)
@@ -218,8 +227,9 @@ write(
 );
 
 // Assets and catalog
-write("assets/styles.css", fs.readFileSync(path.join(root, "src", "styles.css")));
-write("assets/app.js", fs.readFileSync(path.join(root, "src", "app.js")));
+write("assets/styles.css", fs.readFileSync(find("styles.css", "src/styles.css")));
+write("assets/app.js", fs.readFileSync(find("app.js", "src/app.js")));
+write("_worker.js", fs.readFileSync(find("_worker.js")));
 write("catalog.json", JSON.stringify(products));
 
 console.log("Built " + products.length + " Pieces into dist/");
