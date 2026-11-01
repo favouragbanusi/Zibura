@@ -5,6 +5,12 @@ CREATE TABLE IF NOT EXISTS waitlist (
   last TEXT NOT NULL,
   country TEXT NOT NULL,
   city TEXT NOT NULL,
+  birth_day INTEGER,
+  birth_month INTEGER,
+  phone TEXT,
+  email_consent INTEGER NOT NULL DEFAULT 0,
+  sms_consent INTEGER NOT NULL DEFAULT 0,
+  province TEXT,
   created_at TEXT NOT NULL
 );
 
@@ -26,6 +32,8 @@ CREATE TABLE IF NOT EXISTS users (
   last TEXT NOT NULL,
   salt TEXT NOT NULL,
   pass_hash TEXT NOT NULL,
+  birth_day INTEGER,
+  birth_month INTEGER,
   created_at TEXT NOT NULL
 );
 

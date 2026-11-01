@@ -118,20 +118,34 @@
   ]
  },
  {
-  "name": "Objects",
-  "blurb": "Everything for the life around you.",
+  "name": "Lifestyle",
+  "blurb": "Everyday objects for your desk, your devices, and your home.",
   "types": [
    {
     "name": "Stationery",
-    "blurb": "Journals, pens, and paper goods."
+    "blurb": "Notebooks, pens, and paper goods."
    },
    {
-    "name": "Tech",
-    "blurb": "Cases and carry for your devices."
+    "name": "Tech Accessories",
+    "blurb": "Cases, chargers, and cables for your devices."
    },
    {
-    "name": "Home",
-    "blurb": "Pieces for the spaces you live in."
+    "name": "Homeware",
+    "blurb": "Pieces for the rooms you live in."
+   }
+  ]
+ },
+ {
+  "name": "Gifts",
+  "blurb": "Ready to give.",
+  "types": [
+   {
+    "name": "Gift Cards",
+    "blurb": "A balance to spend across the republic."
+   },
+   {
+    "name": "Gift Sets",
+    "blurb": "Pieces chosen to be given together."
    }
   ]
  }

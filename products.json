@@ -24,8 +24,13 @@
    "L",
    "XL"
   ],
-  "audience": "Women",
-  "type": "Outerwear"
+  "audience": [
+   "Women"
+  ],
+  "type": "Outerwear",
+  "material": "Wool",
+  "inStock": true,
+  "isNew": true
  },
  {
   "slug": "meridian",
@@ -52,8 +57,13 @@
    "L",
    "XL"
   ],
-  "audience": "Men",
-  "type": "Bottomwear"
+  "audience": [
+   "Men"
+  ],
+  "type": "Bottomwear",
+  "material": "Cotton",
+  "inStock": true,
+  "isNew": true
  },
  {
   "slug": "tidal",
@@ -80,8 +90,13 @@
    "L",
    "XL"
   ],
-  "audience": "Women",
-  "type": "Fullwear"
+  "audience": [
+   "Women"
+  ],
+  "type": "Fullwear",
+  "material": "Silk",
+  "inStock": true,
+  "isNew": false
  },
  {
   "slug": "ember",
@@ -108,8 +123,13 @@
    "L",
    "XL"
   ],
-  "audience": "Men",
-  "type": "Topwear"
+  "audience": [
+   "Men"
+  ],
+  "type": "Topwear",
+  "material": "Cotton",
+  "inStock": false,
+  "isNew": false
  },
  {
   "slug": "orbit",
@@ -131,8 +151,14 @@
   "sizes": [
    "One size"
   ],
-  "audience": "Everyone",
-  "type": "Jewelry"
+  "audience": [
+   "Women",
+   "Men"
+  ],
+  "type": "Jewelry",
+  "material": "Brass",
+  "inStock": true,
+  "isNew": true
  },
  {
   "slug": "kite",
@@ -155,8 +181,14 @@
   "sizes": [
    "One size"
   ],
-  "audience": "Everyone",
-  "type": "Scarves"
+  "audience": [
+   "Women",
+   "Men"
+  ],
+  "type": "Scarves",
+  "material": "Silk",
+  "inStock": true,
+  "isNew": false
  },
  {
   "slug": "cove",
@@ -179,8 +211,13 @@
   "sizes": [
    "One size"
   ],
-  "audience": "Women",
-  "type": "Crossbody"
+  "audience": [
+   "Women"
+  ],
+  "type": "Crossbody",
+  "material": "Leather",
+  "inStock": true,
+  "isNew": false
  },
  {
   "slug": "stride",
@@ -208,8 +245,13 @@
    "41",
    "42"
   ],
-  "audience": "Men",
-  "type": "Loafers"
+  "audience": [
+   "Men"
+  ],
+  "type": "Loafers",
+  "material": "Leather",
+  "inStock": true,
+  "isNew": false
  },
  {
   "slug": "dusk",
@@ -231,8 +273,14 @@
    "50 ml",
    "100 ml"
   ],
-  "audience": "Everyone",
-  "type": "Perfume"
+  "audience": [
+   "Women",
+   "Men"
+  ],
+  "type": "Perfume",
+  "material": "Glass",
+  "inStock": true,
+  "isNew": true
  },
  {
   "slug": "hearth",
@@ -253,13 +301,19 @@
   "sizes": [
    "One size"
   ],
-  "audience": "Everyone",
-  "type": "Candles"
+  "audience": [
+   "Women",
+   "Men"
+  ],
+  "type": "Candles",
+  "material": "Soy wax",
+  "inStock": true,
+  "isNew": false
  },
  {
   "slug": "margin",
   "name": "Margin",
-  "category": "Objects",
+  "category": "Lifestyle",
   "signal": "Signal I",
   "arc": "Arc I",
   "description": "A hardcover journal with dotted pages and a ribbon marker. Sample Piece.",
@@ -277,13 +331,19 @@
   "sizes": [
    "One size"
   ],
-  "audience": "Everyone",
-  "type": "Stationery"
+  "audience": [
+   "Women",
+   "Men"
+  ],
+  "type": "Stationery",
+  "material": "Paper",
+  "inStock": true,
+  "isNew": false
  },
  {
   "slug": "pocket",
   "name": "Pocket",
-  "category": "Objects",
+  "category": "Lifestyle",
   "signal": "Signal I",
   "arc": "Arc II",
   "description": "A soft touch phone case with a raised edge. Sample Piece.",
@@ -302,7 +362,69 @@
    "iPhone 16",
    "iPhone 16 Pro"
   ],
-  "audience": "Everyone",
-  "type": "Tech"
+  "audience": [
+   "Women",
+   "Men"
+  ],
+  "type": "Tech Accessories",
+  "material": "Silicone",
+  "inStock": true,
+  "isNew": false
+ },
+ {
+  "slug": "zi-gift-card",
+  "name": "Zi Gift Card",
+  "category": "Gifts",
+  "type": "Gift Cards",
+  "signal": "Signal I",
+  "arc": "Arc I",
+  "description": "A balance to spend across the republic. Sample Piece.",
+  "prices": {
+   "CAD": 50,
+   "USD": 40,
+   "GBP": 30,
+   "NGN": 60000
+  },
+  "colors": [
+   "Ripple Blue"
+  ],
+  "sizes": [
+   "One size"
+  ],
+  "audience": [
+   "Women",
+   "Men"
+  ],
+  "material": "Digital",
+  "inStock": true,
+  "isNew": true
+ },
+ {
+  "slug": "signal-gift-set",
+  "name": "Signal Gift Set",
+  "category": "Gifts",
+  "type": "Gift Sets",
+  "signal": "Signal I",
+  "arc": "Arc I",
+  "description": "A scarf and a candle, boxed and ready to give. Sample Piece.",
+  "prices": {
+   "CAD": 120,
+   "USD": 90,
+   "GBP": 70,
+   "NGN": 140000
+  },
+  "colors": [
+   "Cream"
+  ],
+  "sizes": [
+   "One size"
+  ],
+  "audience": [
+   "Women",
+   "Men"
+  ],
+  "material": "Silk and soy wax",
+  "inStock": true,
+  "isNew": false
  }
 ]

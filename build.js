@@ -33,7 +33,10 @@ function write(rel, content) {
 
 const TAX = JSON.parse(fs.readFileSync(find("taxonomy.json"), "utf8"));
 const COLORS = JSON.parse(fs.readFileSync(find("colors.json"), "utf8"));
-const AUDIENCES = ["Women", "Men", "Everyone"];
+const AUDIENCES = ["Women", "Men"];
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const monthOptions = `<option value="">Month</option>${MONTHS.map((m, i) => `<option value="${i + 1}">${m}</option>`).join("")}`;
+const dayOptions = `<option value="">Day</option>${Array.from({ length: 31 }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}`;
 const categories = TAX.map((c) => c.name);
 const countIn = (fn) => products.filter(fn).length;
 
@@ -56,36 +59,30 @@ function waitlistForm(id) {
         <div><label for="${id}-country">Country</label>
           <select id="${id}-country" name="country" autocomplete="country-name" required><option value="">Choose</option>${COUNTRIES.map((c) => `<option>${c}</option>`).join("")}</select></div>
         <div><label for="${id}-city">City</label><input id="${id}-city" name="city" autocomplete="address-level2" required></div>
+        <div><label for="${id}-bm">Birthday month <span class="opt-tag">optional</span></label><select id="${id}-bm" name="birth_month">${monthOptions}</select></div>
+        <div><label for="${id}-bd">Birthday day <span class="opt-tag">optional</span></label><select id="${id}-bd" name="birth_day">${dayOptions}</select></div>
+        <div class="full"><label for="${id}-phone">Phone <span class="opt-tag">optional</span></label><input id="${id}-phone" name="phone" type="tel" autocomplete="tel"></div>
+        <div class="full checks">
+          <label class="check"><input type="checkbox" name="email_consent" required><span>Send me news from Zi Republic by email. I can unsubscribe at any time.</span></label>
+          <label class="check"><input type="checkbox" name="sms_consent"><span>Text me about Signal I. Message and data rates may apply. Reply STOP to opt out.</span></label>
+        </div>
+        <input type="hidden" name="province">
         <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
       </div>
-      <button class="btn" type="submit">Save my place</button>
+      <button class="btn" type="submit">Join the Register</button>
       <div class="msg wl-msg" role="status"></div>
     </form>`;
 }
 
 const MODAL = `<dialog id="wl-modal" aria-labelledby="wl-title">
   <button class="close" type="button" aria-label="Close" data-close-waitlist>&times;</button>
-  <h2 class="display" id="wl-title">Be there when the world opens.</h2>
-  <p class="sub">Join the list for first word on Signal I.</p>
+  <h2 class="display" id="wl-title">Join the Register.</h2>
+  <p class="sub">Be first in line when Signal I opens its borders.</p>
   ${waitlistForm("m")}
 </dialog>`;
 
 function zcard() {
-  return `<div class="zcard" role="img" aria-label="Sample Zi Card">
-  <div class="z-title">ZI CARD</div>
-  <div class="z-tag">YOUR EXPRESSION, YOUR WORLD.</div>
-  <img class="z-mark" src="/assets/logo-icon-navy.png" alt="" width="434" height="436">
-  <div class="z-issued">ISSUED BY ZI REPUBLIC<br>MINISTRY OF ZI INTERIOR</div>
-  <div class="z-photo"><span>YOUR PORTRAIT</span></div>
-  <div class="z-script">Your own title</div>
-  <div class="z-lab" style="top:calc(var(--u)*187);left:calc(var(--u)*390)">NAME</div><div class="z-box" style="top:calc(var(--u)*213);left:calc(var(--u)*394);width:calc(var(--u)*482)"><span>YOUR NAME</span></div>
-  <div class="z-lab" style="top:calc(var(--u)*301);left:calc(var(--u)*390)">ID NUMBER</div><div class="z-box" style="top:calc(var(--u)*328);left:calc(var(--u)*394);width:calc(var(--u)*482)"><span>ZIYYMM000000</span></div>
-  <div class="z-lab" style="top:calc(var(--u)*414);left:calc(var(--u)*390)">STATUS</div><div class="z-box" style="top:calc(var(--u)*442);left:calc(var(--u)*394);width:calc(var(--u)*482)"><span>ZI RESIDENT</span></div>
-  <div class="z-lab" style="top:calc(var(--u)*529);left:calc(var(--u)*390)">ISSUED</div><div class="z-box" style="top:calc(var(--u)*555);left:calc(var(--u)*394);width:calc(var(--u)*214)"><span>MONTH YEAR</span></div>
-  <div class="z-lab" style="top:calc(var(--u)*529);left:calc(var(--u)*661)">VALIDITY</div><div class="z-box" style="top:calc(var(--u)*555);left:calc(var(--u)*661);width:calc(var(--u)*219)"><span>MON YEAR</span></div>
-  <div class="z-side"><i></i><b>ZI REPUBLIC</b></div>
-  <img class="z-seal" src="/assets/zi-card-seal.png" alt="" width="80" height="80">
-</div>`;
+  return `<canvas class="zc" data-sample width="2022" height="1274" role="img" aria-label="Sample Zi Card"></canvas>`;
 }
 
 // A card that tilts with the pointer and turns over on click.
@@ -126,16 +123,17 @@ function layout({ title, description, page, body }) {
 <link rel="icon" href="/assets/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..700&family=Public+Sans:wght@400;500;600&family=Lexend+Exa:wght@400;600&family=Caveat:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..700&family=Public+Sans:wght@400;500;600&family=Lexend:wght@400;500;600&family=Lexend+Zetta:wght@700&family=Yellowtail&family=Mrs+Saint+Delafield&display=swap">
 <link rel="stylesheet" href="/assets/styles.css">
 <script>document.documentElement.className = "js";</script>
 </head>
 <body data-page="${page}">
-<div class="notice">Signal I is landing soon. <a href="/waitlist/" data-open-waitlist>Be first through the door</a></div>
+<div class="notice">The first Signal is coming. <a href="/waitlist/" data-open-waitlist>Be the first to know</a></div>
 <header class="site-header" id="top">
   <div class="wrap">
     <nav class="nav" aria-label="Main">
       <div class="has-mega"><a href="/shop/">Shop</a>${MEGA}</div>
+      <a href="/explore/">Explore</a>
       <a href="/brand/">Zi Republic</a>
       <a href="/note/">From the founder</a>
     </nav>
@@ -159,7 +157,7 @@ ${body}
     <div class="top">
       <div>
         <img class="word" src="/assets/logo-wordmark-navy.png" alt="Zibura" width="636" height="120">
-        <p class="tag">Your expression, your world.</p>
+        <p class="tag">Your expression,<br>your world.</p>
       </div>
       <div>
         <h3>Shop</h3>
@@ -174,7 +172,9 @@ ${categories.map((c) => `        <a href="/shop/?category=${encodeURIComponent(c
         <a href="/brand/#calendar">The calendar</a>
         <a href="/note/">From the founder</a>
         <a href="/zi-card/">The Zi Card</a>
-        <a href="/waitlist/" data-open-waitlist>Join the waitlist</a>
+        <a href="/explore/">Explore the Signals</a>
+        <a href="/placement/">Find your province</a>
+        <a href="/waitlist/" data-open-waitlist>Join the Register</a>
       </div>
       <div>
         <h3>The Embassy</h3>
@@ -216,11 +216,11 @@ write(
   <span class="orb o2" data-depth="-22"></span>
   <span class="orb o3" data-depth="14"></span>
   <div class="center">
-    <h1 class="display rise">${words("Your expression, your world.")}</h1>
+    <h1 class="display rise">${words("Your expression,")}<br>${words("your world.")}</h1>
     <p class="lede fade">Step into Zi Republic, where every Piece is another way of saying exactly who you are.</p>
     <div class="actions fade">
-      <a class="btn" href="/shop/">Shop Signal I</a>
-      <a class="btn line" href="/brand/">Enter the world</a>
+      <a class="btn" href="/brand/">Enter Zi Republic</a>
+      <a class="btn line" href="/shop/">Shop Signal I</a>
     </div>
   </div>
   <div class="foot"><span>Signal I, Arc I</span><a class="text-link" href="#pieces">Scroll</a></div>
@@ -243,9 +243,9 @@ ${products.slice(0, 8).map(card).join("\n")}
 
 <section class="section" style="padding-top:0">
   <div class="wrap">
-    <div class="section-head" data-reveal><h2>Who are you dressing?</h2></div>
+    <div class="section-head" data-reveal><h2>Start here.</h2></div>
     <div class="who" data-reveal>
-${AUDIENCES.map((a) => `      <a href="/shop/?audience=${a}"><span>${a}</span><small>${countIn((p) => p.audience === a || p.audience === "Everyone")} Pieces</small></a>`).join("\n")}
+${AUDIENCES.map((a) => `      <a href="/shop/?audience=${a}"><span>${a}</span><small>${countIn((p) => p.audience.includes(a))} Pieces</small></a>`).join("\n")}
     </div>
   </div>
 </section>
@@ -273,8 +273,8 @@ ${TAX.map((c) => {
   <div class="wrap split">
     <div data-reveal>${flipCard()}</div>
     <div data-reveal>
-      <h2 class="display">Residency is earned.</h2>
-      <p class="lead">Apply for your Zi Card and the Ministry of Zi Interior will take a look. Approved applicants receive standing, Zillar, and experiences money alone cannot buy.</p>
+      <h2 class="display">Become a resident.</h2>
+      <p class="lead">Apply for your Zi Card. The Ministry of Zi Interior reviews every application, and every resident receives standing, Zillar, and experiences money alone cannot buy.</p>
       <p style="margin-top:32px"><a class="btn light" href="/zi-card/">Apply for your Zi Card</a></p>
     </div>
   </div>
@@ -293,9 +293,9 @@ const PROVINCES = [
   ["Swirl", "Purple", "#684787", "Dreamy, layered, a little mysterious.", "Swirl holds many versions of itself at once. Every look has a second meaning, and every answer opens another question.", ["Dreamy", "Layered", "Mysterious"]]
 ];
 const CALENDAR = [
-  ["Founding Day", "The republic's birthday. One day each year to celebrate how it all began."],
-  ["Ziesta", "The republic's holiday. A day set aside to slow down, gather, and dress for joy."],
-  ["Signal Day", "The day a new Signal opens and the republic enters a new era."]
+  ["Founding Day", "The republic's birthday, marked each year on December 1. One day to celebrate how it all began.", "December 1, 2026"],
+  ["Ziesta", "The festival of rest, where fiesta meets siesta. The whole republic slows down, gathers, and dresses for joy.", ""],
+  ["Zi Dawn", "The morning a new Signal opens its borders. The first Zi Dawn, the opening of Signal I, is April 18, 2027.", "April 18, 2027"]
 ];
 write(
   "brand/index.html",
@@ -327,7 +327,7 @@ write(
 </div></section>
 
 <section class="section" id="provinces" style="padding-top:0"><div class="wrap">
-  <div class="section-head" data-reveal><h2>Six provinces, six personalities</h2><span class="small">Find your home province</span></div>
+  <div class="section-head" data-reveal><h2>Find your province.</h2><a class="btn" href="/placement/">Take the Placement</a></div>
   <div class="provinces" data-reveal>
 ${PROVINCES.map(
   ([n, c, hex, line, note, traits]) => `    <article class="province" tabindex="0" style="--pc:${hex}">
@@ -345,17 +345,19 @@ ${PROVINCES.map(
 <section class="section" id="calendar" style="padding-top:0"><div class="wrap split">
   <h2 class="display" data-reveal>The calendar of the republic.</h2>
   <dl class="plain-list" data-reveal>
-${CALENDAR.map(([n, d]) => `    <div><dt>${n}</dt><dd>${d}</dd><span class="tag-soon">Date announced soon</span></div>`).join("\n")}
+${CALENDAR.map(([n, d, dt]) => `    <div><dt>${n}</dt><dd>${d}</dd><span class="tag-soon">${dt || "Date announced soon"}</span></div>`).join("\n")}
   </dl>
 </div></section>
 
 <section class="section" style="padding-top:0"><div class="wrap split">
   <h2 class="display" data-reveal>Belonging, in three parts.</h2>
-  <dl class="plain-list" data-reveal>
-    <div><dt>Zi Resident</dt><dd>Your way in. Every Zi Card holder starts here, inside the world.</dd></div>
-    <div><dt>Zitizen</dt><dd>The inner circle of the republic, earned by how you show up.</dd></div>
+  <div data-reveal>
+  <p class="big-p">You enter as a Resident, rise to Zitizen, and spend in Zillar.</p>
+  <dl class="plain-list">
+    <div><dt>Zi Resident</dt><dd>Your passport into the republic. Apply for a Zi Card and your name goes on the register. Every resident begins here.</dd></div>
+    <div><dt>Zitizen</dt><dd>The inner circle of the republic. Zitizen is earned by how you show up, through the Pieces you wear and the reviews you write.</dd></div>
     <div><dt>Zillar</dt><dd>The republic's own currency. Every order builds your standing, and Zillar unlocks access and experiences money alone cannot buy.</dd></div>
-  </dl>
+  </dl></div>
 </div></section>
 
 <section class="section" style="padding-top:0"><div class="wrap">
@@ -366,11 +368,80 @@ ${TAX.map((c) => `    <li><a href="/shop/?category=${encodeURIComponent(c.name)}
 </div></section>
 
 <section class="section navy-band"><div class="wrap split">
-  <h2 class="display" data-reveal>Your new favorite brand is waiting.</h2>
+  <h2 class="display" data-reveal>Take your place in the republic.</h2>
   <div class="prose" data-reveal>
-    <p class="big">Move through the world on your own terms. We will meet you there.</p>
-    <p style="margin-top:28px"><a class="btn light" href="/waitlist/" data-open-waitlist>Save my place</a></p>
+    <p class="big">Join the Register and hear first when Signal I opens its borders.</p>
+    <p style="margin-top:28px"><a class="btn light" href="/waitlist/" data-open-waitlist>Join the Register</a></p>
   </div>
+</div></section>
+</main>`
+  })
+);
+
+// Explore: Signals and Arcs
+const SIGNALS = [
+  { id: "signal-1", name: "Signal I", status: "Opens April 18, 2027", lead: "The first era of Zi Republic.", body: "Signal I is where the republic opens its borders. Every Piece in it is a way of saying who you are, out loud.", arcs: [
+    { name: "Arc I", line: "Play, turned all the way up.", note: "A collection for the version of you who is already dancing before the music starts.", live: true },
+    { name: "Arc II", line: "Details announced soon.", note: "The second story inside Signal I.", live: false }
+  ] },
+  { id: "signal-2", name: "Signal II", status: "Date announced soon", lead: "The next era, still sealed.", body: "A Signal begins when the vision is ready and ends when it has been fully expressed. Signal II begins when Signal I is complete.", arcs: [] },
+  { id: "signal-3", name: "Signal III", status: "Date announced soon", lead: "Further down the line.", body: "Every Signal opens a new chapter of the republic. Join the Register and you will hear about each one as it is announced.", arcs: [] }
+];
+write(
+  "explore/index.html",
+  layout({
+    title: "Explore | Zibura",
+    description: "Explore every Signal and Arc in Zi Republic.",
+    page: "explore",
+    body: `<main>
+<section class="page-head"><div class="wrap">
+  <h1 class="display rise">${words("Explore the Signals.")}</h1>
+  <p class="fade">A Signal is a creative era. Each Signal holds Arcs, full collections with a story of their own. Open one to learn more.</p>
+</div></section>
+<section class="section" style="padding-top:0"><div class="wrap signals">
+${SIGNALS.map((s, i) => `  <details class="signal" id="${s.id}"${i === 0 ? " open" : ""} data-reveal>
+    <summary><span class="sg-name">${s.name}</span><span class="sg-lead">${esc(s.lead)}</span><span class="tag-soon">${esc(s.status)}</span></summary>
+    <div class="sg-body">
+      <p class="big-p">${esc(s.body)}</p>
+${s.arcs.length ? `      <div class="arcs">${s.arcs.map((a) => `
+        <div class="arc"><h3>${a.name}</h3><p class="arc-line">${esc(a.line)}</p><p>${esc(a.note)}</p>${a.live ? `<a class="btn line" href="/shop/?signal=${encodeURIComponent(s.name)}&amp;arc=${encodeURIComponent(a.name)}">Shop ${a.name}</a>` : `<a class="text-link" href="/waitlist/" data-open-waitlist>Join the Register</a>`}</div>`).join("")}
+      </div>` : `      <p><a class="btn" href="/waitlist/" data-open-waitlist>Join the Register</a></p>`}
+    </div>
+  </details>`).join("\n")}
+</div></section>
+</main>`
+  })
+);
+
+// Placement: the province quiz
+const PLACEMENT = [
+  ["It is Saturday and nothing is planned. What happens?", ["I read, think, and let the day find its shape.", "I text everyone and turn it into a gathering.", "I pick the boldest plan on the table and commit.", "I cook something slow and reset.", "I am already out the door chasing three things.", "I lose hours inside a daydream and a playlist."]],
+  ["Your outfit says:", ["Quiet confidence. Every detail was chosen.", "Look at me, I am happy to be here.", "Rules were for other people.", "Comfortable, natural, made to last.", "Whatever I grabbed on the way out, and it works.", "A layered story with a twist you notice later."]],
+  ["How do you make a big decision?", ["I wait until it is clear, then move.", "I ask the people I love.", "I decide fast and never look back.", "I give it time and let it grow on me.", "I try it and adjust as I go.", "I follow the feeling I cannot explain."]],
+  ["Pick a place.", ["A lake at dawn.", "A rooftop at sunset.", "A stage with the lights on.", "A garden after rain.", "A city street at full speed.", "A foggy hillside at midnight."]],
+  ["What do your friends thank you for?", ["Staying calm and seeing clearly.", "Making every moment feel special.", "Saying what everyone was thinking.", "Showing up, every time.", "Getting things moving.", "Seeing something in them nobody else saw."]],
+  ["Choose your soundtrack.", ["Slow, spacious, and intelligent.", "Everything you can sing along to.", "Loud, with a point to make.", "Warm, acoustic, and unhurried.", "Fast, with surprises.", "Dreamy, layered, hard to place."]],
+  ["Which word belongs next to your name?", ["Magnetic.", "Radiant.", "Fearless.", "Grounded.", "Unstoppable.", "Enigmatic."]]
+];
+write(
+  "placement/index.html",
+  layout({
+    title: "The Placement | Zibura",
+    description: "Answer seven questions and the Zi Republic Placement assigns you a home province.",
+    page: "placement",
+    body: `<main>
+<section class="page-head"><div class="wrap">
+  <h1 class="display rise">${words("Find your province.")}</h1>
+  <p class="fade">Seven questions. The Placement reads your answers and assigns you a home province in Zi Republic.</p>
+</div></section>
+<section class="section" style="padding-top:clamp(16px,3vw,40px)"><div class="wrap">
+  <div id="quiz" class="quiz" data-quiz>
+    <div class="q-bar"><span id="q-step"></span><div class="q-track"><i id="q-fill"></i></div></div>
+    <h2 class="display q-title" id="q-title" tabindex="-1"></h2>
+    <div class="q-opts" id="q-opts"></div>
+  </div>
+  <div id="result" class="result" hidden></div>
+  <script type="application/json" id="quiz-data">${JSON.stringify({ questions: PLACEMENT, provinces: PROVINCES.map(([n, c, hex, line, note, traits]) => ({ n, hex, line, note, traits })) })}</script>
 </div></section>
 </main>`
   })
@@ -380,13 +451,13 @@ ${TAX.map((c) => `    <li><a href="/shop/?category=${encodeURIComponent(c.name)}
 write(
   "waitlist/index.html",
   layout({
-    title: "Join the waitlist | Zibura",
-    description: "Join the Zibura waitlist for first word on Signal I.",
+    title: "Join the Register | Zibura",
+    description: "Join the Zi Republic Register for first word on Signal I.",
     page: "waitlist",
     body: `<main>
 <section class="page-head"><div class="wrap">
-  <h1 class="display rise">${words("Be there when the world opens.")}</h1>
-  <p class="fade">Leave your details and Signal I finds you first.</p>
+  <h1 class="display rise">${words("Join the Register.")}</h1>
+  <p class="fade">The Bureau of Arrivals is taking names. Add yours and you will hear first when Signal I opens its borders.</p>
 </div></section>
 <section class="section" style="padding-top:clamp(16px,3vw,40px)"><div class="wrap">
   <div class="form-card">${waitlistForm("p")}</div>
@@ -405,18 +476,18 @@ write(
     body: `<main>
 <section class="page-head"><div class="wrap">
   <h1 class="display rise">${words("Earn your place in Zi Republic.")}</h1>
-  <p class="fade">Residency is by application. Show us who you are, and the Ministry of Zi Interior will take it from there.</p>
+  <p class="fade">Residency is by application. Every application is reviewed by the Ministry of Zi Interior.</p>
 </div></section>
 <section class="section" style="padding-top:clamp(16px,3vw,40px)"><div class="wrap split">
   <div data-reveal>${flipCard()}</div>
   <div data-reveal>
     <ol class="steps">
-      <li><div><b>Create your account.</b><span>Your first step into the republic.</span></div></li>
-      <li><div><b>Upload your portrait and apply.</b><span>Every application is read by the Ministry of Zi Interior.</span></div></li>
-      <li><div><b>Collect your Zi Card.</b><span>Your Zi Card appears in your account the moment your application is accepted, ready to download and carry everywhere.</span></div></li>
+      <li><div><b>Create your account.</b><span>Your file in the Zi Registry begins here.</span></div></li>
+      <li><div><b>Upload your portrait and apply.</b><span>Your portrait appears on your card, so choose one that looks like you.</span></div></li>
+      <li><div><b>Collect your Zi Card.</b><span>Once your application is accepted, your Zi Card appears in your account, ready to download.</span></div></li>
     </ol>
     <p style="margin-top:40px"><a class="btn" href="/account/">Start your application</a></p>
-    <p class="small" style="margin-top:16px">Want first word when they open? <a href="/waitlist/" data-open-waitlist>Join the waitlist</a>.</p>
+    <p class="small" style="margin-top:16px">Want first word on Signal I? <a href="/waitlist/" data-open-waitlist>Join the Register</a>.</p>
   </div>
 </div></section>
 <section class="section navy-band"><div class="wrap split">
@@ -441,7 +512,7 @@ write(
     page: "account",
     body: `<main>
 <section class="page-head"><div class="wrap">
-  <h1 class="display rise" id="acct-h">${words("Your Zi account.")}</h1>
+  <h1 class="display rise" id="acct-h">${words("Your Zi Registry.")}</h1>
   <p class="fade" id="acct-sub">Create an account to apply for your Zi Card.</p>
 </div></section>
 <section class="section" style="padding-top:clamp(16px,3vw,40px)"><div class="wrap">
@@ -456,6 +527,8 @@ write(
       <div class="form-grid">
         <div><label for="s-first">First name</label><input id="s-first" name="first" autocomplete="given-name" required></div>
         <div><label for="s-last">Last name</label><input id="s-last" name="last" autocomplete="family-name" required></div>
+        <div><label for="s-bm">Birthday month</label><select id="s-bm" name="birth_month">${monthOptions}</select></div>
+        <div><label for="s-bd">Birthday day</label><select id="s-bd" name="birth_day">${dayOptions}</select></div>
         <div class="full"><label for="s-email">Email</label><input id="s-email" name="email" type="email" autocomplete="email" required></div>
         <div class="full"><label for="s-pass">Password (8 characters or more)</label><input id="s-pass" name="password" type="password" minlength="8" autocomplete="new-password" required></div>
       </div>
@@ -487,7 +560,7 @@ write(
 
   <div id="v-pending" class="form-card" hidden>
     <h2 class="display" style="font-size:clamp(28px,3.4vw,40px)">Your application is with the Ministry.</h2>
-    <p class="sub">The Ministry of Zi Interior reads every application. Applications are being reviewed. Check back soon.</p>
+    <p class="sub">The Ministry of Zi Interior is reviewing your application. Check back soon.</p>
   </div>
 
   <div id="v-declined" class="form-card" hidden>
@@ -540,15 +613,15 @@ write(
     body: `<main class="note">
   <div class="photo" data-reveal><img src="/assets/ruova.jpg" alt="Ruova, founder of Zibura" width="1000" height="1500"></div>
   <div class="body">
-    <h1 class="display rise" style="font-size:clamp(36px,5vw,72px)">${words("A letter from Ruova.")}</h1>
+    <h1 class="display rise" style="font-size:clamp(36px,5vw,72px)">${words("Welcome to Zi Republic.")}</h1>
     <div class="letter fade">
-      <p>Most of us carry more than one version of ourselves. The one who dresses for the day, the one who shows up at night, the one only close friends ever meet. I wanted a world where every one of them is welcome.</p>
-      <p>Zibura asks one thing of clothing: hold all of me. My mood, my personality, my story, all at once.</p>
-      <p>So we built a country around the answer. Zi Republic has provinces, Signals, Arcs, a currency of its own, and a card that makes you one of us. Every Piece is a small part of that country, made to be worn out loud.</p>
-      <p>Complexity is not contradiction. You can be soft and fierce, quiet and loud, playful and exact, and still be entirely yourself. Wear every version.</p>
-      <p>Welcome to Zi Republic. Your expression, your world.</p>
+      <p>I am never just one thing. Some days I am quiet and exact. Other days I am loud and playful. The clothes I wanted had to keep up with both.</p>
+      <p>So I built a place for that. Zi Republic is a country with provinces, a currency, a calendar, and a card of its own. Signals set the era. Arcs tell the story. Pieces are what you wear.</p>
+      <p>You can be soft and fierce in the same day. You can be dressed for the party and thinking about tomorrow. Here, that is normal.</p>
+      <p>Find your province, take your place, and wear all of it.</p>
     </div>
-    <p class="sign">Ruova</p>
+    <p class="signature" aria-label="Ruova">Ruova</p>
+    <p class="signed">Zi-in-Chief, Zi Republic</p>
   </div>
 </main>`
   })
@@ -613,7 +686,7 @@ products.forEach((p) => {
       description: p.description,
       page: "piece",
       body: `<main class="wrap piece-page" data-slug="${esc(p.slug)}">
-  <nav class="crumbs" aria-label="Breadcrumb"><a href="/shop/">Shop</a> <span>/</span> <a href="/shop/?audience=${esc(p.audience)}">${esc(p.audience)}</a> <span>/</span> <a href="/shop/?category=${encodeURIComponent(p.category)}">${esc(p.category)}</a> <span>/</span> <a href="/shop/?category=${encodeURIComponent(p.category)}&amp;type=${encodeURIComponent(p.type)}">${esc(p.type)}</a></nav>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/shop/">Shop</a> <span>/</span> <a href="/shop/?audience=${esc(p.audience[0])}">${esc(p.audience.join(" and "))}</a> <span>/</span> <a href="/shop/?category=${encodeURIComponent(p.category)}">${esc(p.category)}</a> <span>/</span> <a href="/shop/?category=${encodeURIComponent(p.category)}&amp;type=${encodeURIComponent(p.type)}">${esc(p.type)}</a></nav>
   <div class="piece">
     <div class="gallery" aria-label="Photos of ${esc(p.name)}">
       <div class="ph big"></div><div class="ph"></div><div class="ph"></div><div class="ph"></div>

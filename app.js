@@ -122,11 +122,16 @@
     var sortSel = $("#sort");
     var pane = $("#filters-pane");
 
-    var st = { audience: "", category: "", type: "", colors: [], sizes: [], min: "", max: "", sort: "new", q: "" };
+    var st = { audience: "", category: "", type: "", signal: "", arc: "", materials: [], stock: false, fresh: false, colors: [], sizes: [], min: "", max: "", sort: "new", q: "" };
     var params = new URLSearchParams(location.search);
     st.audience = params.get("audience") || "";
     st.category = params.get("category") || "";
     st.type = params.get("type") || "";
+    st.signal = params.get("signal") || "";
+    st.arc = params.get("arc") || "";
+    st.materials = (params.get("material") || "").split(",").filter(Boolean);
+    st.stock = params.get("stock") === "1";
+    st.fresh = params.get("new") === "1";
     st.colors = (params.get("color") || "").split(",").filter(Boolean);
     st.sizes = (params.get("size") || "").split(",").filter(Boolean);
     st.min = params.get("min") || "";
@@ -136,13 +141,24 @@
     sortSel.value = st.sort;
 
     var allColors = uniq([].concat.apply([], catalog.map(function (p) { return p.colors; }))).filter(function (c) { return colorMap[c]; });
-    var allSizes = uniq([].concat.apply([], catalog.map(function (p) { return p.sizes; }))).sort(function (a, b) { return sizeRank(a) - sizeRank(b); });
+    var allMaterials = uniq(catalog.map(function (p) { return p.material; }).filter(Boolean)).sort();
+    var allSignals = uniq(catalog.map(function (p) { return p.signal; }).filter(Boolean));
+    var allArcs = uniq(catalog.map(function (p) { return p.arc; }).filter(Boolean));
+    function sizesFor(category) {
+      var list = catalog.filter(function (p) { return p.category === category; });
+      return uniq([].concat.apply([], list.map(function (p) { return p.sizes; }))).sort(function (a, b) { return sizeRank(a) - sizeRank(b); });
+    }
 
     function sync() {
       var q = new URLSearchParams();
       if (st.audience) q.set("audience", st.audience);
       if (st.category) q.set("category", st.category);
       if (st.type) q.set("type", st.type);
+      if (st.signal) q.set("signal", st.signal);
+      if (st.arc) q.set("arc", st.arc);
+      if (st.materials.length) q.set("material", st.materials.join(","));
+      if (st.stock) q.set("stock", "1");
+      if (st.fresh) q.set("new", "1");
       if (st.colors.length) q.set("color", st.colors.join(","));
       if (st.sizes.length) q.set("size", st.sizes.join(","));
       if (st.min) q.set("min", st.min);
@@ -154,7 +170,12 @@
     }
 
     function matches(p) {
-      if (st.audience && p.audience !== st.audience && p.audience !== "Everyone") return false;
+      if (st.audience && p.audience.indexOf(st.audience) === -1) return false;
+      if (st.signal && p.signal !== st.signal) return false;
+      if (st.arc && p.arc !== st.arc) return false;
+      if (st.materials.length && st.materials.indexOf(p.material) === -1) return false;
+      if (st.stock && !p.inStock) return false;
+      if (st.fresh && !p.isNew) return false;
       if (st.category && p.category !== st.category) return false;
       if (st.type && p.type !== st.type) return false;
       if (st.colors.length && !p.colors.some(function (c) { return st.colors.indexOf(c) !== -1; })) return false;
@@ -163,7 +184,7 @@
       if (st.min !== "" && price < parseFloat(st.min)) return false;
       if (st.max !== "" && price > parseFloat(st.max)) return false;
       if (st.q) {
-        var hay = (p.name + " " + p.category + " " + p.type + " " + p.audience + " " + p.colors.join(" ") + " " + p.description).toLowerCase();
+        var hay = (p.name + " " + p.category + " " + p.type + " " + p.audience.join(" ") + " " + (p.material || "") + " " + p.colors.join(" ") + " " + p.description).toLowerCase();
         if (hay.indexOf(st.q.toLowerCase()) === -1) return false;
       }
       return true;
@@ -187,7 +208,7 @@
       var h = "";
       h += '<div class="facet"><div class="search"><input type="search" id="f-q" placeholder="Search Pieces" value="' + esc(st.q) + '" aria-label="Search Pieces"></div></div>';
       h += '<div class="facet"><h3>Shop for</h3>';
-      ["", "Women", "Men", "Everyone"].forEach(function (a) {
+      ["", "Women", "Men"].forEach(function (a) {
         h += '<button type="button" class="opt' + (st.audience === a ? " on" : "") + '" data-aud="' + a + '">' + (a || "All") + "</button>";
       });
       h += "</div>";
@@ -208,10 +229,31 @@
         h += '<button type="button" class="sw' + (st.colors.indexOf(c) !== -1 ? " on" : "") + '" data-color="' + esc(c) + '" style="background:' + colorMap[c] + '" title="' + esc(c) + '" aria-label="' + esc(c) + '" aria-pressed="' + (st.colors.indexOf(c) !== -1) + '"></button>';
       });
       h += "</div></div>";
-      h += '<div class="facet"><h3>Size</h3><div class="row">';
-      allSizes.forEach(function (s) {
-        h += '<button type="button" class="pill' + (st.sizes.indexOf(s) !== -1 ? " on" : "") + '" data-size="' + esc(s) + '" aria-pressed="' + (st.sizes.indexOf(s) !== -1) + '">' + esc(s) + "</button>";
+      h += '<div class="facet"><h3>Size</h3>';
+      tax.forEach(function (c) {
+        if (st.category && st.category !== c.name) return;
+        var sz = sizesFor(c.name);
+        if (!sz.length) return;
+        if (!st.category) h += '<p class="size-h">' + esc(c.name) + "</p>";
+        h += '<div class="row">';
+        sz.forEach(function (s) {
+          h += '<button type="button" class="pill' + (st.sizes.indexOf(s) !== -1 ? " on" : "") + '" data-size="' + esc(s) + '" aria-pressed="' + (st.sizes.indexOf(s) !== -1) + '">' + esc(s) + "</button>";
+        });
+        h += "</div>";
       });
+      h += "</div>";
+      h += '<div class="facet"><h3>Signal</h3><div class="row">';
+      allSignals.forEach(function (s) { h += '<button type="button" class="pill' + (st.signal === s ? " on" : "") + '" data-signal="' + esc(s) + '">' + esc(s) + "</button>"; });
+      h += "</div></div>";
+      h += '<div class="facet"><h3>Arc</h3><div class="row">';
+      allArcs.forEach(function (s) { h += '<button type="button" class="pill' + (st.arc === s ? " on" : "") + '" data-arc="' + esc(s) + '">' + esc(s) + "</button>"; });
+      h += "</div></div>";
+      h += '<div class="facet"><h3>Material</h3><div class="row">';
+      allMaterials.forEach(function (s) { h += '<button type="button" class="pill' + (st.materials.indexOf(s) !== -1 ? " on" : "") + '" data-material="' + esc(s) + '">' + esc(s) + "</button>"; });
+      h += "</div></div>";
+      h += '<div class="facet"><h3>Show</h3><div class="row">';
+      h += '<button type="button" class="pill' + (st.stock ? " on" : "") + '" data-flag="stock">In stock</button>';
+      h += '<button type="button" class="pill' + (st.fresh ? " on" : "") + '" data-flag="fresh">New</button>';
       h += "</div></div>";
       h += '<div class="facet"><h3>Price <span>' + esc(currency) + '</span></h3><div class="price-row"><input type="number" min="0" inputmode="numeric" id="f-min" placeholder="Min" value="' + esc(st.min) + '" aria-label="Minimum price"><span>to</span><input type="number" min="0" inputmode="numeric" id="f-max" placeholder="Max" value="' + esc(st.max) + '" aria-label="Maximum price"></div></div>';
       facets.innerHTML = h;
@@ -225,6 +267,11 @@
       if (st.type) chip(st.type, "type");
       st.colors.forEach(function (c) { chip(c, "color", c); });
       st.sizes.forEach(function (s) { chip("Size " + s, "size", s); });
+      if (st.signal) chip(st.signal, "signal");
+      if (st.arc) chip(st.arc, "arc");
+      st.materials.forEach(function (m) { chip(m, "material", m); });
+      if (st.stock) chip("In stock", "stock");
+      if (st.fresh) chip("New", "fresh");
       if (st.min || st.max) chip((st.min || "0") + " to " + (st.max || "any") + " " + currency, "price");
       if (st.q) chip("“" + st.q + "”", "q");
       if (h) h += '<button type="button" class="chip clear" data-clear="all">Clear all</button>';
@@ -249,6 +296,10 @@
       if (b.hasAttribute("data-aud")) st.audience = b.getAttribute("data-aud");
       else if (b.hasAttribute("data-cat")) { st.category = b.getAttribute("data-cat"); st.type = b.getAttribute("data-type") || ""; }
       else if (b.hasAttribute("data-color")) toggle(st.colors, b.getAttribute("data-color"));
+      else if (b.hasAttribute("data-signal")) st.signal = st.signal === b.getAttribute("data-signal") ? "" : b.getAttribute("data-signal");
+      else if (b.hasAttribute("data-arc")) st.arc = st.arc === b.getAttribute("data-arc") ? "" : b.getAttribute("data-arc");
+      else if (b.hasAttribute("data-material")) toggle(st.materials, b.getAttribute("data-material"));
+      else if (b.hasAttribute("data-flag")) { var f = b.getAttribute("data-flag"); st[f] = !st[f]; }
       else if (b.hasAttribute("data-size")) toggle(st.sizes, b.getAttribute("data-size"));
       else return;
       refresh();
@@ -262,7 +313,12 @@
       var b = e.target.closest("button");
       if (!b) return;
       var k = b.getAttribute("data-clear"), v = b.getAttribute("data-val");
-      if (k === "all") { st.audience = st.category = st.type = st.min = st.max = st.q = ""; st.colors = []; st.sizes = []; }
+      if (k === "all") { st.audience = st.category = st.type = st.min = st.max = st.q = st.signal = st.arc = ""; st.colors = []; st.sizes = []; st.materials = []; st.stock = st.fresh = false; }
+      if (k === "signal") st.signal = "";
+      if (k === "arc") st.arc = "";
+      if (k === "material") toggle(st.materials, v);
+      if (k === "stock") st.stock = false;
+      if (k === "fresh") st.fresh = false;
       if (k === "audience") st.audience = "";
       if (k === "category") { st.category = ""; st.type = ""; }
       if (k === "type") st.type = "";
@@ -450,6 +506,12 @@
           email: form.elements.email.value,
           country: form.elements.country.value,
           city: form.elements.city.value,
+          birth_day: form.elements.birth_day.value,
+          birth_month: form.elements.birth_month.value,
+          phone: form.elements.phone.value,
+          email_consent: form.elements.email_consent.checked,
+          sms_consent: form.elements.sms_consent.checked,
+          province: (function () { try { return localStorage.getItem("zibura_province") || ""; } catch (x) { return ""; } })(),
           website: form.elements.website.value
         };
         var btn = $("button[type=submit]", form);
@@ -461,7 +523,7 @@
             if (d.ok) {
               form.reset();
               try { localStorage.setItem("zibura_joined", "1"); } catch (x) {}
-              msg.textContent = "You are on the list. Signal I will find you first.";
+              msg.textContent = "You are on the Register. Signal I will find you first.";
             } else {
               msg.textContent = d.error || "Something went wrong. Please try again.";
               btn.disabled = false;
@@ -472,14 +534,20 @@
     });
   }
 
+  var openWaitlistLinks = function () {};
   function initModal() {
     var modal = $("#wl-modal");
     if (!modal || !modal.showModal) return;
     function open() { if (!modal.open) modal.showModal(); }
     function close() { modal.close(); try { sessionStorage.setItem("zibura_wl_seen", "1"); } catch (x) {} }
-    $all("[data-open-waitlist]").forEach(function (a) {
-      a.addEventListener("click", function (e) { e.preventDefault(); open(); });
-    });
+    openWaitlistLinks = function () {
+      $all("[data-open-waitlist]").forEach(function (a) {
+        if (a.getAttribute("data-bound")) return;
+        a.setAttribute("data-bound", "1");
+        a.addEventListener("click", function (e) { e.preventDefault(); open(); });
+      });
+    };
+    openWaitlistLinks();
     $all("[data-close-waitlist]").forEach(function (b) { b.addEventListener("click", close); });
     modal.addEventListener("click", function (e) { if (e.target === modal) close(); });
     if (document.body.getAttribute("data-page") === "home") {
@@ -642,20 +710,22 @@
     ctx.closePath();
   }
 
-  function drawCard(canvas, card) {
+  // Draws the Zi Card front on a canvas. Positions follow the Ministry's master card (1011 x 637).
+  function drawCard(canvas, card, sample) {
     var NAVY = "#111c44";
+    var SANS = '"Lexend", "Public Sans", sans-serif';
+    var WIDE = '"Lexend Zetta", "Lexend Exa", "Lexend", sans-serif';
     return Promise.all([
-      document.fonts.load('600 52px "Lexend Exa"'),
-      document.fonts.load('400 17px "Lexend Exa"'),
-      document.fonts.load('700 17px "Public Sans"'),
-      document.fonts.load('400 26px "Public Sans"'),
-      document.fonts.load('34px "Caveat"')
+      document.fonts.load('700 40px "Lexend Zetta"'),
+      document.fonts.load('400 20px "Lexend"'),
+      document.fonts.load('600 14px "Lexend"'),
+      document.fonts.load('40px "Yellowtail"')
     ]).catch(function () {}).then(function () {
       return Promise.all([
         loadImg("/assets/zi-card-bg.png"),
         loadImg("/assets/logo-icon-navy.png"),
         loadImg("/assets/zi-card-seal.png"),
-        loadImg("/api/photo?t=" + Date.now()).catch(function () { return null; })
+        sample ? null : loadImg("/api/photo?t=" + Date.now()).catch(function () { return null; })
       ]);
     }).then(function (im) {
       var ctx = canvas.getContext("2d");
@@ -667,17 +737,26 @@
       ctx.clip();
       cover(ctx, im[0], 0, 0, 1011, 637);
       ctx.fillStyle = NAVY;
-      ctx.textBaseline = "top";
-      function text(t, x, y, font, spacing) {
-        ctx.font = font;
-        if ("letterSpacing" in ctx) ctx.letterSpacing = spacing || "0px";
-        ctx.fillText(t, x, y);
+      ctx.textBaseline = "alphabetic";
+
+      // Text of a set cap height, letter spaced so it fills an exact width.
+      function spaced(t, x, base, family, weight, cap, width) {
+        var size = cap / 0.7;
+        ctx.font = weight + " " + size + "px " + family;
+        if ("letterSpacing" in ctx) ctx.letterSpacing = "0px";
+        var natural = ctx.measureText(t).width;
+        var gap = t.length > 1 ? (width - natural) / (t.length - 1) : 0;
+        if ("letterSpacing" in ctx) { ctx.letterSpacing = gap + "px"; ctx.fillText(t, x, base); ctx.letterSpacing = "0px"; }
+        else { ctx.fillText(t, x, base); }
       }
-      text("ZI CARD", 56, 66, '600 52px "Lexend Exa", sans-serif', "1px");
-      text("YOUR EXPRESSION, YOUR WORLD.", 56, 120, '400 13.5px "Lexend Exa", sans-serif', "1.4px");
-      ctx.drawImage(im[1], 614, 74, 52, 52 * im[1].height / im[1].width);
-      text("ISSUED BY ZI REPUBLIC", 681, 80, '400 17px "Lexend Exa", sans-serif', "2px");
-      text("MINISTRY OF ZI INTERIOR", 681, 107, '400 17px "Lexend Exa", sans-serif', "2px");
+
+      spaced("ZI CARD", 58, 107, WIDE, "700", 33, 289);
+      spaced("YOUR EXPRESSION, YOUR WORLD.", 56, 132, SANS, "400", 10, 291);
+      ctx.drawImage(im[1], 616, 76, 47, 47 * im[1].height / im[1].width);
+      spaced("ISSUED BY ZI REPUBLIC", 682, 95, SANS, "400", 11, 279);
+      spaced("MINISTRY OF ZI INTERIOR", 682, 121, SANS, "400", 11, 279);
+
+      // Portrait
       ctx.save();
       rrect(ctx, 55, 187, 281, 362, 24);
       ctx.clip();
@@ -685,50 +764,73 @@
       ctx.fillRect(55, 187, 281, 362);
       if (im[3]) cover(ctx, im[3], 55, 187, 281, 362);
       ctx.restore();
+      if (sample && !im[3]) {
+        ctx.fillStyle = NAVY; ctx.globalAlpha = 0.45;
+        ctx.font = "500 14px " + SANS; ctx.textAlign = "center";
+        if ("letterSpacing" in ctx) ctx.letterSpacing = "2px";
+        ctx.fillText("YOUR PORTRAIT", 195.5, 540);
+        ctx.textAlign = "left"; ctx.globalAlpha = 1;
+        if ("letterSpacing" in ctx) ctx.letterSpacing = "0px";
+      }
       ctx.fillStyle = NAVY;
-      var rows = [
-        ["NAME", card.name, 187, 394, 482],
-        ["ID NUMBER", card.id, 301, 394, 482],
-        ["STATUS", card.status, 414, 394, 482],
-        ["ISSUED", card.issued, 529, 394, 214],
-        ["VALIDITY", card.validity, 529, 661, 219]
-      ];
-      rows.forEach(function (r) {
-        var labX = r[3] - 4, labY = r[2];
-        text(r[0], labX, labY, '700 17px "Public Sans", sans-serif');
-        var boxY = r[2] + 26;
-        ctx.save();
-        ctx.fillStyle = "rgba(255,255,255,0.62)";
-        rrect(ctx, r[3], boxY, r[4], 56, 10);
-        ctx.fill();
-        ctx.restore();
-        var size = 26;
-        ctx.font = size + 'px "Public Sans", sans-serif';
-        while (ctx.measureText(r[1]).width > r[4] - 20 && size > 12) { size -= 1; ctx.font = size + 'px "Public Sans", sans-serif'; }
-        ctx.textBaseline = "middle";
-        ctx.fillText(r[1], r[3] + 7, boxY + 29);
-        ctx.textBaseline = "top";
-      });
-      ctx.fillRect(951, 196, 1, 320);
-      ctx.save();
-      ctx.translate(951, 372);
-      ctx.rotate(Math.PI / 2);
-      ctx.textBaseline = "middle";
-      text("ZI REPUBLIC", 0, 0, '400 17px "Lexend Exa", sans-serif', "2.4px");
-      ctx.restore();
+
+      // Script title under the portrait
       if (card.title) {
         ctx.save();
         ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        var ts = 34;
-        ctx.font = ts + 'px "Caveat", cursive';
-        while (ctx.measureText(card.title).width > 270 && ts > 14) { ts -= 1; ctx.font = ts + 'px "Caveat", cursive'; }
-        ctx.fillText(card.title, 195.5, 580);
+        var ts = 52;
+        ctx.font = ts + 'px "Yellowtail", cursive';
+        while (ctx.measureText(card.title).width > 190 && ts > 16) { ts -= 1; ctx.font = ts + 'px "Yellowtail", cursive'; }
+        ctx.fillText(card.title, 196, 604);
         ctx.restore();
       }
-      ctx.drawImage(im[2], 912, 540, 76, 76 * im[2].height / im[2].width);
+
+      // Fields
+      var fields = [
+        ["NAME", card.name, 190, 214, 394, 482, 45],
+        ["ID NUMBER", card.id, 304, 328, 394, 482, 87],
+        ["STATUS", card.status, 417, 442, 394, 482, 57],
+        ["ISSUED", card.issued, 531, 556, 390, 219, 55],
+        ["VALIDITY", card.validity, 532, 556, 661, 220, 67]
+      ];
+      fields.forEach(function (f) {
+        var lx = f[0] === "VALIDITY" ? 662 : 391;
+        ctx.fillStyle = NAVY;
+        spaced(f[0], lx, f[2] + 10, SANS, "600", 9.5, f[6]);
+        ctx.save();
+        if (f[0] !== "ISSUED" && f[0] !== "VALIDITY") { ctx.shadowColor = "rgba(17,28,68,0.14)"; ctx.shadowBlur = 5; ctx.shadowOffsetY = 1.5; }
+        ctx.fillStyle = "rgba(244,247,255,0.94)";
+        rrect(ctx, f[4], f[3], f[5], 56, 8);
+        ctx.fill();
+        ctx.restore();
+        ctx.fillStyle = NAVY;
+        var size = 21;
+        ctx.font = "400 " + size + "px " + SANS;
+        if ("letterSpacing" in ctx) ctx.letterSpacing = "0px";
+        while (ctx.measureText(f[1]).width > f[5] - 22 && size > 11) { size -= 1; ctx.font = "400 " + size + "px " + SANS; }
+        ctx.fillText(f[1], f[4] + (f[0] === "ISSUED" ? 10 : f[0] === "VALIDITY" ? 12 : 8), f[3] + 33);
+      });
+
+      // Side rule, star, and vertical name of the republic
+      ctx.fillStyle = NAVY; ctx.strokeStyle = NAVY; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(949.5, 198); ctx.lineTo(949.5, 268); ctx.moveTo(949.5, 286); ctx.lineTo(949.5, 355); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(949.5, 270); ctx.quadraticCurveTo(949.5, 277, 956, 277);
+      ctx.quadraticCurveTo(949.5, 277, 949.5, 284); ctx.quadraticCurveTo(949.5, 277, 943, 277);
+      ctx.quadraticCurveTo(949.5, 277, 949.5, 270); ctx.fill();
+      ctx.save();
+      ctx.translate(955, 381);
+      ctx.rotate(Math.PI / 2);
+      spaced("ZI REPUBLIC", 0, 0, SANS, "500", 10.5, 133);
+      ctx.restore();
+      ctx.drawImage(im[2], 912, 543, 76, 75);
       ctx.restore();
     });
+  }
+
+  var SAMPLE_CARD = { name: "YOUR NAME", id: "ZIYYMM000000", status: "ZI RESIDENT", issued: "MONTH YEAR", validity: "MONTH YEAR", title: "Your own title" };
+  function initSampleCards() {
+    $all("canvas[data-sample]").forEach(function (c) { drawCard(c, SAMPLE_CARD, true); });
   }
 
   // Resize and centre-crop the chosen photo to the card's portrait frame.
@@ -935,10 +1037,51 @@
     if (key) load();
   }
 
+  /* The Placement quiz */
+  function initQuiz() {
+    var data = JSON.parse($("#quiz-data").textContent);
+    var Q = data.questions, P = data.provinces;
+    var scores, step, last;
+    var box = $("#quiz"), res = $("#result"), title = $("#q-title"), opts = $("#q-opts");
+    function start() {
+      scores = [0, 0, 0, 0, 0, 0]; step = 0; last = 0;
+      res.hidden = true; box.hidden = false;
+      show();
+    }
+    function show() {
+      $("#q-step").textContent = "Question " + (step + 1) + " of " + Q.length;
+      $("#q-fill").style.width = (step / Q.length * 100) + "%";
+      title.textContent = Q[step][0];
+      opts.innerHTML = "";
+      Q[step][1].forEach(function (t, i) {
+        var b = document.createElement("button");
+        b.type = "button"; b.textContent = t;
+        b.addEventListener("click", function () {
+          scores[i] += 1; last = i; step += 1;
+          if (step < Q.length) { show(); title.focus(); } else finish();
+        });
+        opts.appendChild(b);
+      });
+    }
+    function finish() {
+      var best = last;
+      scores.forEach(function (s, i) { if (s > scores[best]) best = i; });
+      var p = P[best];
+      try { localStorage.setItem("zibura_province", p.n); } catch (x) {}
+      box.hidden = true; res.hidden = false;
+      res.innerHTML = '<div class="r-dot" style="background:' + p.hex + '"></div><p class="small">Your home province is</p><h2 class="display">' + p.n + '</h2><p class="r-line">' + p.line + '</p><p class="prose">' + p.note + '</p><ul>' + p.traits.map(function (t) { return "<li>" + t + "</li>"; }).join("") + '</ul><div class="r-actions"><a class="btn" href="/waitlist/" data-open-waitlist>Join the Register as ' + p.n + '</a><button type="button" class="btn line" id="retake">Take it again</button></div>';
+      $("#retake").addEventListener("click", start);
+      openWaitlistLinks();
+      res.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    start();
+  }
+
   function init() {
     var page = document.body.getAttribute("data-page");
     initModal();
     initFx();
+    initSampleCards();
     var select = $("#currency");
 
     Promise.all([detectCurrency(), loadCatalog()]).then(function (res) {
@@ -956,6 +1099,7 @@
       if (page === "piece") initPiece();
       if (page === "account") initAccount(); else updateAcctLink();
       if (page === "admin") initAdmin();
+      if (page === "placement") initQuiz();
       if (page !== "shop") loadRatings();
       if (page === "cart") rerender = initCart();
       if (page === "thanks") setCart([]);

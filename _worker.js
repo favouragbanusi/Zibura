@@ -109,15 +109,27 @@ async function waitlist(request, env) {
   const email = clean(body.email, 160).toLowerCase();
   const country = clean(body.country, 60);
   const city = clean(body.city, 80);
+  const day = parseInt(body.birth_day, 10) || null;
+  const month = parseInt(body.birth_month, 10) || null;
+  const phone = clean(body.phone, 30).replace(/[^\d+()\-\s]/g, "");
+  const emailOk = body.email_consent ? 1 : 0;
+  const smsOk = phone && body.sms_consent ? 1 : 0;
+  const province = ["Ripple", "Glow", "Blaze", "Bloom", "Dash", "Swirl"].includes(body.province) ? body.province : null;
   if (!first || !last || !country || !city || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
     return json({ error: "Please complete every field with a valid email." }, 400);
   }
+  if (!emailOk) return json({ error: "Please tick the box to receive news from Zi Republic." }, 400);
+  if ((day && (day < 1 || day > 31)) || (month && (month < 1 || month > 12))) {
+    return json({ error: "Please check your birthday." }, 400);
+  }
   try {
     await env.DB.prepare(
-      "INSERT INTO waitlist (email, first, last, country, city, created_at) VALUES (?, ?, ?, ?, ?, ?)"
-    ).bind(email, first, last, country, city, new Date().toISOString()).run();
+      "INSERT INTO waitlist (email, first, last, country, city, birth_day, birth_month, phone, email_consent, sms_consent, province, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    ).bind(email, first, last, country, city, day, month, phone || null, emailOk, smsOk, province, new Date().toISOString()).run();
   } catch (e) {
     if (String(e).includes("UNIQUE")) {
+      await env.DB.prepare("UPDATE waitlist SET province = COALESCE(?, province), birth_day = COALESCE(?, birth_day), birth_month = COALESCE(?, birth_month), phone = COALESCE(?, phone), sms_consent = MAX(sms_consent, ?) WHERE email = ?")
+        .bind(province, day, month, phone || null, smsOk, email).run();
       return json({ ok: true, again: true });
     }
     return json({ error: "Something went wrong. Please try again." }, 500);
@@ -216,6 +228,7 @@ async function signup(request, env) {
   const email = clean(b.email, 160).toLowerCase();
   const first = clean(b.first, 60), last = clean(b.last, 60);
   const password = String(b.password || "");
+  const bday = parseInt(b.birth_day, 10) || null, bmonth = parseInt(b.birth_month, 10) || null;
   if (!first || !last || !emailOk(email) || password.length < 8 || password.length > 200) {
     return json({ error: "Please add your name, a valid email, and a password of at least 8 characters." }, 400);
   }
@@ -223,8 +236,8 @@ async function signup(request, env) {
   if (exists) return json({ error: "An account with that email already exists. Try signing in." }, 409);
   const salt = hex(crypto.getRandomValues(new Uint8Array(16)));
   const hash = await hashPassword(password, salt);
-  const res = await env.DB.prepare("INSERT INTO users (email, first, last, salt, pass_hash, created_at) VALUES (?, ?, ?, ?, ?, ?)")
-    .bind(email, first, last, salt, hash, new Date().toISOString()).run();
+  const res = await env.DB.prepare("INSERT INTO users (email, first, last, salt, pass_hash, birth_day, birth_month, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+    .bind(email, first, last, salt, hash, bday, bmonth, new Date().toISOString()).run();
   const id = res.meta.last_row_id;
   const cookie = await startSession(env, id);
   return json({ ok: true }, 200, { "set-cookie": cookie });
