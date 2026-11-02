@@ -640,7 +640,7 @@ figcaption { font-size: 13px; color: var(--ink-soft); margin-top: 10px; max-widt
 /* Founder signature, full width */
 .sig-wrap { padding: 0 var(--gutter) clamp(40px, 6vw, 96px); overflow: hidden; text-align: center; }
 .sig-wrap .signature { font-family: "Mrs Saint Delafield", cursive; font-size: clamp(120px, 40vw, 900px); line-height: .85; margin: 0; color: var(--navy); white-space: nowrap; transform: rotate(-3deg); display: inline-block; }
-.note .body .signature { display: none; }
+
 
 /* Collapsible filters */
 details.facet { border-bottom: 1px solid var(--line); padding: 0; }
@@ -813,7 +813,7 @@ details.facet .size-h { font-weight: 500; margin: 14px 0 0; }
 @media (max-width: 1000px) { .site-footer .top { grid-template-columns: 1fr 1fr; } .site-footer .f-brand { grid-column: 1 / -1; } }
 
 /* Interaction layer */
-.progress { position: fixed; left: 0; top: 0; height: 3px; width: 100%; transform-origin: left; transform: scaleX(0); background: linear-gradient(90deg, #111c44, #2fa8ff, #14d6c8, #ffd400, #ff7a00, #f0182e, #8a4dff); z-index: 60; pointer-events: none; }
+.progress { position: fixed; left: 0; top: 0; height: 3px; width: 100%; transform-origin: left; transform: scaleX(0); background: #2fa8ff; z-index: 60; pointer-events: none; }
 .toast { position: fixed; left: 50%; bottom: 26px; transform: translate(-50%, 30px); opacity: 0; background: var(--navy); color: var(--white); border-radius: 999px; padding: 14px 22px; font-size: 14px; z-index: 70; transition: transform .4s cubic-bezier(.2,.7,.1,1), opacity .3s; display: flex; gap: 14px; align-items: center; pointer-events: none; }
 .toast.on { transform: translate(-50%, 0); opacity: 1; pointer-events: auto; }
 .toast a { color: var(--sky); }
@@ -856,8 +856,10 @@ details.facet .size-h { font-weight: 500; margin: 14px 0 0; }
 .cur-media .cur-dot { opacity: 0; }
 .cur-text .cur-ring { width: 3px; height: 30px; margin: -15px 0 0 -1.5px; border-radius: 3px; background: var(--navy); }
 .cur-text .cur-dot { opacity: 0; }
-.cur-down .cur-ring { width: 26px; height: 26px; margin: -13px 0 0 -13px; background: rgba(255,122,0,.35); border-color: #ff7a00; }
+.cur-down .cur-ring { width: 26px; height: 26px; margin: -13px 0 0 -13px; background: rgba(47,168,255,.35); border-color: #2fa8ff; }
 .cur-label { width: 92px; margin: -9px 0 0 -46px; text-align: center; color: #fff; font-size: 13px; font-weight: 500; transition: opacity .2s; }
 .cur-media .cur-label { opacity: 1; }
 .cur-trail { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 99; pointer-events: none; }
 @media (hover: none), (pointer: coarse) { .cur-dot, .cur-ring, .cur-label, .cur-trail { display: none; } }
+
+.note .body .signature { display: inline-block; margin: clamp(20px, 3vw, 40px) 0 0; line-height: 1.25; padding: .1em .2em .15em; transform: rotate(-3deg); transform-origin: left center; white-space: nowrap; }

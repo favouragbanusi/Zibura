@@ -1030,9 +1030,9 @@ write(
       <p>That's Zi Republic, built on the idea that people deserve a place to actually express themselves, however that looks for them. This was never about re-educating anyone or writing a new set of rules to replace the old ones. It's about giving people somewhere to belong, exactly as they already are.</p>
     </div>
     <blockquote class="pull"><span class="qm" aria-hidden="true">&ldquo;</span>How you show up in the world is a language. We built Zibura so more people could speak it fluently, on their own terms.</blockquote>
+    <p class="signature" id="sig" aria-label="Ruova">Ruova</p>
   </div>
-</main>
-<section class="sig-wrap" aria-label="Signed, Ruova"><p class="signature" id="sig" aria-label="Ruova">Ruova</p></section>`
+</main>`
   })
 );
 

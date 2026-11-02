@@ -112,13 +112,17 @@
     var g = cv.getContext("2d");
     function size() { cv.width = innerWidth; cv.height = innerHeight; }
     size(); window.addEventListener("resize", size);
-    var COLORS = ["#2fa8ff", "#ffd400", "#f0182e", "#17c26a", "#ff7a00", "#8a4dff"];
-    var mx = -100, my = -100, rx = -100, ry = -100, pts = [], on = false, hue = 0;
+    var SPARK = "#2fa8ff";
+    var mx = -100, my = -100, rx = -100, ry = -100, parts = [], on = false, lastSpawn = 0;
     root.classList.add("has-cursor");
     document.addEventListener("mousemove", function (e) {
       mx = e.clientX; my = e.clientY;
       if (!on) { on = true; rx = mx; ry = my; body.classList.add("cur-on"); }
-      pts.push({ x: mx, y: my, t: performance.now() }); if (pts.length > 60) pts.shift();
+      var now = performance.now();
+      if (!reduce && now - lastSpawn > 38) {
+        lastSpawn = now;
+        parts.push({ x: mx + (Math.random() - 0.5) * 18, y: my + (Math.random() - 0.5) * 18, vx: (Math.random() - 0.5) * 0.5, vy: 0.25 + Math.random() * 0.4, s: 4 + Math.random() * 6, born: now, life: 650 + Math.random() * 350, ph: Math.random() * 6 });
+      }
       var t = e.target;
       var media = t.closest && t.closest(".card, .gallery .ph");
       var link = t.closest && t.closest("a, button, summary, label, [role=button], .tile, .pill, .opt");
@@ -131,6 +135,14 @@
     document.addEventListener("mouseleave", function () { on = false; body.classList.remove("cur-on"); });
     document.addEventListener("mousedown", function () { body.classList.add("cur-down"); });
     document.addEventListener("mouseup", function () { body.classList.remove("cur-down"); });
+    function star(x, y, r) {
+      g.beginPath();
+      for (var k = 0; k < 8; k++) {
+        var ang = k * Math.PI / 4 - Math.PI / 2, rad = k % 2 === 0 ? r : r * 0.28;
+        g.lineTo(x + Math.cos(ang) * rad, y + Math.sin(ang) * rad);
+      }
+      g.closePath(); g.fill();
+    }
     (function loop(now) {
       rx += (mx - rx) * 0.18; ry += (my - ry) * 0.18;
       dot.style.transform = "translate(" + mx + "px," + my + "px)";
@@ -139,14 +151,15 @@
       g.clearRect(0, 0, cv.width, cv.height);
       if (!reduce) {
         var t = performance.now();
-        while (pts.length && t - pts[0].t > 520) pts.shift();
-        for (var i = 1; i < pts.length; i++) {
-          var a = pts[i - 1], b = pts[i], age = 1 - (t - b.t) / 520;
-          g.strokeStyle = COLORS[Math.floor((b.t / 90) % COLORS.length)];
-          g.globalAlpha = Math.max(0, age) * 0.85;
-          g.lineWidth = 2 + age * 9; g.lineCap = "round";
-          g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); g.stroke();
-        }
+        parts = parts.filter(function (p) { return t - p.born < p.life; });
+        g.fillStyle = SPARK;
+        parts.forEach(function (p) {
+          var age = (t - p.born) / p.life;
+          p.x += p.vx; p.y += p.vy;
+          var tw = 0.6 + 0.4 * Math.sin(t / 70 + p.ph);
+          g.globalAlpha = (1 - age) * tw;
+          star(p.x, p.y, p.s * (1 - age * 0.5));
+        });
         g.globalAlpha = 1;
       }
       requestAnimationFrame(loop);
@@ -764,7 +777,7 @@
     s.style.fontSize = "100px";
     s.style.display = "inline-block";
     var w = s.getBoundingClientRect().width || 1;
-    var target = Math.min(wrap.clientWidth * 0.5, 680);
+    var target = Math.min(wrap.clientWidth * 0.5, 320);
     s.style.fontSize = Math.max(60, Math.floor(100 * target / w)) + "px";
   }
   function initFx() {
