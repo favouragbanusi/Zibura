@@ -113,3 +113,11 @@ CREATE TABLE IF NOT EXISTS saved (
   created_at TEXT NOT NULL,
   PRIMARY KEY (user_id, slug)
 );
+
+CREATE TABLE IF NOT EXISTS password_resets (
+  token_hash TEXT PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  expires_at INTEGER NOT NULL,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS password_resets_user ON password_resets (user_id);

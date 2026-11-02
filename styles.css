@@ -832,3 +832,32 @@ details.facet .size-h { font-weight: 500; margin: 14px 0 0; }
 .menu-open .site-header.away { transform: none; }
 .site-footer a.btn { opacity: 1; color: var(--navy); }
 .site-footer .top .s, .site-footer .top p.s { color: var(--sky) !important; opacity: .85 !important; }
+
+.sig-wrap { overflow: visible; padding: clamp(24px, 4vw, 56px) var(--gutter) clamp(56px, 8vw, 110px); text-align: left; max-width: 1360px; margin: 0 auto; }
+.sig-wrap .signature { line-height: 1.25; padding: .12em .2em .2em; transform: rotate(-3deg); transform-origin: left center; }
+
+.socs { display: flex; gap: 10px; flex-wrap: wrap; }
+.soc { display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(210,234,255,.35); border-radius: 999px; padding: 8px 14px; font-size: 13px; transition: background .2s, color .2s, transform .2s; }
+.site-footer .soc:hover { background: var(--sky); color: var(--navy); transform: translateY(-2px); }
+.site-footer .f-follow { margin-top: 14px; }
+.d-socs { margin: 4px 0 18px; }
+.d-socs .soc { color: var(--navy); border-color: var(--line); text-decoration: none; }
+
+/* Cursor */
+.has-cursor, .has-cursor a, .has-cursor button, .has-cursor label, .has-cursor summary, .has-cursor .gallery .ph, .has-cursor [role="button"] { cursor: none; }
+.has-cursor input, .has-cursor textarea, .has-cursor select { cursor: text; }
+.cur-dot, .cur-ring, .cur-label { position: fixed; left: 0; top: 0; z-index: 100; pointer-events: none; opacity: 0; will-change: transform; }
+.cur-dot { width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: var(--navy); box-shadow: 0 0 0 2px #fff; transition: opacity .2s, width .2s, height .2s, margin .2s, background .2s; }
+.cur-ring { width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 50%; border: 1.5px solid var(--navy); background: rgba(210,234,255,0); transition: opacity .2s, width .25s cubic-bezier(.2,.7,.1,1), height .25s cubic-bezier(.2,.7,.1,1), margin .25s cubic-bezier(.2,.7,.1,1), background .25s, border-color .25s; }
+.cur-on .cur-dot, .cur-on .cur-ring { opacity: 1; }
+.cur-link .cur-ring { width: 64px; height: 64px; margin: -32px 0 0 -32px; background: rgba(47,168,255,.22); border-color: #2fa8ff; }
+.cur-link .cur-dot { background: #2fa8ff; }
+.cur-media .cur-ring { width: 92px; height: 92px; margin: -46px 0 0 -46px; background: var(--navy); border-color: var(--navy); }
+.cur-media .cur-dot { opacity: 0; }
+.cur-text .cur-ring { width: 3px; height: 30px; margin: -15px 0 0 -1.5px; border-radius: 3px; background: var(--navy); }
+.cur-text .cur-dot { opacity: 0; }
+.cur-down .cur-ring { width: 26px; height: 26px; margin: -13px 0 0 -13px; background: rgba(255,122,0,.35); border-color: #ff7a00; }
+.cur-label { width: 92px; margin: -9px 0 0 -46px; text-align: center; color: #fff; font-size: 13px; font-weight: 500; transition: opacity .2s; }
+.cur-media .cur-label { opacity: 1; }
+.cur-trail { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 99; pointer-events: none; }
+@media (hover: none), (pointer: coarse) { .cur-dot, .cur-ring, .cur-label, .cur-trail { display: none; } }

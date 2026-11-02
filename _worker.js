@@ -246,6 +246,48 @@ async function passwordPost(request, env) {
   return json({ ok: true });
 }
 
+// ---------- Password reset by email (Brevo) ----------
+async function sendMail(env, to, subject, html) {
+  if (!env.BREVO_API_KEY || !env.MAIL_FROM) return false;
+  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: { "api-key": env.BREVO_API_KEY, "content-type": "application/json", accept: "application/json" },
+    body: JSON.stringify({ sender: { name: "Zibura", email: env.MAIL_FROM }, to: [{ email: to }], subject, htmlContent: html })
+  });
+  return res.ok;
+}
+async function forgotPassword(request, env) {
+  const off = needDb(env); if (off) return off;
+  let b; try { b = await request.json(); } catch (e) { return json({ error: "The form could not be read." }, 400); }
+  const email = clean(b.email, 160).toLowerCase();
+  const done = json({ ok: true });
+  if (!emailOk(email)) return done;
+  const user = await env.DB.prepare("SELECT id, first FROM users WHERE email = ?").bind(email).first();
+  if (!user) return done;
+  const recent = await env.DB.prepare("SELECT created_at FROM password_resets WHERE user_id = ? ORDER BY created_at DESC LIMIT 1").bind(user.id).first();
+  if (recent && Date.now() - recent.created_at < 60000) return done;
+  const token = hex(crypto.getRandomValues(new Uint8Array(32)));
+  await env.DB.prepare("INSERT INTO password_resets (token_hash, user_id, expires_at, created_at) VALUES (?, ?, ?, ?)")
+    .bind(await sha256(token), user.id, Date.now() + 3600000, Date.now()).run();
+  const link = new URL(request.url).origin + "/reset/?token=" + token;
+  await sendMail(env, email, "Reset your Zibura password",
+    "<p>Hello " + user.first.replace(/[<>&]/g, "") + ",</p><p>The Ministry of Zi Interior received a request to reset your password. Use the link below within one hour.</p><p><a href=\"" + link + "\">Reset my password</a></p><p>If you did not ask for this, you can ignore this email. Your password stays the same.</p>");
+  return done;
+}
+async function resetPassword(request, env) {
+  const off = needDb(env); if (off) return off;
+  let b; try { b = await request.json(); } catch (e) { return json({ error: "The form could not be read." }, 400); }
+  const password = String(b.password || "");
+  if (password.length < 8 || password.length > 200) return json({ error: "Your new password needs at least 8 characters." }, 400);
+  const row = await env.DB.prepare("SELECT user_id, expires_at FROM password_resets WHERE token_hash = ?").bind(await sha256(String(b.token || ""))).first();
+  if (!row || row.expires_at < Date.now()) return json({ error: "This reset link has expired. Ask for a new one." }, 400);
+  const salt = hex(crypto.getRandomValues(new Uint8Array(16)));
+  await env.DB.prepare("UPDATE users SET salt = ?, pass_hash = ? WHERE id = ?").bind(salt, await hashPassword(password, salt), row.user_id).run();
+  await env.DB.prepare("DELETE FROM password_resets WHERE user_id = ?").bind(row.user_id).run();
+  await env.DB.prepare("DELETE FROM sessions WHERE user_id = ?").bind(row.user_id).run();
+  return json({ ok: true });
+}
+
 async function deleteAccount(request, env) {
   const off = needDb(env); if (off) return off;
   const user = await currentUser(request, env);
@@ -253,7 +295,7 @@ async function deleteAccount(request, env) {
   let b; try { b = await request.json(); } catch (e) { return json({ error: "The form could not be read." }, 400); }
   const row = await env.DB.prepare("SELECT salt, pass_hash FROM users WHERE id = ?").bind(user.id).first();
   if (!row || (await hashPassword(String(b.password || ""), row.salt)) !== row.pass_hash) return json({ error: "Your password does not match." }, 403);
-  for (const t of ["sessions", "applications", "profiles", "addresses", "saved", "orders"]) {
+  for (const t of ["sessions", "applications", "profiles", "addresses", "saved", "orders", "password_resets"]) {
     await env.DB.prepare("DELETE FROM " + t + " WHERE user_id = ?").bind(user.id).run();
   }
   await env.DB.prepare("DELETE FROM users WHERE id = ?").bind(user.id).run();
@@ -616,6 +658,8 @@ export default {
     if (url.pathname === "/api/auth/login" && request.method === "POST") return login(request, env);
     if (url.pathname === "/api/auth/logout" && request.method === "POST") return logout(request, env);
     if (url.pathname === "/api/me" && request.method === "GET") return me(request, env);
+    if (url.pathname === "/api/auth/forgot" && request.method === "POST") return forgotPassword(request, env);
+    if (url.pathname === "/api/auth/reset" && request.method === "POST") return resetPassword(request, env);
     if (url.pathname === "/api/account" && request.method === "GET") return account(request, env);
     if (url.pathname === "/api/profile" && request.method === "POST") return saveProfile(request, env);
     if (url.pathname === "/api/avatar" && request.method === "POST") return avatarPost(request, env);
@@ -635,6 +679,12 @@ export default {
     if (url.pathname === "/api/waitlist" && request.method === "POST") {
       return waitlist(request, env);
     }
-    return env.ASSETS.fetch(request);
+    const res = await env.ASSETS.fetch(request);
+    // Pages and data refresh on every visit. Versioned assets keep for a year because their address changes with each build.
+    const headers = new Headers(res.headers);
+    const versioned = url.pathname.startsWith("/assets/") && url.searchParams.has("v");
+    const stable = /\.(jpg|jpeg|png|webp|mp4|webm|woff2?)$/i.test(url.pathname);
+    headers.set("cache-control", versioned ? "public, max-age=31536000, immutable" : stable ? "public, max-age=3600, must-revalidate" : "no-cache");
+    return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
   }
 };

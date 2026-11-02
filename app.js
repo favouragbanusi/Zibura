@@ -99,7 +99,61 @@
     if (code) code.textContent = s.value;
     $all(".d-cur button").forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-cur") === s.value); });
   }
+  function initCursor() {
+    var fine = window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!fine) return;
+    var root = document.documentElement, body = document.body;
+    var dot = document.createElement("div"); dot.className = "cur-dot";
+    var ring = document.createElement("div"); ring.className = "cur-ring";
+    var label = document.createElement("div"); label.className = "cur-label";
+    var cv = document.createElement("canvas"); cv.className = "cur-trail";
+    body.appendChild(cv); body.appendChild(ring); body.appendChild(dot); body.appendChild(label);
+    var g = cv.getContext("2d");
+    function size() { cv.width = innerWidth; cv.height = innerHeight; }
+    size(); window.addEventListener("resize", size);
+    var COLORS = ["#2fa8ff", "#ffd400", "#f0182e", "#17c26a", "#ff7a00", "#8a4dff"];
+    var mx = -100, my = -100, rx = -100, ry = -100, pts = [], on = false, hue = 0;
+    root.classList.add("has-cursor");
+    document.addEventListener("mousemove", function (e) {
+      mx = e.clientX; my = e.clientY;
+      if (!on) { on = true; rx = mx; ry = my; body.classList.add("cur-on"); }
+      pts.push({ x: mx, y: my, t: performance.now() }); if (pts.length > 60) pts.shift();
+      var t = e.target;
+      var media = t.closest && t.closest(".card, .gallery .ph");
+      var link = t.closest && t.closest("a, button, summary, label, [role=button], .tile, .pill, .opt");
+      var text = t.closest && t.closest("input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]), textarea");
+      body.classList.toggle("cur-media", !!media && !text);
+      body.classList.toggle("cur-link", !!link && !media && !text);
+      body.classList.toggle("cur-text", !!text);
+      label.textContent = media ? (media.classList.contains("card") ? "View" : "Zoom") : "";
+    });
+    document.addEventListener("mouseleave", function () { on = false; body.classList.remove("cur-on"); });
+    document.addEventListener("mousedown", function () { body.classList.add("cur-down"); });
+    document.addEventListener("mouseup", function () { body.classList.remove("cur-down"); });
+    (function loop(now) {
+      rx += (mx - rx) * 0.18; ry += (my - ry) * 0.18;
+      dot.style.transform = "translate(" + mx + "px," + my + "px)";
+      ring.style.transform = "translate(" + rx + "px," + ry + "px)";
+      label.style.transform = "translate(" + rx + "px," + ry + "px)";
+      g.clearRect(0, 0, cv.width, cv.height);
+      if (!reduce) {
+        var t = performance.now();
+        while (pts.length && t - pts[0].t > 520) pts.shift();
+        for (var i = 1; i < pts.length; i++) {
+          var a = pts[i - 1], b = pts[i], age = 1 - (t - b.t) / 520;
+          g.strokeStyle = COLORS[Math.floor((b.t / 90) % COLORS.length)];
+          g.globalAlpha = Math.max(0, age) * 0.85;
+          g.lineWidth = 2 + age * 9; g.lineCap = "round";
+          g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); g.stroke();
+        }
+        g.globalAlpha = 1;
+      }
+      requestAnimationFrame(loop);
+    })();
+  }
   function initUx() {
+    initCursor();
     var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     var fine = window.matchMedia && window.matchMedia("(hover: hover)").matches;
     var body = document.body, burger = document.getElementById("burger");
@@ -710,7 +764,7 @@
     s.style.fontSize = "100px";
     s.style.display = "inline-block";
     var w = s.getBoundingClientRect().width || 1;
-    var target = Math.min(wrap.clientWidth * 0.88, 1400);
+    var target = Math.min(wrap.clientWidth * 0.5, 680);
     s.style.fontSize = Math.max(60, Math.floor(100 * target / w)) + "px";
   }
   function initFx() {
@@ -1256,6 +1310,17 @@
         }).catch(function () { btn.disabled = false; msg.textContent = "The Ministry hit a snag. Please try again."; });
       });
     }
+    var fLogin = document.getElementById("f-login"), fForgot = document.getElementById("f-forgot");
+    document.getElementById("show-forgot").addEventListener("click", function () { fLogin.hidden = true; fForgot.hidden = false; });
+    document.getElementById("back-login").addEventListener("click", function () { fForgot.hidden = true; fLogin.hidden = false; });
+    fForgot.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var msg = $(".msg", fForgot);
+      msg.textContent = "One moment.";
+      api("/api/auth/forgot", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: fForgot.elements.email.value }) }).then(function () {
+        msg.textContent = "If that email is on file, a reset link is on its way. It works for one hour.";
+      }).catch(function () { msg.textContent = "The Ministry hit a snag. Please try again."; });
+    });
     authForm("f-signup", "/api/auth/signup");
     authForm("f-login", "/api/auth/login");
 
@@ -1353,6 +1418,19 @@
       var el = document.getElementById("order-no");
       if (el && d.ok && d.number) { el.textContent = "Your order number is " + d.number + ". It is filed in your account."; el.hidden = false; }
     }).catch(function () {});
+  }
+
+  function initReset() {
+    var f = document.getElementById("f-reset"), msg = $(".msg", f);
+    var token = new URLSearchParams(location.search).get("token") || "";
+    if (!token) msg.textContent = "This page needs the link from your reset email.";
+    f.addEventListener("submit", function (e) {
+      e.preventDefault();
+      api("/api/auth/reset", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ token: token, password: f.elements[0].value }) }).then(function (d) {
+        if (d.ok) { msg.innerHTML = 'Password saved. <a href="/account/">Sign in</a>.'; f.reset(); }
+        else msg.textContent = d.error || "The Ministry hit a snag. Please try again.";
+      });
+    });
   }
 
   function updateAcctLink() {
@@ -1521,6 +1599,7 @@
       if (page === "piece") initPiece();
       if (page === "account") initAccount(); else updateAcctLink();
       if (page === "admin") initAdmin();
+      if (page === "reset") initReset();
       if (page === "placement") initQuiz();
       if (page !== "shop") loadRatings();
       if (page === "cart") rerender = initCart();

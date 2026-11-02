@@ -15,7 +15,13 @@ function find(...candidates) {
   throw new Error("Missing file. Looked for: " + candidates.join(", "));
 }
 
-const products = JSON.parse(fs.readFileSync(find("products.json", "data/products.json"), "utf8"));
+// Content from the Google Sheet (written by sheet.js) wins over the files in this project.
+try { require("child_process").execFileSync(process.execPath, [path.join(__dirname, "sheet.js")], { stdio: "inherit" }); } catch (e) { console.log("sheet.js did not run:", e.message); }
+const fromSheet = (name) => { const f = path.join(__dirname, "content", name); return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, "utf8")) : null; };
+const COPY = fromSheet("copy.json") || {};
+const LINKS = fromSheet("links.json") || {};
+const T = (key, fallback) => (COPY[key] ? esc(COPY[key]) : fallback);
+const products = fromSheet("pieces.json") || JSON.parse(fs.readFileSync(find("products.json", "data/products.json"), "utf8"));
 
 function esc(s) {
   return String(s)
@@ -31,6 +37,8 @@ function write(rel, content) {
   fs.writeFileSync(file, content);
 }
 
+// A new value on every build, so browsers and Cloudflare fetch fresh CSS and JS after each deploy.
+const BUILD_V = Date.now().toString(36);
 const TAX = JSON.parse(fs.readFileSync(find("taxonomy.json"), "utf8"));
 const COLORS = JSON.parse(fs.readFileSync(find("colors.json"), "utf8"));
 const AUDIENCES = ["Women", "Men"];
@@ -43,7 +51,7 @@ const countIn = (fn) => products.filter(fn).length;
 // Images and films drop in by file name. Add a file such as signal-1-cover.jpg or arc-1-film.mp4 next to build.js and it appears on the page.
 // Real files next to build.js win. The placeholders folder fills any gap until the real image arrives.
 function findImage(name) {
-  for (const dir of [root, path.join(root, "placeholders")]) {
+  for (const dir of [path.join(__dirname, "content", "images"), root, path.join(root, "placeholders")]) {
     for (const ext of ["jpg", "jpeg", "png", "webp"]) {
       const file = path.join(dir, `${name}.${ext}`);
       if (fs.existsSync(file)) return { file, ext };
@@ -62,12 +70,10 @@ function media(name, alt) {
 }
 // Returns an <img> for a product photo if the file exists, or an empty string.
 function photo(name, alt) {
-  for (const ext of ["jpg", "jpeg", "png", "webp"]) {
-    const file = path.join(root, `${name}.${ext}`);
-    if (fs.existsSync(file)) {
-      write(`assets/media/${name}.${ext}`, fs.readFileSync(file));
-      return `<img src="/assets/media/${name}.${ext}" alt="${esc(alt)}" loading="lazy">`;
-    }
+  const hit = findImage(name);
+  if (hit) {
+    write(`assets/media/${name}.${hit.ext}`, fs.readFileSync(hit.file));
+    return `<img src="/assets/media/${name}.${hit.ext}" alt="${esc(alt)}" loading="lazy">`;
   }
   return "";
 }
@@ -188,6 +194,8 @@ ${c.types.map((t) => `      <a href="/shop/?category=${encodeURIComponent(c.name
   </div>
 </div>`;
 
+const SOCIAL = `<a class="soc" href="${LINKS.instagram || "https://www.instagram.com/thezibura/"}" target="_blank" rel="noopener" aria-label="Zibura on Instagram"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r=".6" fill="currentColor"/></svg><span>Instagram</span></a><a class="soc" href="${LINKS.tiktok || "https://www.tiktok.com/@thezibura"}" target="_blank" rel="noopener" aria-label="Zibura on TikTok"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v11.2a3.7 3.7 0 11-3.7-3.7"/><path d="M14 3c.4 2.6 2 4.2 5 4.4"/></svg><span>TikTok</span></a>`;
+
 function layout({ title, description, page, body }) {
   return `<!doctype html>
 <html lang="en">
@@ -201,11 +209,11 @@ function layout({ title, description, page, body }) {
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..700&family=Public+Sans:wght@400;500;600&family=Lexend:wght@400;500;600&family=Lexend+Zetta:wght@700&family=Yellowtail&family=Mrs+Saint+Delafield&display=swap">
-<link rel="stylesheet" href="/assets/styles.css">
+<link rel="stylesheet" href="/assets/styles.css?v=${BUILD_V}">
 <script>document.documentElement.className = "js";</script>
 </head>
 <body data-page="${page}">
-<div class="notice">Official notice: Signal I opens April 18, 2027. <a href="/waitlist/" data-open-waitlist>Get on the Register</a></div>
+<div class="notice">${T("notice_text", "Official notice: Signal I opens April 18, 2027.")} <a href="/waitlist/" data-open-waitlist>${T("notice_link", "Get on the Register")}</a></div>
 <header class="site-header" id="top">
   <div class="wrap">
     <button type="button" class="burger" id="burger" aria-label="Open menu" aria-expanded="false" aria-controls="drawer"><span></span><span></span><span></span></button>
@@ -241,6 +249,7 @@ function layout({ title, description, page, body }) {
     <a class="d-link" href="/account/" id="acct-link-m">My account</a>
     <a class="d-link" href="/cart/">Cart</a>
     <div class="d-cur" role="group" aria-label="Currency">${["CAD", "USD", "GBP", "NGN"].map((c) => `<button type="button" data-cur="${c}">${c}</button>`).join("")}</div>
+    <div class="socs d-socs">${SOCIAL}</div>
     <a class="btn wide" href="/zi-card/">Apply for Zi Card</a>
   </div>
 </div>
@@ -249,12 +258,12 @@ ${body}
   <div class="wrap">
     <div class="f-hero">
       <p class="f-big">Your expression,<br>your world.</p>
-      <div class="f-cta"><p>The Bureau of Arrivals is open for names.</p><a class="btn light" href="/waitlist/">Join the Register</a></div>
+      <div class="f-cta"><p>${T("footer_cta", "The Bureau of Arrivals is open for names.")}</p><a class="btn light" href="/waitlist/">Join the Register</a></div>
     </div>
     <div class="top">
       <div class="f-brand">
         <img class="word" src="/assets/logo-wordmark-sky.png" alt="Zibura" width="636" height="120">
-        <p class="s">Zibura is the fashion house of Zi Republic. Founding Day is December 1, 2026. Signal I opens April 18, 2027.</p>
+        <p class="s">${T("footer_about", "Zibura is the fashion house of Zi Republic. Founding Day is December 1, 2026. Signal I opens April 18, 2027.")}</p>
         <div class="f-prov" aria-hidden="true"><i style="background:#111c44;box-shadow:0 0 0 1px #d2eaff"></i><i style="background:#ffd400"></i><i style="background:#f0182e"></i><i style="background:#17c26a"></i><i style="background:#ff7a00"></i><i style="background:#8a4dff"></i></div>
       </div>
       <div>
@@ -282,16 +291,18 @@ ${categories.map((c) => `        <a href="/shop/?category=${encodeURIComponent(c
         <p class="s">The Zi Republic Embassy<br>6 Founding Day Avenue<br>Ripple, Zi Republic</p>
         <a href="/note/">From the Zi-in-Chief</a>
         <a href="/waitlist/">Join the Register</a>
+        <h3 class="f-follow">Follow the republic</h3>
+        <div class="socs">${SOCIAL}</div>
       </div>
     </div>
     <div class="legal-row">
-      <p class="legal">&copy; 2026 Zibura. Printed by authority of the Zi Republic.</p>
+      <p class="legal">${T("legal_line", "&copy; 2026 Zibura. Printed by authority of the Zi Republic.")}</p>
       <button type="button" class="to-top" id="to-top">Back to the capital</button>
     </div>
   </div>
 </footer>
 ${MODAL}
-<script src="/assets/app.js" defer></script>
+<script src="/assets/app.js?v=${BUILD_V}" defer></script>
 </body>
 </html>
 `;
@@ -324,10 +335,10 @@ write(
   <div class="center">
     <div class="hero-copy">
       <h1 class="display rise">${words("Your expression,")}<br>${words("your world.")}</h1>
-      <p class="lede fade">Zi Republic is a fashion country for people with more than one side. Citizens are welcome, the rules are optional, and the borders open April 18, 2027.</p>
+      <p class="lede fade">${T("hero_lede", "Zi Republic is a fashion country for people with more than one side. Citizens are welcome, the rules are optional, and the borders open April 18, 2027.")}</p>
       <div class="actions fade">
-        <a class="btn" href="#register">Join the Register</a>
-        <a class="btn line" href="/brand/">Cross the border</a>
+        <a class="btn" href="#register">${T("hero_button_1", "Join the Register")}</a>
+        <a class="btn line" href="/brand/">${T("hero_button_2", "Cross the border")}</a>
       </div>
     </div>
     <figure class="hero-photo fade" data-tilt-photo>
@@ -346,7 +357,7 @@ write(
   <div class="wrap split">
     <div data-reveal>
       <h2 class="display">Join the Register.</h2>
-      <p class="reg-lead">The Bureau of Arrivals is taking names. Add yours and your name goes on the register of Zi Republic, ahead of the day Signal I opens its borders.</p>
+      <p class="reg-lead">${T("register_lead", "The Bureau of Arrivals is taking names. Add yours and your name goes on the register of Zi Republic, ahead of the day Signal I opens its borders.")}</p>
       <ul class="reg-points">
         <li>Your name on the register before the borders open</li>
         <li>First word on Signal I, April 18, 2027</li>
@@ -874,6 +885,14 @@ write(
         <div class="full"><label for="l-pass">Password</label><input id="l-pass" name="password" type="password" autocomplete="current-password" required></div>
       </div>
       <button class="btn" type="submit">Present my passport</button>
+      <p class="small" style="margin-top:14px"><button type="button" class="linkbtn" id="show-forgot">Forgot your password?</button></p>
+      <div class="msg" role="status"></div>
+    </form>
+    <form id="f-forgot" class="acct-form" hidden>
+      <p class="sub">Enter the email on your file. The Ministry will send a reset link that works for one hour.</p>
+      <div class="form-grid"><div class="full"><label for="fg-email">Email</label><input id="fg-email" name="email" type="email" autocomplete="email" required></div></div>
+      <button class="btn" type="submit">Send reset link</button>
+      <p class="small" style="margin-top:14px"><button type="button" class="linkbtn" id="back-login">Back to sign in</button></p>
       <div class="msg" role="status"></div>
     </form>
   </div>
@@ -945,6 +964,29 @@ write(
   })
 );
 
+// Password reset
+write(
+  "reset/index.html",
+  layout({
+    title: "Reset your password | Zibura",
+    description: "Choose a new password for your Zi passport.",
+    page: "reset",
+    body: `<main>
+<section class="page-head"><div class="wrap">
+  <h1 class="display rise">${words("Choose a new password.")}</h1>
+  <p class="fade">Pick something of 8 characters or more. Signing in on other devices will be asked again.</p>
+</div></section>
+<section class="section" style="padding-top:clamp(16px,3vw,40px)"><div class="wrap">
+  <form id="f-reset" class="form-card acct-form">
+    <div class="form-grid"><div class="full"><label for="rs-pass">New password</label><input id="rs-pass" type="password" minlength="8" autocomplete="new-password" required></div></div>
+    <button class="btn" type="submit">Save new password</button>
+    <div class="msg" role="status"></div>
+  </form>
+</div></section>
+</main>`
+  })
+);
+
 // Ministry review page
 write(
   "admin/index.html",
@@ -981,9 +1023,9 @@ write(
     <p class="who-role">Zi-in-Chief</p>
   </div>
   <div class="body">
-    <p class="lead-b fade">Expression is the most human thing we do. There's no single right way to exist, and every side of you, every version, deserves space.</p>
+    <p class="lead-b fade">${T("founder_lead", "Expression is the most human thing we do. There's no single right way to exist, and every side of you, every version, deserves space.")}</p>
     <div class="letter fade">
-      <p>Fashion has always been a language to me, maybe the first one I ever really learned to speak on my own terms. It's how I've found the truest way to express who I am.</p>
+      <p>${T("founder_p1", "Fashion has always been a language to me, maybe the first one I ever really learned to speak on my own terms. It's how I've found the truest way to express who I am.")}</p>
       <p>I wanted that for other people too. Because if I'm honest, life comes with so many rules and regulations, so many quiet ideas about what's appropriate, what's too much, what belongs together and what doesn't. One morning I just thought, I'm going to build a new country because who is going to check me? So I did.</p>
       <p>That's Zi Republic, built on the idea that people deserve a place to actually express themselves, however that looks for them. This was never about re-educating anyone or writing a new set of rules to replace the old ones. It's about giving people somewhere to belong, exactly as they already are.</p>
     </div>
@@ -1002,7 +1044,7 @@ write(
     description: "Every Piece in the Zibura world.",
     page: "shop",
     body: `<main class="wrap">
-<div class="page-head" style="padding-left:0;padding-right:0"><h1 class="display rise">${words("Shop the republic.")}</h1><p class="fade">Signal I, Arc I. Every Piece here has official clearance. Pick your color, pick your size, and wear it your way.</p></div>
+<div class="page-head" style="padding-left:0;padding-right:0"><h1 class="display rise">${words("Shop the republic.")}</h1><p class="fade">${T("shop_subtitle", "Signal I, Arc I. Every Piece here has official clearance. Pick your color, pick your size, and wear it your way.")}</p></div>
 <div class="toolbar">
   <button type="button" class="btn line small-btn" id="open-filters">Filters</button>
   <p class="count" id="count" role="status"></p>
@@ -1149,7 +1191,7 @@ write(
     page: "thanks",
     body: `<main class="thanks">
 <h1 class="display rise">${words("Payment cleared.")}</h1>
-<p class="fade">Customs has stamped your order. Welcome to the republic, your Pieces are on their way into your world.</p>
+<p class="fade">${T("thanks_text", "Customs has stamped your order. Welcome to the republic, your Pieces are on their way into your world.")}</p>
 <p class="fade" id="order-no" hidden></p>
 <a class="btn" href="/shop/">Back to the republic</a>
 </main>`
@@ -1171,6 +1213,10 @@ for (const f of [
   "zi-card-back.png"
 ]) {
   write("assets/" + f, fs.readFileSync(find(f)));
+}
+for (const n of ["hero", "ruova"]) {
+  const h = findImage(n);
+  if (h) write("assets/" + n + ".jpg", fs.readFileSync(h.file));
 }
 write("_worker.js", fs.readFileSync(find("_worker.js")));
 write("catalog.json", JSON.stringify(products.map((p) => ({ ...p, photos: [1, 2].map((n) => { const m = photo(`${p.slug}-${n}`, "").match(/src="([^"]+)"/); return m ? m[1] : null; }).filter(Boolean) }))));
