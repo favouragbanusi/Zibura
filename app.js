@@ -60,6 +60,8 @@
     if (el) {
       el.textContent = n;
       el.classList.toggle("zero", n === 0);
+      var cl = document.getElementById("cart-link");
+      if (cl) { var ct = n === 0 ? "Cart, empty" : "Cart, " + n + (n === 1 ? " item" : " items"); cl.setAttribute("data-tip", ct); cl.setAttribute("aria-label", ct); }
       if (lastCount !== null && n > lastCount) { el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump"); }
     }
     lastCount = n;
@@ -97,6 +99,7 @@
     var s = document.getElementById("currency"), code = document.getElementById("cur-code");
     if (!s) return;
     if (code) code.textContent = s.value;
+    var cb = code && code.closest(".icon-btn"); if (cb) cb.setAttribute("data-tip", "Currency: " + s.value);
     $all(".d-cur button").forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-cur") === s.value); });
   }
   function initCursor() {
@@ -1449,7 +1452,7 @@
   function updateAcctLink() {
     var link = document.getElementById("acct-link");
     if (!link) return;
-    api("/api/me").then(function (d) { var on = !!d.user; link.setAttribute("aria-label", on ? "My passport" : "Sign in"); link.title = on ? "My passport" : "Sign in"; link.classList.toggle("signed", on); var m = document.getElementById("acct-link-m"); if (m) m.textContent = on ? "My passport" : "Sign in"; }).catch(function () {});
+    api("/api/me").then(function (d) { var on = !!d.user; var tip = on ? "My account, " + (d.user.first || "") : "Sign in"; tip = tip.replace(/, $/, ""); link.setAttribute("aria-label", tip); link.setAttribute("data-tip", tip); link.classList.toggle("signed", on); var m = document.getElementById("acct-link-m"); if (m) m.textContent = on ? "My passport" : "Sign in"; }).catch(function () {});
   }
 
   function initAdmin() {
@@ -1610,7 +1613,7 @@
         });
       }
       if (page === "piece") initPiece();
-      if (page === "account") initAccount(); else updateAcctLink();
+      if (page === "account") initAccount(); updateAcctLink();
       if (page === "admin") initAdmin();
       if (page === "reset") initReset();
       if (page === "placement") initQuiz();

@@ -216,7 +216,7 @@ function layout({ title, description, page, body }) {
 <div class="notice">${T("notice_text", "Official notice: Signal I opens April 18, 2027.")} <a href="/waitlist/" data-open-waitlist>${T("notice_link", "Get on the Register")}</a></div>
 <header class="site-header" id="top">
   <div class="wrap">
-    <button type="button" class="burger" id="burger" aria-label="Open menu" aria-expanded="false" aria-controls="drawer"><span></span><span></span><span></span></button>
+    <button type="button" class="burger" id="burger" data-tip="Menu" aria-label="Open menu" aria-expanded="false" aria-controls="drawer"><span></span><span></span><span></span></button>
     <nav class="nav" aria-label="Main">
       <div class="has-mega"><a href="/shop/">Shop</a>${MEGA}</div>
       <a href="/explore/">The Signals</a>
@@ -225,15 +225,15 @@ function layout({ title, description, page, body }) {
     </nav>
     <a class="brand" href="/" aria-label="Zibura home"><img src="/assets/logo-wordmark-navy.png" alt="Zibura" width="636" height="120"></a>
     <nav class="nav right" aria-label="Account and cart">
-      <label class="icon-btn cur" title="Currency"><span class="sr">Currency</span><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9S14.5 18.3 12 21c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/></svg><span class="cur-code" id="cur-code">USD</span>
+      <label class="icon-btn cur" data-tip="Currency"><span class="sr">Currency</span><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9S14.5 18.3 12 21c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/></svg><span class="cur-code" id="cur-code">USD</span>
         <select id="currency" aria-label="Currency">
           <option value="CAD">CAD</option>
           <option value="USD">USD</option>
           <option value="GBP">GBP</option>
           <option value="NGN">NGN</option>
         </select></label>
-      <a class="icon-btn" href="/account/" id="acct-link" aria-label="Sign in" title="Sign in"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.2-4 4.2-6 8-6s6.8 2 8 6"/></svg></a>
-      <a class="icon-btn" href="/cart/" id="cart-link" aria-label="Cart" title="Cart"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8V6.5a3 3 0 016 0V8"/></svg><span class="cart-badge" id="cart-count">0</span></a>
+      <a class="icon-btn" href="/account/" id="acct-link" aria-label="Sign in" data-tip="Sign in"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.2-4 4.2-6 8-6s6.8 2 8 6"/></svg></a>
+      <a class="icon-btn" href="/cart/" id="cart-link" aria-label="Cart" data-tip="Cart"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8V6.5a3 3 0 016 0V8"/></svg><span class="cart-badge" id="cart-count">0</span></a>
       <a class="btn nav-cta" href="/zi-card/">Apply for Zi Card</a>
     </nav>
   </div>
