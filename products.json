@@ -22,7 +22,8 @@
    "S",
    "M",
    "L",
-   "XL"
+   "XL",
+   "XXL"
   ],
   "audience": [
    "Women"
@@ -55,7 +56,8 @@
    "S",
    "M",
    "L",
-   "XL"
+   "XL",
+   "XXL"
   ],
   "audience": [
    "Men"
@@ -79,11 +81,12 @@
    "NGN": 262000
   },
   "colors": [
-   "Ripple Blue",
+   "Cobalt",
    "Blaze Red",
    "Cream"
   ],
   "sizes": [
+   "XXS",
    "XS",
    "S",
    "M",
@@ -114,14 +117,16 @@
   "colors": [
    "White",
    "Dash Orange",
-   "Black"
+   "Hot Pink"
   ],
   "sizes": [
    "XS",
    "S",
    "M",
    "L",
-   "XL"
+   "XL",
+   "XXL",
+   "3XL"
   ],
   "audience": [
    "Men"
@@ -196,7 +201,7 @@
   "category": "Bags",
   "signal": "Signal I",
   "arc": "Arc I",
-  "description": "A structured crossbody bag with an adjustable strap. Sample Piece.",
+  "description": "A structured leather tote with two top handles and room for a laptop. Sample Piece.",
   "prices": {
    "CAD": 280,
    "USD": 205,
@@ -204,9 +209,9 @@
    "NGN": 307000
   },
   "colors": [
+   "Dash Orange",
    "Black",
-   "Tan",
-   "Ripple Blue"
+   "Tan"
   ],
   "sizes": [
    "One size"
@@ -214,7 +219,7 @@
   "audience": [
    "Women"
   ],
-  "type": "Crossbody",
+  "type": "Totes",
   "material": "Leather",
   "inStock": true,
   "isNew": false
@@ -243,7 +248,8 @@
    "39",
    "40",
    "41",
-   "42"
+   "42",
+   "43"
   ],
   "audience": [
    "Men"
@@ -270,6 +276,7 @@
    "Original"
   ],
   "sizes": [
+   "30 ml",
    "50 ml",
    "100 ml"
   ],
@@ -299,7 +306,8 @@
    "Original"
   ],
   "sizes": [
-   "One size"
+   "200 g",
+   "300 g"
   ],
   "audience": [
    "Women",
@@ -325,7 +333,7 @@
   },
   "colors": [
    "Black",
-   "Ripple Blue",
+   "Sky Blue",
    "Blaze Red"
   ],
   "sizes": [
@@ -355,12 +363,12 @@
   },
   "colors": [
    "Black",
-   "Swirl Purple",
+   "Lilac",
    "Cream"
   ],
   "sizes": [
-   "iPhone 16",
-   "iPhone 16 Pro"
+   "Phone",
+   "Tablet"
   ],
   "audience": [
    "Women",
@@ -388,9 +396,7 @@
   "colors": [
    "Ripple Blue"
   ],
-  "sizes": [
-   "One size"
-  ],
+  "sizes": [],
   "audience": [
    "Women",
    "Men"
@@ -416,9 +422,7 @@
   "colors": [
    "Cream"
   ],
-  "sizes": [
-   "One size"
-  ],
+  "sizes": [],
   "audience": [
    "Women",
    "Men"

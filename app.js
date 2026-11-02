@@ -53,10 +53,105 @@
 
   function getCart() { return load(CART_KEY, []); }
   function setCart(cart) { save(CART_KEY, cart); updateCount(); }
+  var lastCount = null;
   function updateCount() {
     var n = getCart().reduce(function (sum, l) { return sum + l.qty; }, 0);
     var el = $("#cart-count");
-    if (el) el.textContent = n;
+    if (el) {
+      el.textContent = n;
+      el.classList.toggle("zero", n === 0);
+      if (lastCount !== null && n > lastCount) { el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump"); }
+    }
+    lastCount = n;
+  }
+  function toast(html) {
+    var t = document.getElementById("toast");
+    if (!t) { t = document.createElement("div"); t.id = "toast"; t.className = "toast"; t.setAttribute("role", "status"); document.body.appendChild(t); }
+    t.innerHTML = html; void t.offsetWidth; t.classList.add("on");
+    clearTimeout(toast.h); toast.h = setTimeout(function () { t.classList.remove("on"); }, 3600);
+  }
+  function flyToCart(img) {
+    var target = document.getElementById("cart-link");
+    if (!img || !target || (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) return;
+    var a = img.getBoundingClientRect(), b = target.getBoundingClientRect();
+    var f = document.createElement("img"); f.src = img.currentSrc || img.src; f.className = "fly"; f.alt = "";
+    f.style.left = (a.left + a.width / 2 - 35) + "px"; f.style.top = (a.top + a.height / 2 - 44) + "px";
+    document.body.appendChild(f);
+    var dx = b.left + b.width / 2 - (a.left + a.width / 2), dy = b.top + b.height / 2 - (a.top + a.height / 2);
+    var anim = f.animate([{ transform: "translate(0,0) scale(1) rotate(0)", opacity: 1 }, { transform: "translate(" + dx * 0.5 + "px," + (dy * 0.5 - 80) + "px) scale(.7) rotate(8deg)", opacity: 1, offset: .55 }, { transform: "translate(" + dx + "px," + dy + "px) scale(.12) rotate(20deg)", opacity: .2 }], { duration: 750, easing: "cubic-bezier(.5,0,.3,1)" });
+    anim.onfinish = function () { f.remove(); };
+  }
+  function confetti(colors) {
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var c = document.createElement("canvas"); c.className = "confetti"; c.width = innerWidth; c.height = innerHeight; document.body.appendChild(c);
+    var g = c.getContext("2d"), parts = [];
+    for (var i = 0; i < 140; i++) parts.push({ x: innerWidth / 2, y: innerHeight * 0.55, vx: (Math.random() - 0.5) * 18, vy: -Math.random() * 18 - 4, s: 6 + Math.random() * 8, r: Math.random() * 6, vr: (Math.random() - 0.5) * 0.4, c: colors[i % colors.length] });
+    var t0 = performance.now();
+    (function frame(t) {
+      g.clearRect(0, 0, c.width, c.height);
+      parts.forEach(function (p) { p.vy += 0.45; p.x += p.vx; p.y += p.vy; p.r += p.vr; g.save(); g.translate(p.x, p.y); g.rotate(p.r); g.fillStyle = p.c; g.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); g.restore(); });
+      if (t - t0 < 2600) requestAnimationFrame(frame); else c.remove();
+    })(t0);
+  }
+  function syncCur() {
+    var s = document.getElementById("currency"), code = document.getElementById("cur-code");
+    if (!s) return;
+    if (code) code.textContent = s.value;
+    $all(".d-cur button").forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-cur") === s.value); });
+  }
+  function initUx() {
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var fine = window.matchMedia && window.matchMedia("(hover: hover)").matches;
+    var body = document.body, burger = document.getElementById("burger");
+    function menu(open) { body.classList.toggle("menu-open", open); if (burger) { burger.setAttribute("aria-expanded", open); burger.setAttribute("aria-label", open ? "Close menu" : "Open menu"); } var d = document.getElementById("drawer"); if (d) d.setAttribute("aria-hidden", !open); }
+    if (burger) burger.addEventListener("click", function () { menu(!body.classList.contains("menu-open")); });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") menu(false); });
+    window.addEventListener("resize", function () { if (innerWidth > 1000) menu(false); });
+    $all("#drawer a").forEach(function (l) { l.addEventListener("click", function () { menu(false); }); });
+    $all(".d-cur button").forEach(function (b) { b.addEventListener("click", function () { var s = document.getElementById("currency"); s.value = b.getAttribute("data-cur"); s.dispatchEvent(new Event("change")); syncCur(); }); });
+    var sel = document.getElementById("currency"); if (sel) sel.addEventListener("change", syncCur);
+    var tt = document.getElementById("to-top"); if (tt) tt.addEventListener("click", function () { window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" }); });
+    // Scroll progress, drawn in the six province colors
+    var bar = document.createElement("div"); bar.className = "progress"; body.appendChild(bar);
+    var track = $(".ticker .track"), lastY = window.scrollY, skew = 0;
+    function onScroll() {
+      var h = document.documentElement.scrollHeight - innerHeight;
+      bar.style.transform = "scaleX(" + (h > 0 ? Math.min(1, window.scrollY / h) : 0) + ")";
+    }
+    window.addEventListener("scroll", onScroll, { passive: true }); onScroll();
+    if (track && !reduce) {
+      (function loop() {
+        var y = window.scrollY, v = y - lastY; lastY = y;
+        skew += (Math.max(-12, Math.min(12, v)) - skew) * 0.12;
+        track.style.transform = "skewX(" + (-skew * 0.6) + "deg)";
+        requestAnimationFrame(loop);
+      })();
+    }
+    if (fine && !reduce) {
+      // Magnetic buttons
+      document.addEventListener("mousemove", function (e) {
+        var b = e.target.closest && e.target.closest(".btn");
+        $all(".btn.mag").forEach(function (x) { if (x !== b) { x.style.transform = ""; x.classList.remove("mag"); } });
+        if (!b || b.disabled) return;
+        var r = b.getBoundingClientRect();
+        b.classList.add("mag");
+        b.style.transform = "translate(" + ((e.clientX - r.left - r.width / 2) * 0.18) + "px," + ((e.clientY - r.top - r.height / 2) * 0.28) + "px)";
+      });
+      // Card tilt and gallery zoom origin
+      document.addEventListener("mousemove", function (e) {
+        var plate = e.target.closest && e.target.closest(".card .plate");
+        $all(".card .plate.tilt").forEach(function (x) { if (x !== plate) { x.style.transform = ""; x.classList.remove("tilt"); } });
+        if (plate) {
+          var r = plate.getBoundingClientRect(), px = (e.clientX - r.left) / r.width - 0.5, py = (e.clientY - r.top) / r.height - 0.5;
+          plate.classList.add("tilt");
+          plate.style.transform = "perspective(800px) rotateY(" + (px * 10) + "deg) rotateX(" + (-py * 10) + "deg) translateZ(0)";
+        }
+        var ph = e.target.closest && e.target.closest(".gallery .ph");
+        if (ph) { var q = ph.getBoundingClientRect(); ph.style.setProperty("--zx", ((e.clientX - q.left) / q.width * 100) + "%"); ph.style.setProperty("--zy", ((e.clientY - q.top) / q.height * 100) + "%"); }
+        var hp = document.querySelector("[data-tilt-photo]");
+        if (hp) { var h = hp.getBoundingClientRect(); var hx = (e.clientX - (h.left + h.width / 2)) / innerWidth, hy = (e.clientY - (h.top + h.height / 2)) / innerHeight; hp.style.transform = "rotateY(" + (hx * 14) + "deg) rotateX(" + (-hy * 10) + "deg)"; }
+      });
+    }
   }
 
   function bySlug(slug) {
@@ -204,15 +299,22 @@
 
     function toggle(arr, v) { var i = arr.indexOf(v); if (i === -1) arr.push(v); else arr.splice(i, 1); }
 
+    function facetOpen(key, title, val) {
+      return '<details class="facet" data-f="' + key + '"' + (openNow[key] ? " open" : "") + "><summary><span>" + esc(title) + "</span>" + (val ? "<em>" + esc(val) + "</em>" : "") + "</summary>";
+    }
+    var openNow = {};
     function renderFacets() {
+      var openSet = {};
+      Array.prototype.forEach.call(facets.querySelectorAll("details.facet[open]"), function (d) { openSet[d.getAttribute("data-f")] = 1; });
+      openNow = openSet;
       var h = "";
       h += '<div class="facet"><div class="search"><input type="search" id="f-q" placeholder="Search Pieces" value="' + esc(st.q) + '" aria-label="Search Pieces"></div></div>';
-      h += '<div class="facet"><h3>Shop for</h3>';
+      h += facetOpen("aud", "Shop for", st.audience);
       ["", "Women", "Men"].forEach(function (a) {
         h += '<button type="button" class="opt' + (st.audience === a ? " on" : "") + '" data-aud="' + a + '">' + (a || "All") + "</button>";
       });
-      h += "</div>";
-      h += '<div class="facet"><h3>Category</h3>';
+      h += "</details>";
+      h += facetOpen("cat", "Category", st.category ? (st.type || st.category) : "");
       h += '<button type="button" class="opt' + (!st.category ? " on" : "") + '" data-cat="">All categories</button>';
       tax.forEach(function (c) {
         var on = st.category === c.name;
@@ -223,39 +325,40 @@
         });
         h += "</div>";
       });
-      h += "</div>";
-      h += '<div class="facet"><h3>Color</h3><div class="row">';
+      h += "</details>";
+      h += facetOpen("col", "Color", st.colors.length ? st.colors.length + " chosen" : "") + '<div class="row">';
       allColors.forEach(function (c) {
         h += '<button type="button" class="sw' + (st.colors.indexOf(c) !== -1 ? " on" : "") + '" data-color="' + esc(c) + '" style="background:' + colorMap[c] + '" title="' + esc(c) + '" aria-label="' + esc(c) + '" aria-pressed="' + (st.colors.indexOf(c) !== -1) + '"></button>';
       });
-      h += "</div></div>";
-      h += '<div class="facet"><h3>Size</h3>';
-      tax.forEach(function (c) {
-        if (st.category && st.category !== c.name) return;
-        var sz = sizesFor(c.name);
-        if (!sz.length) return;
-        if (!st.category) h += '<p class="size-h">' + esc(c.name) + "</p>";
-        h += '<div class="row">';
-        sz.forEach(function (s) {
-          h += '<button type="button" class="pill' + (st.sizes.indexOf(s) !== -1 ? " on" : "") + '" data-size="' + esc(s) + '" aria-pressed="' + (st.sizes.indexOf(s) !== -1) + '">' + esc(s) + "</button>";
+      h += "</div></details>";
+      var sizeCats = tax.filter(function (c) { return (!st.category || st.category === c.name) && c.sizes && c.sizes.length; });
+      h += facetOpen("size", "Size", st.sizes.length ? st.sizes.length + " chosen" : "");
+      sizeCats.forEach(function (c) {
+        if (sizeCats.length > 1) h += '<p class="size-h">' + esc(c.name) + "</p>";
+        c.sizes.forEach(function (g) {
+          if (c.sizes.length > 1) h += '<p class="size-g">' + esc(g.label) + "</p>";
+          h += '<div class="row">';
+          g.values.forEach(function (s) {
+            h += '<button type="button" class="pill' + (st.sizes.indexOf(s) !== -1 ? " on" : "") + '" data-size="' + esc(s) + '" aria-pressed="' + (st.sizes.indexOf(s) !== -1) + '">' + esc(s) + "</button>";
+          });
+          h += "</div>";
         });
-        h += "</div>";
       });
-      h += "</div>";
-      h += '<div class="facet"><h3>Signal</h3><div class="row">';
+      h += "</details>";
+      h += facetOpen("sig", "Signal", st.signal) + '<div class="row">';
       allSignals.forEach(function (s) { h += '<button type="button" class="pill' + (st.signal === s ? " on" : "") + '" data-signal="' + esc(s) + '">' + esc(s) + "</button>"; });
-      h += "</div></div>";
-      h += '<div class="facet"><h3>Arc</h3><div class="row">';
+      h += "</div></details>";
+      h += facetOpen("arc", "Arc", st.arc) + '<div class="row">';
       allArcs.forEach(function (s) { h += '<button type="button" class="pill' + (st.arc === s ? " on" : "") + '" data-arc="' + esc(s) + '">' + esc(s) + "</button>"; });
-      h += "</div></div>";
-      h += '<div class="facet"><h3>Material</h3><div class="row">';
+      h += "</div></details>";
+      h += facetOpen("mat", "Material", st.materials.length ? st.materials.length + " chosen" : "") + '<div class="row">';
       allMaterials.forEach(function (s) { h += '<button type="button" class="pill' + (st.materials.indexOf(s) !== -1 ? " on" : "") + '" data-material="' + esc(s) + '">' + esc(s) + "</button>"; });
-      h += "</div></div>";
-      h += '<div class="facet"><h3>Show</h3><div class="row">';
+      h += "</div></details>";
+      h += facetOpen("show", "Show", (st.stock ? 1 : 0) + (st.fresh ? 1 : 0) ? "On" : "") + '<div class="row">';
       h += '<button type="button" class="pill' + (st.stock ? " on" : "") + '" data-flag="stock">In stock</button>';
       h += '<button type="button" class="pill' + (st.fresh ? " on" : "") + '" data-flag="fresh">New</button>';
-      h += "</div></div>";
-      h += '<div class="facet"><h3>Price <span>' + esc(currency) + '</span></h3><div class="price-row"><input type="number" min="0" inputmode="numeric" id="f-min" placeholder="Min" value="' + esc(st.min) + '" aria-label="Minimum price"><span>to</span><input type="number" min="0" inputmode="numeric" id="f-max" placeholder="Max" value="' + esc(st.max) + '" aria-label="Maximum price"></div></div>';
+      h += "</div></details>";
+      h += facetOpen("price", "Price (" + currency + ")", st.min || st.max ? "Set" : "") + '<div class="price-row"><input type="number" min="0" inputmode="numeric" id="f-min" placeholder="Min" value="' + esc(st.min) + '" aria-label="Minimum price"><span>to</span><input type="number" min="0" inputmode="numeric" id="f-max" placeholder="Max" value="' + esc(st.max) + '" aria-label="Maximum price"></div></details>';
       facets.innerHTML = h;
     }
 
@@ -281,7 +384,7 @@
     function render() {
       var list = sorted(catalog.filter(matches));
       count.textContent = list.length + (list.length === 1 ? " Piece" : " Pieces");
-      grid.innerHTML = list.length ? list.map(cardHtml).join("") : '<p class="grid-empty">Nothing matches those filters yet. Loosen one, or clear them all.</p>';
+      grid.innerHTML = list.length ? list.map(cardHtml).join("") : '<p class="grid-empty">No Pieces match those filters yet. Loosen one, or repeal them all.</p>';
       applyPrices();
       paintRatings();
       renderChips();
@@ -339,7 +442,19 @@
   var shopRefresh = null;
 
   /* Piece page */
+  function initSaveButton() {
+    var btn = document.getElementById("save-btn");
+    if (!btn) return;
+    var slug = btn.getAttribute("data-slug"), signed = false, saved = false;
+    function paint() { btn.textContent = saved ? "Saved to your passport" : "Save to my passport"; btn.setAttribute("aria-pressed", saved); }
+    api("/api/account").then(function (d) { if (d.user) { signed = true; saved = d.saved.indexOf(slug) !== -1; paint(); } }).catch(function () {});
+    btn.addEventListener("click", function () {
+      if (!signed) { location.href = "/account/"; return; }
+      api("/api/saved", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ slug: slug }) }).then(function (d) { if (d.ok) { saved = d.saved; paint(); } });
+    });
+  }
   function initPiece() {
+    initSaveButton();
     var main = $("[data-slug]");
     var slug = main.getAttribute("data-slug");
     var form = $("#add-form");
@@ -351,8 +466,8 @@
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       var color = form.elements.color.value;
-      var size = form.elements.size.value;
-      if (!color || !size) { msg.textContent = "Choose a color and a size."; return; }
+      var size = form.elements.size ? form.elements.size.value : "";
+      if (!color || (form.elements.size && !size)) { msg.textContent = "Choose a color and a size."; return; }
       var cart = getCart();
       var found = false;
       cart.forEach(function (l) {
@@ -361,6 +476,8 @@
       if (!found) cart.push({ slug: slug, color: color, size: size, qty: 1 });
       setCart(cart);
       msg.innerHTML = 'In your cart. <a href="/cart/">View cart</a>';
+      flyToCart(document.querySelector(".gallery .ph img") || document.querySelector(".gallery img"));
+      toast('Cleared for your cart. <a href="/cart/">View cart</a>');
     });
     initReviews(slug);
   }
@@ -418,10 +535,10 @@
         .then(function (r) { return r.json(); })
         .then(function (d) {
           if (d.ok) { rform.reset(); rmsg.textContent = "Thank you. Your review is live."; load(); }
-          else { rmsg.textContent = d.error || "Something went wrong. Please try again."; }
+          else { rmsg.textContent = d.error || "The Ministry hit a snag. Please try again."; }
           btn.disabled = false;
         })
-        .catch(function () { rmsg.textContent = "Something went wrong. Please try again."; btn.disabled = false; });
+        .catch(function () { rmsg.textContent = "The Ministry hit a snag. Please try again."; btn.disabled = false; });
     });
   }
 
@@ -433,7 +550,7 @@
     function render() {
       var cart = getCart().filter(function (l) { return bySlug(l.slug); });
       if (!cart.length) {
-        box.innerHTML = '<p class="empty">Your cart is waiting for its first Piece. <a href="/shop/">Start in the shop</a>.</p>';
+        box.innerHTML = '<p class="empty">Your declaration form is empty. <a href="/shop/">Head to the shop</a>.</p>';
         return;
       }
       var total = 0;
@@ -443,7 +560,7 @@
         total += line;
         return '<div class="cart-line">' +
           '<div><a class="nm" href="/piece/' + esc(p.slug) + '/">' + esc(p.name) + '</a>' +
-          '<div class="opt">' + esc(l.color) + ', ' + esc(l.size) + '</div>' +
+          '<div class="opt">' + esc(l.color) + (l.size ? ', ' + esc(l.size) : '') + '</div>' +
           '<div class="qty">' +
           '<button type="button" class="step" data-act="dec" data-i="' + i + '" aria-label="Fewer">-</button>' +
           '<span class="num">' + l.qty + '</span>' +
@@ -452,7 +569,7 @@
           '<div class="amount">' + money(line) + '</div></div>';
       }).join("");
       html += '<div class="cart-total"><span>Subtotal</span><strong>' + money(total) + '</strong></div>' +
-        '<button type="button" class="btn" id="checkout">Checkout</button>' +
+        '<button type="button" class="btn" id="checkout">Clear customs and pay</button>' +
         '<p class="fine">Payment is handled on a secure Stripe page.</p>';
       box.innerHTML = html;
     }
@@ -472,7 +589,7 @@
       }
       if (t.id === "checkout") {
         t.disabled = true;
-        msg.textContent = "Opening secure checkout.";
+        msg.textContent = "Sending you to the secure payment desk.";
         fetch("/api/checkout", {
           method: "POST",
           headers: { "content-type": "application/json" },
@@ -525,11 +642,11 @@
               try { localStorage.setItem("zibura_joined", "1"); } catch (x) {}
               msg.textContent = "You are on the Register. Signal I will find you first.";
             } else {
-              msg.textContent = d.error || "Something went wrong. Please try again.";
+              msg.textContent = d.error || "The Ministry hit a snag. Please try again.";
               btn.disabled = false;
             }
           })
-          .catch(function () { msg.textContent = "Something went wrong. Please try again."; btn.disabled = false; });
+          .catch(function () { msg.textContent = "The Ministry hit a snag. Please try again."; btn.disabled = false; });
       });
     });
   }
@@ -556,9 +673,9 @@
               form.reset();
               try { localStorage.setItem("zibura_joined", "1"); } catch (x) {}
               msg.textContent = "Thank you. The next Zi Gazette is on its way to you.";
-            } else { msg.textContent = d.error || "Something went wrong. Please try again."; btn.disabled = false; }
+            } else { msg.textContent = d.error || "The Ministry hit a snag. Please try again."; btn.disabled = false; }
           })
-          .catch(function () { msg.textContent = "Something went wrong. Please try again."; btn.disabled = false; });
+          .catch(function () { msg.textContent = "The Ministry hit a snag. Please try again."; btn.disabled = false; });
       });
     });
   }
@@ -586,7 +703,20 @@
   }
 
   /* Interaction: motion that answers the visitor */
+  function fitSignature() {
+    var s = document.getElementById("sig");
+    if (!s) return;
+    var wrap = s.parentNode;
+    s.style.fontSize = "100px";
+    s.style.display = "inline-block";
+    var w = s.getBoundingClientRect().width || 1;
+    var target = Math.min(wrap.clientWidth * 0.88, 1400);
+    s.style.fontSize = Math.max(60, Math.floor(100 * target / w)) + "px";
+  }
   function initFx() {
+    fitSignature();
+    window.addEventListener("resize", fitSignature);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitSignature);
     var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     // Scroll reveal
@@ -892,12 +1022,15 @@
       return api("/api/me").then(function (d) {
         document.getElementById("acct-loading").hidden = true;
         if (d.error) { sub.textContent = d.error; return; }
+        var dash = document.getElementById("dash");
         if (!d.user) {
-          out.hidden = true;
+          out.hidden = true; dash.hidden = true;
           show(null, "v-auth");
           return;
         }
+        dash.hidden = false;
         out.hidden = false;
+        loadDash(d);
         document.getElementById("acct-who").textContent = d.user.first + " " + d.user.last + ", " + d.user.email + ".";
         var nm = document.getElementById("a-name");
         if (nm && !nm.value) nm.value = (d.user.first + " " + d.user.last).toUpperCase();
@@ -923,6 +1056,183 @@
       });
     }
 
+    var acct = null, taxCache = null;
+    var PROV_HEX = { Ripple: "#111c44", Glow: "#ffd400", Blaze: "#f0182e", Bloom: "#17c26a", Dash: "#ff7a00", Swirl: "#8a4dff" };
+    var MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    function fmtMoney(cents, cur) {
+      try { return new Intl.NumberFormat("en", { style: "currency", currency: cur || "USD" }).format((cents || 0) / 100); } catch (e) { return (cur || "") + " " + ((cents || 0) / 100).toFixed(2); }
+    }
+    function fmtDate(s) { try { return new Date(s).toLocaleDateString("en", { year: "numeric", month: "long", day: "numeric" }); } catch (e) { return ""; } }
+    function panel(name) { return document.querySelector('[data-panel="' + name + '"]'); }
+    function openSec(name) {
+      if (!panel(name)) name = "overview";
+      $all("[data-panel]").forEach(function (p) { p.hidden = p.getAttribute("data-panel") !== name; });
+      $all("#dash-nav button").forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-sec") === name); });
+      try { history.replaceState(null, "", "#" + name); } catch (e) {}
+    }
+    function loadDash(me) {
+      Promise.all([api("/api/account"), taxCache ? Promise.resolve(taxCache) : fetch("/taxonomy.json").then(function (r) { return r.json(); }).catch(function () { return []; })]).then(function (r) {
+        acct = r[0]; taxCache = r[1];
+        if (!acct.user) return;
+        // A quiz taken before signing in is kept and saved to the passport.
+        var localStyle = null;
+        try { localStyle = JSON.parse(localStorage.getItem("zibura_style") || "null"); } catch (e) {}
+        if (localStyle && (!acct.profile.style || acct.profile.style.at !== localStyle.at)) {
+          acct.profile.style = localStyle; acct.profile.province = localStyle.province;
+          api("/api/profile", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ province: localStyle.province, style: localStyle }) });
+        }
+        drawDash(me);
+        openSec((location.hash || "").slice(1) || "overview");
+      });
+    }
+    function field(id, label, val, extra) { return '<div' + (extra && extra.full ? ' class="full"' : "") + '><label for="' + id + '">' + label + '</label><input id="' + id + '" value="' + esc(val || "") + '"' + (extra && extra.attrs ? " " + extra.attrs : "") + "></div>"; }
+    function empty(t, href, label) { return '<div class="empty"><p>' + t + "</p>" + (href ? '<a class="btn" href="' + href + '">' + label + "</a>" : "") + "</div>"; }
+    function piece(slug) { return bySlug(slug); }
+    function drawDash(me) {
+      var u = acct.user, pf = acct.profile, st = pf.style, prov = pf.province || (st && st.province) || "";
+      var av = document.getElementById("d-avatar");
+      av.innerHTML = pf.avatar ? '<img src="/api/avatar?v=' + Date.now() + '" alt="Your photo">' : "<span>" + esc((u.first[0] || "") + (u.last[0] || "")) + "</span>";
+      document.getElementById("d-name").textContent = u.first + " " + u.last;
+      var meta = [];
+      if (prov) meta.push(prov + " province");
+      if (me.card) meta.push(me.card.id);
+      meta.push("Resident since " + fmtDate(u.since));
+      document.getElementById("d-meta").textContent = meta.join(", ");
+      document.getElementById("acct-who").textContent = u.email;
+      document.getElementById("acct-sub").textContent = "Your orders, Zi Card, style report, and everything else on your file.";
+
+      // Overview
+      var cardState = me.card ? "Issued" : (me.application ? (me.application.status === "pending" ? "In review" : me.application.status === "declined" ? "Declined" : "In review") : "Not applied");
+      var last = acct.orders[0];
+      var ov = '<div class="tiles">' +
+        '<button type="button" class="tile" data-go="card"><b>' + cardState + '</b><span>Zi Card</span></button>' +
+        '<button type="button" class="tile" data-go="orders"><b>' + acct.orders.length + '</b><span>' + (acct.orders.length === 1 ? "Order" : "Orders") + '</span></button>' +
+        '<button type="button" class="tile" data-go="saved"><b>' + acct.saved.length + '</b><span>Saved Pieces</span></button>' +
+        '<button type="button" class="tile" data-go="style"><b>' + esc(prov || "Not set") + '</b><span>Province</span></button></div>';
+      var todo = [];
+      if (!me.card && !me.application) todo.push(['Apply for your Zi Card', "card"]);
+      if (!st) todo.push(['Take the province quiz', "style"]);
+      if (!pf.avatar) todo.push(['Add your photo', "profile"]);
+      if (!acct.addresses.length) todo.push(['Add a shipping address', "addresses"]);
+      if (!pf.prefs || !Object.keys(pf.prefs).length) todo.push(['Save your sizes', "prefs"]);
+      if (todo.length) ov += '<div class="box"><h3>Finish your file</h3><ul class="todo">' + todo.map(function (t) { return '<li><button type="button" class="linkbtn" data-go="' + t[1] + '">' + t[0] + "</button></li>"; }).join("") + "</ul></div>";
+      if (last) ov += '<div class="box"><h3>Latest order</h3><p><b>' + last.number + "</b>, " + fmtDate(last.at) + ", " + (last.status === "paid" ? "Paid" : "Awaiting payment") + ", " + fmtMoney(last.total, last.currency) + '. <button type="button" class="linkbtn" data-go="orders">View all orders</button></p></div>';
+      if (st) ov += '<div class="box"><h3>Your style</h3><p><b>' + esc(st.style) + "</b>, " + esc(st.province) + " with a touch of " + esc(st.second) + '. <button type="button" class="linkbtn" data-go="style">See your report</button></p></div>';
+      if (u.birth_month && u.birth_day) ov += '<div class="box"><h3>Birthday on file</h3><p>' + MONTHS[u.birth_month - 1] + " " + u.birth_day + ".</p></div>";
+      panel("overview").innerHTML = '<h2 class="display h2">Welcome back, ' + esc(u.first) + ".</h2>" + ov;
+
+      // Orders
+      var ord = acct.orders.length ? acct.orders.map(function (o) {
+        var rows = o.items.map(function (it) {
+          var p = piece(it.slug);
+          return '<li><a href="/piece/' + esc(it.slug) + '/" class="thumb">' + (p && p.photos && p.photos[0] ? '<img src="' + esc(p.photos[0]) + '" alt="">' : "") + '</a><div><b>' + esc(it.name) + '</b><span>' + esc(it.color) + (it.size ? ", " + esc(it.size) : "") + ", quantity " + it.qty + '</span></div><em>' + fmtMoney(Math.round(it.unit * 100) * it.qty, o.currency) + "</em></li>";
+        }).join("");
+        var ship = o.ship && o.ship.address ? '<p class="small">Ships to ' + esc(o.ship.name || "") + ", " + [o.ship.address.line1, o.ship.address.city, o.ship.address.postal_code, o.ship.address.country].filter(Boolean).map(esc).join(", ") + ".</p>" : "";
+        return '<details class="order"><summary><span><b>' + o.number + "</b> " + fmtDate(o.at) + '</span><span class="badge ' + o.status + '">' + (o.status === "paid" ? "Paid" : "Awaiting payment") + "</span><em>" + fmtMoney(o.total, o.currency) + "</em></summary><ul>" + rows + "</ul>" + ship + '<p class="small">' + (o.status === "paid" ? "Your Pieces are being prepared by the Bureau of Arrivals. Tracking will appear here when it is available." : "This order has not been paid. Return to your cart to complete it.") + "</p></details>";
+      }).join("") : empty("Your orders will be filed here. Nothing has crossed the border yet.", "/shop/", "Shop the republic");
+      panel("orders").innerHTML = '<h2 class="display h2">Orders</h2>' + ord;
+
+      // Style
+      if (st) {
+        var bars = (st.shares || []).map(function (s) { return '<div class="r-bar"><span>' + esc(s.n) + '</span><div><i style="width:' + Math.max(s.pct, 2) + "%;background:" + (PROV_HEX[s.n] || "#111c44") + '"></i></div><b>' + s.pct + "%</b></div>"; }).join("");
+        panel("style").innerHTML = '<h2 class="display h2">Your style report</h2><div class="box"><p class="r-big">' + esc(st.style) + '.</p><p class="prose">Home province: <b>' + esc(st.province) + "</b>. Second province: <b>" + esc(st.second) + "</b>. Taken " + fmtDate(st.at) + '.</p><div class="r-bars">' + bars + '</div></div><p><a class="btn line" href="/province/">Retake the quiz</a></p>';
+      } else panel("style").innerHTML = '<h2 class="display h2">Your style report</h2>' + empty("Twelve questions tell us your province, your style, and your range.", "/province/", "Take the quiz");
+
+      // Saved
+      drawSaved();
+
+      // Addresses
+      drawAddresses();
+
+      // Profile
+      var mOpts = '<option value="">Month</option>' + MONTHS.map(function (m, i) { return '<option value="' + (i + 1) + '"' + (u.birth_month === i + 1 ? " selected" : "") + ">" + m + "</option>"; }).join("");
+      var dOpts = '<option value="">Day</option>' + Array.apply(null, Array(31)).map(function (_, i) { return '<option value="' + (i + 1) + '"' + (u.birth_day === i + 1 ? " selected" : "") + ">" + (i + 1) + "</option>"; }).join("");
+      panel("profile").innerHTML = '<h2 class="display h2">Profile</h2><div class="box"><div class="av-row"><div class="dash-avatar big" id="p-av">' + (pf.avatar ? '<img src="/api/avatar?v=' + Date.now() + '" alt="">' : "<span>" + esc(u.first[0] + u.last[0]) + "</span>") + '</div><div><label class="btn line" for="p-file">Change photo</label><input id="p-file" type="file" accept="image/jpeg,image/png,image/webp" hidden><p class="small">This is your account picture. Your Zi Card portrait is set when you apply.</p><div class="msg" id="p-fmsg" role="status"></div></div></div></div>' +
+        '<form id="f-profile" class="box"><div class="form-grid">' + field("pr-first", "First name", u.first, { attrs: 'name="first" required' }) + field("pr-last", "Last name", u.last, { attrs: 'name="last" required' }) +
+        '<div><label for="pr-bm">Birthday month</label><select id="pr-bm" name="birth_month">' + mOpts + '</select></div><div><label for="pr-bd">Birthday day</label><select id="pr-bd" name="birth_day">' + dOpts + "</select></div>" +
+        field("pr-phone", "Phone", pf.phone, { attrs: 'name="phone" autocomplete="tel"' }) + field("pr-city", "City", pf.city, { attrs: 'name="city"' }) + field("pr-country", "Country", pf.country, { attrs: 'name="country"', full: true }) +
+        '<div class="full"><label for="pr-bio">About you (280 characters)</label><textarea id="pr-bio" name="bio" maxlength="280" rows="3">' + esc(pf.bio) + '</textarea></div></div><p class="small">Your email is ' + esc(u.email) + '.</p><button class="btn" type="submit">Save profile</button><div class="msg" role="status"></div></form>';
+
+      // Sizes
+      var P2 = pf.prefs || {};
+      function sel(id, label, group, cur) {
+        var vals = [];
+        (taxCache || []).forEach(function (c) { if (c.name === group[0]) (c.sizes || []).forEach(function (g) { if (!group[1] || g.label === group[1]) vals = vals.concat(g.values); }); });
+        return '<div><label for="' + id + '">' + label + '</label><select id="' + id + '" name="' + id + '"><option value="">Not set</option>' + vals.map(function (v) { return '<option' + (cur === v ? " selected" : "") + ">" + esc(v) + "</option>"; }).join("") + "</select></div>";
+      }
+      var colorsList = ["Ripple Blue", "Sky Blue", "Cobalt", "Aqua", "Mint", "Bloom Green", "Lime", "Glow Yellow", "Dash Orange", "Coral", "Blaze Red", "Hot Pink", "Swirl Purple", "Lilac", "Black", "White", "Cream", "Tan"];
+      var favs = P2.colors || [];
+      panel("prefs").innerHTML = '<h2 class="display h2">Your sizes and tastes</h2><form id="f-prefs" class="box"><div class="form-grid">' +
+        sel("tops", "Tops and dresses", ["Clothing", "Letter sizes"], P2.tops) + sel("bottoms", "Bottoms (numeric)", ["Clothing", "Numeric (US)"], P2.bottoms) +
+        sel("shoe", "Shoe size (EU)", ["Footwear"], P2.shoe) + sel("ring", "Ring size (US)", ["Accessories", "Ring size (US)"], P2.ring) +
+        sel("scent", "Fragrance size", ["Fragrance", "Volume"], P2.scent) + sel("device", "Your phone or device", ["Lifestyle", "Device"], P2.device) +
+        '<div class="full"><label>Colors you like</label><div class="row">' + colorsList.map(function (c) { return '<button type="button" class="pill' + (favs.indexOf(c) !== -1 ? " on" : "") + '" data-fav="' + esc(c) + '" aria-pressed="' + (favs.indexOf(c) !== -1) + '">' + esc(c) + "</button>"; }).join("") + "</div></div>" +
+        '<div class="full"><label for="notes">Notes for the stylists</label><textarea id="notes" rows="3" maxlength="280">' + esc(P2.notes || "") + '</textarea></div></div><button class="btn" type="submit">Save sizes</button><div class="msg" role="status"></div></form>';
+
+      // Security
+      panel("security").innerHTML = '<h2 class="display h2">Security</h2><form id="f-pass" class="box"><h3>Change password</h3><div class="form-grid"><div class="full"><label for="pw-cur">Current password</label><input id="pw-cur" type="password" autocomplete="current-password" required></div><div class="full"><label for="pw-new">New password (8 characters or more)</label><input id="pw-new" type="password" minlength="8" autocomplete="new-password" required></div></div><button class="btn" type="submit">Update password</button><div class="msg" role="status"></div></form>' +
+        '<form id="f-del" class="box"><h3>Renounce citizenship</h3><p class="small">This deletes your account, orders list, saved Pieces, addresses, and Zi Card. It cannot be undone.</p><div class="form-grid"><div class="full"><label for="del-pw">Confirm with your password</label><input id="del-pw" type="password" autocomplete="current-password" required></div></div><button class="btn line" type="submit">Delete my account</button><div class="msg" role="status"></div></form>';
+    }
+    function drawSaved() {
+      var list = acct.saved.map(piece).filter(Boolean);
+      panel("saved").innerHTML = '<h2 class="display h2">Saved Pieces</h2>' + (list.length ? '<div class="r-picks">' + list.map(function (p) { return '<div class="saved-it">' + cardHtml(p) + '<button type="button" class="linkbtn" data-unsave="' + esc(p.slug) + '">Remove</button></div>'; }).join("") + "</div>" : empty("Tap Save on any Piece page and it lands here.", "/shop/", "Browse Pieces"));
+      applyPrices();
+    }
+    function drawAddresses(editId) {
+      var cur = editId ? acct.addresses.filter(function (x) { return x.id === editId; })[0] : null;
+      var list = acct.addresses.map(function (x) {
+        return '<div class="box addr"><h3>' + esc(x.label) + (x.is_default ? ' <span class="badge paid">Default</span>' : "") + "</h3><p>" + esc(x.name) + "<br>" + esc(x.line1) + (x.line2 ? "<br>" + esc(x.line2) : "") + "<br>" + esc(x.city) + (x.region ? ", " + esc(x.region) : "") + " " + esc(x.postal) + "<br>" + esc(x.country) + (x.phone ? "<br>" + esc(x.phone) : "") + '</p><p><button type="button" class="linkbtn" data-aedit="' + x.id + '">Edit</button> ' + (x.is_default ? "" : '<button type="button" class="linkbtn" data-adef="' + x.id + '">Make default</button> ') + '<button type="button" class="linkbtn" data-adel="' + x.id + '">Delete</button></p></div>';
+      }).join("");
+      var c = cur || { label: "Home", name: acct.user.first + " " + acct.user.last };
+      panel("addresses").innerHTML = '<h2 class="display h2">Addresses</h2>' + (list || empty("No addresses yet. Add one and checkout gets faster.")) +
+        '<form id="f-addr" class="box"><h3>' + (cur ? "Edit address" : "Add an address") + '</h3><div class="form-grid">' + field("ad-label", "Label", c.label, { attrs: 'name="label"' }) + field("ad-name", "Full name", c.name, { attrs: 'name="name" required' }) + field("ad-l1", "Street address", c.line1, { attrs: 'name="line1" required', full: true }) + field("ad-l2", "Apartment, suite, unit", c.line2, { attrs: 'name="line2"', full: true }) + field("ad-city", "City", c.city, { attrs: 'name="city" required' }) + field("ad-region", "Province or state", c.region, { attrs: 'name="region"' }) + field("ad-postal", "Postal code", c.postal, { attrs: 'name="postal" required' }) + field("ad-country", "Country", c.country, { attrs: 'name="country" required' }) + field("ad-phone", "Phone", c.phone, { attrs: 'name="phone"', full: true }) + '</div><input type="hidden" name="id" value="' + (cur ? cur.id : "") + '"><button class="btn" type="submit">' + (cur ? "Save address" : "Add address") + "</button>" + (cur ? ' <button type="button" class="btn line" data-acancel="1">Cancel</button>' : "") + '<div class="msg" role="status"></div></form>';
+    }
+    function post(path, body) { return api(path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }); }
+    function refresh() { return api("/api/me").then(function (me) { return loadDash(me); }); }
+    var dashEl = document.getElementById("dash");
+    dashEl.addEventListener("click", function (e) {
+      var t = e.target.closest("button"); if (!t) return;
+      if (t.hasAttribute("data-sec")) openSec(t.getAttribute("data-sec"));
+      else if (t.hasAttribute("data-go")) openSec(t.getAttribute("data-go"));
+      else if (t.hasAttribute("data-unsave")) post("/api/saved", { slug: t.getAttribute("data-unsave") }).then(function () { acct.saved = acct.saved.filter(function (s) { return s !== t.getAttribute("data-unsave"); }); drawSaved(); });
+      else if (t.hasAttribute("data-aedit")) drawAddresses(parseInt(t.getAttribute("data-aedit"), 10));
+      else if (t.hasAttribute("data-acancel")) drawAddresses();
+      else if (t.hasAttribute("data-adef")) post("/api/address", { action: "default", id: t.getAttribute("data-adef") }).then(refresh);
+      else if (t.hasAttribute("data-adel")) post("/api/address", { action: "delete", id: t.getAttribute("data-adel") }).then(refresh);
+      else if (t.hasAttribute("data-fav")) { var on = !t.classList.contains("on"); t.classList.toggle("on", on); t.setAttribute("aria-pressed", on); }
+    });
+    dashEl.addEventListener("change", function (e) {
+      if (e.target.id !== "p-file" || !e.target.files[0]) return;
+      var msg = document.getElementById("p-fmsg"); msg.textContent = "Uploading.";
+      var fd = new FormData(); fd.append("photo", e.target.files[0]);
+      api("/api/avatar", { method: "POST", body: fd }).then(function (d) { if (d.ok) { msg.textContent = "Photo saved."; refresh(); } else msg.textContent = d.error || "The photo could not be saved."; });
+    });
+    dashEl.addEventListener("submit", function (e) {
+      var f = e.target; if (f.id === "f-apply") return;
+      var msg = $(".msg", f), body;
+      if (f.id === "f-profile") {
+        e.preventDefault(); body = {};
+        Array.prototype.forEach.call(f.elements, function (el) { if (el.name) body[el.name] = el.value; });
+        post("/api/profile", body).then(function (d) { msg.textContent = d.ok ? "Profile saved." : (d.error || "Could not save."); if (d.ok) refresh(); });
+      } else if (f.id === "f-prefs") {
+        e.preventDefault();
+        var prefs = { notes: f.elements.notes.value, colors: $all("[data-fav].on", f).map(function (b) { return b.getAttribute("data-fav"); }) };
+        ["tops", "bottoms", "shoe", "ring", "scent", "device"].forEach(function (k) { if (f.elements[k].value) prefs[k] = f.elements[k].value; });
+        post("/api/profile", { prefs: prefs }).then(function (d) { msg.textContent = d.ok ? "Sizes saved." : (d.error || "Could not save."); });
+      } else if (f.id === "f-addr") {
+        e.preventDefault(); body = {};
+        Array.prototype.forEach.call(f.elements, function (el) { if (el.name) body[el.name] = el.value; });
+        post("/api/address", body).then(function (d) { if (d.ok) refresh().then(function () { openSec("addresses"); }); else msg.textContent = d.error || "Could not save."; });
+      } else if (f.id === "f-pass") {
+        e.preventDefault();
+        post("/api/password", { current: f.elements["pw-cur"].value, next: f.elements["pw-new"].value }).then(function (d) { msg.textContent = d.ok ? "Password updated." : (d.error || "Could not update."); if (d.ok) f.reset(); });
+      } else if (f.id === "f-del") {
+        e.preventDefault();
+        post("/api/account/delete", { password: f.elements["del-pw"].value }).then(function (d) { if (d.ok) { updateAcctLink(); render(); } else msg.textContent = d.error || "Could not delete."; });
+      }
+    });
+    window.addEventListener("hashchange", function () { if (acct) openSec((location.hash || "").slice(1)); });
+
     $all(".tab[data-tab]").forEach(function (t) {
       t.addEventListener("click", function () {
         $all(".tab[data-tab]").forEach(function (x) { x.classList.toggle("on", x === t); });
@@ -942,8 +1252,8 @@
         api(path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }).then(function (d) {
           btn.disabled = false;
           if (d.ok) { msg.textContent = ""; f.reset(); updateAcctLink(); render(); }
-          else msg.textContent = d.error || "Something went wrong. Please try again.";
-        }).catch(function () { btn.disabled = false; msg.textContent = "Something went wrong. Please try again."; });
+          else msg.textContent = d.error || "The Ministry hit a snag. Please try again.";
+        }).catch(function () { btn.disabled = false; msg.textContent = "The Ministry hit a snag. Please try again."; });
       });
     }
     authForm("f-signup", "/api/auth/signup");
@@ -1015,8 +1325,8 @@
       api("/api/apply", { method: "POST", body: fd }).then(function (d) {
         btn.disabled = false;
         if (d.ok) { msg.textContent = ""; render(); }
-        else msg.textContent = d.error || "Something went wrong. Please try again.";
-      }).catch(function () { btn.disabled = false; msg.textContent = "Something went wrong. Please try again."; });
+        else msg.textContent = d.error || "The Ministry hit a snag. Please try again.";
+      }).catch(function () { btn.disabled = false; msg.textContent = "The Ministry hit a snag. Please try again."; });
       }, "image/jpeg", 0.92);
     });
 
@@ -1036,10 +1346,19 @@
     render();
   }
 
+  function confirmThanks() {
+    var id = new URLSearchParams(location.search).get("session_id");
+    if (!id) return;
+    fetch("/api/orders/confirm", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ session_id: id }) }).then(function (r) { return r.json(); }).then(function (d) {
+      var el = document.getElementById("order-no");
+      if (el && d.ok && d.number) { el.textContent = "Your order number is " + d.number + ". It is filed in your account."; el.hidden = false; }
+    }).catch(function () {});
+  }
+
   function updateAcctLink() {
     var link = document.getElementById("acct-link");
     if (!link) return;
-    api("/api/me").then(function (d) { link.textContent = d.user ? "My account" : "Sign in"; }).catch(function () {});
+    api("/api/me").then(function (d) { var on = !!d.user; link.setAttribute("aria-label", on ? "My passport" : "Sign in"); link.title = on ? "My passport" : "Sign in"; link.classList.toggle("signed", on); var m = document.getElementById("acct-link-m"); if (m) m.textContent = on ? "My passport" : "Sign in"; }).catch(function () {});
   }
 
   function initAdmin() {
@@ -1116,10 +1435,10 @@
   function initQuiz() {
     var data = JSON.parse($("#quiz-data").textContent);
     var Q = data.questions, P = data.provinces;
-    var scores, step, last;
+    var scores, step, last, answers;
     var box = $("#quiz"), res = $("#result"), title = $("#q-title"), opts = $("#q-opts");
     function start() {
-      scores = [0, 0, 0, 0, 0, 0]; step = 0; last = 0;
+      scores = [0, 0, 0, 0, 0, 0]; answers = []; step = 0; last = 0;
       res.hidden = true; box.hidden = false;
       show();
     }
@@ -1132,20 +1451,46 @@
         var b = document.createElement("button");
         b.type = "button"; b.textContent = t;
         b.addEventListener("click", function () {
-          scores[i] += 1; last = i; step += 1;
+          scores[i] += 1; answers.push(i); last = i; step += 1;
           if (step < Q.length) { show(); title.focus(); } else finish();
         });
         opts.appendChild(b);
       });
     }
     function finish() {
-      var best = last;
-      scores.forEach(function (s, i) { if (s > scores[best]) best = i; });
-      var p = P[best];
-      try { localStorage.setItem("zibura_province", p.n); } catch (x) {}
+      var total = Q.length, order = [0, 1, 2, 3, 4, 5];
+      order.sort(function (x, y) { return scores[y] - scores[x] || (x === last ? -1 : y === last ? 1 : x - y); });
+      var best = order[0], second = order[1];
+      var p = P[best], s = P[second], pr = p.profile;
+      var share = function (i) { return Math.round(scores[i] / total * 100); };
+      var top = share(best);
+      var range = top >= 50 ? "Focused. You know your lane and you stay in it." : top >= 34 ? "Anchored with range. You have a home base and you travel well." : "Wide range. You move across the republic with a different look for each room.";
+      var profile = { province: p.n, second: s.n, style: pr.style, shares: order.map(function (i) { return { n: P[i].n, pct: share(i) }; }), answers: answers.slice(), at: new Date().toISOString().slice(0, 10) };
+      try { localStorage.setItem("zibura_province", p.n); localStorage.setItem("zibura_style", JSON.stringify(profile)); } catch (x) {}
+      fetch("/api/profile", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ province: p.n, style: profile }) }).catch(function () {});
+      var noticeIdx = [1, 2, 8, 9];
+      var notices = noticeIdx.map(function (q, k) { return P[answers[q]].profile.notice[k]; });
+      var swatches = pr.palette.map(function (c) { return '<span class="r-sw" data-c="' + esc(c) + '"><i></i>' + esc(c) + "</span>"; }).join("");
+      var bars = order.map(function (i) { return '<div class="r-bar"><span>' + esc(P[i].n) + '</span><div><i style="width:' + Math.max(share(i), 2) + "%;background:" + P[i].hex + '"></i></div><b>' + share(i) + "%</b></div>"; }).join("");
+      var picks = pr.picks.map(function (slug) { return catalog.filter(function (c) { return c.slug === slug; })[0]; }).filter(Boolean);
+      var sPick = catalog.filter(function (c) { return c.slug === s.profile.picks[0] && pr.picks.indexOf(c.slug) === -1; })[0] || catalog.filter(function (c) { return c.slug === s.profile.picks[1]; })[0];
       box.hidden = true; res.hidden = false;
-      res.innerHTML = '<div class="r-dot" style="background:' + p.hex + '"></div><p class="small">Your home province is</p><h2 class="display">' + p.n + '</h2><p class="r-line">' + p.line + '</p><p class="prose">' + p.note + '</p><ul>' + p.traits.map(function (t) { return "<li>" + t + "</li>"; }).join("") + '</ul><div class="r-actions"><a class="btn" href="/waitlist/">Join the Register as ' + p.n + '</a><button type="button" class="btn line" id="retake">Take it again</button></div>';
+      confetti([p.hex, s.hex, "#ffffff", "#d2eaff"]);
+      res.innerHTML =
+        '<div class="r-head"><div class="r-dot" style="background:' + p.hex + '"></div><p class="small">Your official Zi Republic style report</p><h2 class="display">' + esc(p.n) + " province</h2><p class=\"r-line\">" + esc(p.line) + '</p></div>' +
+        '<div class="r-cols"><section><h3>Your style, in one line</h3><p class="r-big">' + esc(pr.style) + ".</p><p class=\"prose\">" + esc(p.note) + '</p></section>' +
+        '<section><h3>Your range</h3><p class="prose">' + esc(range) + " You are " + top + "% " + esc(p.n) + ", with a " + share(second) + "% " + esc(s.n) + " streak that shows up in your " + esc(s.traits[0].toLowerCase()) + " side.</p>" + '<div class="r-bars">' + bars + '</div></section></div>' +
+        '<div class="r-cols"><section><h3>What we noticed</h3><ul class="r-list">' + notices.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + '</ul></section>' +
+        '<section><h3>How you wear it</h3><p class="prose"><b>Silhouette.</b> ' + esc(pr.silhouette) + '</p><p class="prose"><b>Fabrics.</b> ' + esc(pr.fabrics) + '</p><p class="prose"><b>Where you shine.</b> ' + esc(pr.moments) + '</p><p class="prose"><b>How you shop.</b> ' + esc(pr.shopper) + "</p></section></div>" +
+        '<div class="r-cols"><section><h3>Your palette</h3><div class="r-sws">' + swatches + '</div></section><section><h3>You probably love</h3><ul class="r-list">' + pr.loves.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + '</ul></section></div>' +
+        '<section class="r-stretch"><h3>Your stretch</h3><p class="prose">' + esc(pr.stretch) + "</p></section>" +
+        '<section><h3>Pieces cleared for your province</h3><div class="r-picks" id="r-picks">' + picks.concat(sPick ? [sPick] : []).map(cardHtml).join("") + '</div><p class="small">The last Piece comes from your second province, ' + esc(s.n) + ".</p></section>" +
+        '<div class="r-actions"><a class="btn" href="/waitlist/">Join the Register as ' + esc(p.n) + '</a><a class="btn line" href="/account/">Save to my passport</a><button type="button" class="btn line" id="retake">Take it again</button></div>';
+      var colorsMap = window.__colors || null;
+      function paint() { Array.prototype.forEach.call(res.querySelectorAll(".r-sw"), function (el) { var c = window.__colors && window.__colors[el.getAttribute("data-c")]; if (c) el.firstChild.style.background = c; }); }
+      if (window.__colors) paint(); else fetch("/colors.json").then(function (r) { return r.json(); }).then(function (m) { window.__colors = m; paint(); });
       $("#retake").addEventListener("click", start);
+      applyPrices();
       openWaitlistLinks();
       res.scrollIntoView({ behavior: "smooth", block: "start" });
     }
@@ -1156,12 +1501,14 @@
     var page = document.body.getAttribute("data-page");
     initModal();
     initFx();
+    initUx();
     initSampleCards();
     var select = $("#currency");
 
     Promise.all([detectCurrency(), loadCatalog()]).then(function (res) {
       currency = res[0];
       if (select) select.value = currency;
+      syncCur();
       updateCount();
 
       var rerender = null;
@@ -1177,7 +1524,7 @@
       if (page === "placement") initQuiz();
       if (page !== "shop") loadRatings();
       if (page === "cart") rerender = initCart();
-      if (page === "thanks") setCart([]);
+      if (page === "thanks") { setCart([]); confirmThanks(); }
       initWaitlist();
       initSubscribe();
       applyPrices();

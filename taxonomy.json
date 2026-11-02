@@ -23,6 +23,41 @@
     "name": "Setwear",
     "blurb": "Matching Pieces made to be worn together."
    }
+  ],
+  "sizes": [
+   {
+    "label": "Letter sizes",
+    "values": [
+     "XXS",
+     "XS",
+     "S",
+     "M",
+     "L",
+     "XL",
+     "XXL",
+     "3XL"
+    ]
+   },
+   {
+    "label": "Numeric (US)",
+    "values": [
+     "0",
+     "2",
+     "4",
+     "6",
+     "8",
+     "10",
+     "12",
+     "14",
+     "16"
+    ]
+   },
+   {
+    "label": "Other",
+    "values": [
+     "One size"
+    ]
+   }
   ]
  },
  {
@@ -53,6 +88,26 @@
     "name": "Heels",
     "blurb": "Shoes with height."
    }
+  ],
+  "sizes": [
+   {
+    "label": "EU sizes",
+    "values": [
+     "35",
+     "36",
+     "37",
+     "38",
+     "39",
+     "40",
+     "41",
+     "42",
+     "43",
+     "44",
+     "45",
+     "46",
+     "47"
+    ]
+   }
   ]
  },
  {
@@ -74,6 +129,14 @@
    {
     "name": "Travel",
     "blurb": "Bags made for the journey."
+   }
+  ],
+  "sizes": [
+   {
+    "label": "Size",
+    "values": [
+     "One size"
+    ]
    }
   ]
  },
@@ -101,6 +164,43 @@
     "name": "Belts",
     "blurb": "Belts that define a waist or a line."
    }
+  ],
+  "sizes": [
+   {
+    "label": "Size",
+    "values": [
+     "One size",
+     "S",
+     "M",
+     "L"
+    ]
+   },
+   {
+    "label": "Ring size (US)",
+    "values": [
+     "Ring 4",
+     "Ring 5",
+     "Ring 6",
+     "Ring 7",
+     "Ring 8",
+     "Ring 9",
+     "Ring 10",
+     "Ring 11",
+     "Ring 12",
+     "Ring 13"
+    ]
+   },
+   {
+    "label": "Belt (cm)",
+    "values": [
+     "Belt 75",
+     "Belt 80",
+     "Belt 85",
+     "Belt 90",
+     "Belt 95",
+     "Belt 100"
+    ]
+   }
   ]
  },
  {
@@ -118,6 +218,24 @@
    {
     "name": "Candles",
     "blurb": "Scent for the room."
+   }
+  ],
+  "sizes": [
+   {
+    "label": "Volume",
+    "values": [
+     "10 ml",
+     "30 ml",
+     "50 ml",
+     "100 ml"
+    ]
+   },
+   {
+    "label": "Candle weight",
+    "values": [
+     "200 g",
+     "300 g"
+    ]
    }
   ]
  },
@@ -137,6 +255,24 @@
     "name": "Homeware",
     "blurb": "Pieces for the rooms you live in."
    }
+  ],
+  "sizes": [
+   {
+    "label": "Device",
+    "values": [
+     "Phone",
+     "Tablet",
+     "Laptop",
+     "Watch",
+     "Earbuds"
+    ]
+   },
+   {
+    "label": "Other",
+    "values": [
+     "One size"
+    ]
+   }
   ]
  },
  {
@@ -151,6 +287,7 @@
     "name": "Gift Sets",
     "blurb": "Pieces chosen to be given together."
    }
-  ]
+  ],
+  "sizes": []
  }
 ]

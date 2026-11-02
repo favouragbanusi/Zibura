@@ -19,7 +19,7 @@ function region(request) {
 async function createSession(env, origin, lines, currency) {
   const params = new URLSearchParams();
   params.set("mode", "payment");
-  params.set("success_url", origin + "/thanks/");
+  params.set("success_url", origin + "/thanks/?session_id={CHECKOUT_SESSION_ID}");
   params.set("cancel_url", origin + "/cart/");
   SHIP_TO.forEach((c, i) => {
     params.set("shipping_address_collection[allowed_countries][" + i + "]", c);
@@ -33,7 +33,7 @@ async function createSession(env, origin, lines, currency) {
     params.set(p + "[price_data][product_data][name]", line.piece.name);
     params.set(
       p + "[price_data][product_data][description]",
-      line.color + ", " + line.size
+      line.size ? line.color + ", " + line.size : line.color
     );
   });
   const res = await fetch("https://api.stripe.com/v1/checkout/sessions", {
@@ -74,11 +74,11 @@ async function checkout(request, env) {
   const lines = [];
   for (const item of items) {
     const piece = bySlug.get(item.slug);
-    if (!piece || !piece.colors.includes(item.color) || !piece.sizes.includes(item.size)) {
+    if (!piece || !piece.colors.includes(item.color) || (piece.sizes.length ? !piece.sizes.includes(item.size) : false)) {
       return json({ error: "A Piece in your cart is no longer available." }, 400);
     }
     const qty = Math.min(Math.max(parseInt(item.qty, 10) || 1, 1), 10);
-    lines.push({ piece, color: item.color, size: item.size, qty });
+    lines.push({ piece, color: item.color, size: piece.sizes.length ? item.size : "", qty });
   }
 
   let result = await createSession(env, origin, lines, currency);
@@ -88,7 +88,177 @@ async function checkout(request, env) {
   if (!result.ok || !result.data.url) {
     return json({ error: "Checkout could not start. Please try again." }, 502);
   }
+  try {
+    const user = await currentUser(request, env);
+    if (env.DB && user) {
+      const cur = result.data.currency ? result.data.currency.toUpperCase() : currency;
+      const items = lines.map((l) => ({ slug: l.piece.slug, name: l.piece.name, color: l.color, size: l.size, qty: l.qty, unit: l.piece.prices[cur] || l.piece.prices.USD }));
+      await env.DB.prepare("INSERT OR IGNORE INTO orders (user_id, stripe_session, status, currency, total, items_json, ship_json, created_at) VALUES (?, ?, 'pending', ?, ?, ?, '', ?)")
+        .bind(user.id, result.data.id, cur, Math.round((result.data.amount_total || items.reduce((s, i) => s + i.unit * i.qty * 100, 0))), JSON.stringify(items), new Date().toISOString()).run();
+    }
+  } catch (e) {}
   return json({ url: result.data.url });
+}
+
+// ---------- Account extras: orders, profile, addresses, saved, security ----------
+async function stripeSession(env, id) {
+  const res = await fetch("https://api.stripe.com/v1/checkout/sessions/" + encodeURIComponent(id), { headers: { authorization: "Bearer " + env.STRIPE_SECRET_KEY } });
+  return res.ok ? res.json() : null;
+}
+async function confirmOrder(request, env) {
+  const off = needDb(env); if (off) return off;
+  let b; try { b = await request.json(); } catch (e) { return json({ error: "The request could not be read." }, 400); }
+  const id = clean(b.session_id, 200);
+  if (!id || !env.STRIPE_SECRET_KEY) return json({ ok: false });
+  const s = await stripeSession(env, id);
+  if (!s || s.payment_status !== "paid") return json({ ok: false });
+  const sd = s.shipping_details || (s.collected_information && s.collected_information.shipping_details) || null;
+  const ship = sd ? JSON.stringify({ name: sd.name, address: sd.address }) : "";
+  await env.DB.prepare("UPDATE orders SET status = 'paid', total = ?, currency = ?, ship_json = ?, email = ? WHERE stripe_session = ?")
+    .bind(s.amount_total || 0, String(s.currency || "usd").toUpperCase(), ship, (s.customer_details && s.customer_details.email) || "", id).run();
+  const row = await env.DB.prepare("SELECT id FROM orders WHERE stripe_session = ?").bind(id).first();
+  return json({ ok: true, number: row ? orderNo(row.id) : "" });
+}
+const orderNo = (id) => "ZR-" + String(1000 + id);
+
+async function account(request, env) {
+  const off = needDb(env); if (off) return off;
+  const user = await currentUser(request, env);
+  if (!user) return json({ user: null }, 200, { "cache-control": "no-store" });
+  const db = env.DB;
+  const full = await db.prepare("SELECT birth_day, birth_month, created_at FROM users WHERE id = ?").bind(user.id).first();
+  const prof = (await db.prepare("SELECT * FROM profiles WHERE user_id = ?").bind(user.id).first()) || {};
+  const orders = (await db.prepare("SELECT id, status, currency, total, items_json, ship_json, created_at FROM orders WHERE user_id = ? ORDER BY id DESC LIMIT 100").bind(user.id).all()).results || [];
+  const addresses = (await db.prepare("SELECT * FROM addresses WHERE user_id = ? ORDER BY is_default DESC, id DESC").bind(user.id).all()).results || [];
+  const saved = ((await db.prepare("SELECT slug FROM saved WHERE user_id = ? ORDER BY created_at DESC").bind(user.id).all()).results || []).map((r) => r.slug);
+  let style = null, prefs = {};
+  try { style = prof.style_json ? JSON.parse(prof.style_json) : null; } catch (e) {}
+  try { prefs = prof.prefs_json ? JSON.parse(prof.prefs_json) : {}; } catch (e) {}
+  const hasAvatar = !!(env.PHOTOS && prof.avatar_key);
+  return json({
+    user: { first: user.first, last: user.last, email: user.email, birth_day: full && full.birth_day, birth_month: full && full.birth_month, since: full && full.created_at },
+    profile: { province: prof.province || "", phone: prof.phone || "", city: prof.city || "", country: prof.country || "", bio: prof.bio || "", pronouns_note: "", avatar: hasAvatar, style, prefs },
+    orders: orders.map((o) => ({ number: orderNo(o.id), status: o.status, currency: o.currency, total: o.total, items: safeParse(o.items_json, []), ship: safeParse(o.ship_json, null), at: o.created_at })),
+    addresses, saved
+  }, 200, { "cache-control": "no-store" });
+}
+function safeParse(s, d) { try { return s ? JSON.parse(s) : d; } catch (e) { return d; } }
+
+async function saveProfile(request, env) {
+  const off = needDb(env); if (off) return off;
+  const user = await currentUser(request, env);
+  if (!user) return json({ error: "Please sign in first." }, 401);
+  let b; try { b = await request.json(); } catch (e) { return json({ error: "The form could not be read." }, 400); }
+  const cur = (await env.DB.prepare("SELECT * FROM profiles WHERE user_id = ?").bind(user.id).first()) || {};
+  const next = {
+    province: b.province !== undefined ? clean(b.province, 20) : cur.province || "",
+    phone: b.phone !== undefined ? clean(b.phone, 40) : cur.phone || "",
+    city: b.city !== undefined ? clean(b.city, 80) : cur.city || "",
+    country: b.country !== undefined ? clean(b.country, 80) : cur.country || "",
+    bio: b.bio !== undefined ? clean(b.bio, 280) : cur.bio || "",
+    style_json: b.style !== undefined ? JSON.stringify(b.style).slice(0, 4000) : cur.style_json || "",
+    prefs_json: b.prefs !== undefined ? JSON.stringify(b.prefs).slice(0, 4000) : cur.prefs_json || ""
+  };
+  await env.DB.prepare("INSERT INTO profiles (user_id, province, phone, city, country, bio, style_json, prefs_json, avatar_key, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET province=excluded.province, phone=excluded.phone, city=excluded.city, country=excluded.country, bio=excluded.bio, style_json=excluded.style_json, prefs_json=excluded.prefs_json, updated_at=excluded.updated_at")
+    .bind(user.id, next.province, next.phone, next.city, next.country, next.bio, next.style_json, next.prefs_json, cur.avatar_key || "", new Date().toISOString()).run();
+  if (b.first !== undefined || b.last !== undefined || b.birth_day !== undefined) {
+    const first = clean(b.first, 60) || user.first, last = clean(b.last, 60) || user.last;
+    await env.DB.prepare("UPDATE users SET first = ?, last = ?, birth_day = ?, birth_month = ? WHERE id = ?")
+      .bind(first, last, parseInt(b.birth_day, 10) || null, parseInt(b.birth_month, 10) || null, user.id).run();
+  }
+  return json({ ok: true });
+}
+
+async function avatarPost(request, env) {
+  const off = needDb(env); if (off) return off;
+  if (!env.PHOTOS) return json({ error: "Photo storage is being set up." }, 503);
+  const user = await currentUser(request, env);
+  if (!user) return json({ error: "Please sign in first." }, 401);
+  let form; try { form = await request.formData(); } catch (e) { return json({ error: "The photo could not be read." }, 400); }
+  const file = form.get("photo");
+  if (!file || typeof file === "string" || file.size < 500 || file.size > 2 * 1024 * 1024) return json({ error: "Please choose a photo under 2 MB." }, 400);
+  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) return json({ error: "Please choose a JPG, PNG, or WebP photo." }, 400);
+  const key = "avatars/" + user.id;
+  await env.PHOTOS.put(key, await file.arrayBuffer(), { httpMetadata: { contentType: file.type } });
+  await env.DB.prepare("INSERT INTO profiles (user_id, avatar_key, updated_at) VALUES (?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET avatar_key = excluded.avatar_key, updated_at = excluded.updated_at")
+    .bind(user.id, key, new Date().toISOString()).run();
+  return json({ ok: true });
+}
+async function avatarGet(request, env) {
+  const user = await currentUser(request, env);
+  if (!user || !env.PHOTOS) return new Response("Not found", { status: 404 });
+  const obj = await env.PHOTOS.get("avatars/" + user.id);
+  if (!obj) return new Response("Not found", { status: 404 });
+  return new Response(obj.body, { headers: { "content-type": obj.httpMetadata?.contentType || "image/jpeg", "cache-control": "private, max-age=60" } });
+}
+
+async function addressPost(request, env) {
+  const off = needDb(env); if (off) return off;
+  const user = await currentUser(request, env);
+  if (!user) return json({ error: "Please sign in first." }, 401);
+  let b; try { b = await request.json(); } catch (e) { return json({ error: "The form could not be read." }, 400); }
+  if (b.action === "delete") {
+    await env.DB.prepare("DELETE FROM addresses WHERE id = ? AND user_id = ?").bind(parseInt(b.id, 10) || 0, user.id).run();
+    return json({ ok: true });
+  }
+  if (b.action === "default") {
+    await env.DB.prepare("UPDATE addresses SET is_default = CASE WHEN id = ? THEN 1 ELSE 0 END WHERE user_id = ?").bind(parseInt(b.id, 10) || 0, user.id).run();
+    return json({ ok: true });
+  }
+  const a = { label: clean(b.label, 40) || "Home", name: clean(b.name, 80), line1: clean(b.line1, 120), line2: clean(b.line2, 120), city: clean(b.city, 80), region: clean(b.region, 80), postal: clean(b.postal, 20), country: clean(b.country, 60), phone: clean(b.phone, 40) };
+  if (!a.name || !a.line1 || !a.city || !a.postal || !a.country) return json({ error: "Please add a name, street address, city, postal code, and country." }, 400);
+  const count = await env.DB.prepare("SELECT COUNT(*) AS n FROM addresses WHERE user_id = ?").bind(user.id).first();
+  if (!b.id && count.n >= 10) return json({ error: "You can keep up to 10 addresses." }, 400);
+  if (b.id) {
+    await env.DB.prepare("UPDATE addresses SET label=?, name=?, line1=?, line2=?, city=?, region=?, postal=?, country=?, phone=? WHERE id=? AND user_id=?")
+      .bind(a.label, a.name, a.line1, a.line2, a.city, a.region, a.postal, a.country, a.phone, parseInt(b.id, 10) || 0, user.id).run();
+  } else {
+    await env.DB.prepare("INSERT INTO addresses (user_id, label, name, line1, line2, city, region, postal, country, phone, is_default) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+      .bind(user.id, a.label, a.name, a.line1, a.line2, a.city, a.region, a.postal, a.country, a.phone, count.n === 0 ? 1 : 0).run();
+  }
+  return json({ ok: true });
+}
+
+async function savedPost(request, env) {
+  const off = needDb(env); if (off) return off;
+  const user = await currentUser(request, env);
+  if (!user) return json({ error: "Please sign in first." }, 401);
+  let b; try { b = await request.json(); } catch (e) { return json({ error: "The request could not be read." }, 400); }
+  const slug = clean(b.slug, 80);
+  if (!slug) return json({ error: "Missing Piece." }, 400);
+  const row = await env.DB.prepare("SELECT 1 AS x FROM saved WHERE user_id = ? AND slug = ?").bind(user.id, slug).first();
+  if (row) { await env.DB.prepare("DELETE FROM saved WHERE user_id = ? AND slug = ?").bind(user.id, slug).run(); return json({ ok: true, saved: false }); }
+  await env.DB.prepare("INSERT INTO saved (user_id, slug, created_at) VALUES (?, ?, ?)").bind(user.id, slug, new Date().toISOString()).run();
+  return json({ ok: true, saved: true });
+}
+
+async function passwordPost(request, env) {
+  const off = needDb(env); if (off) return off;
+  const user = await currentUser(request, env);
+  if (!user) return json({ error: "Please sign in first." }, 401);
+  let b; try { b = await request.json(); } catch (e) { return json({ error: "The form could not be read." }, 400); }
+  const row = await env.DB.prepare("SELECT salt, pass_hash FROM users WHERE id = ?").bind(user.id).first();
+  if (!row || (await hashPassword(String(b.current || ""), row.salt)) !== row.pass_hash) return json({ error: "Your current password does not match." }, 403);
+  const next = String(b.next || "");
+  if (next.length < 8 || next.length > 200) return json({ error: "Your new password needs at least 8 characters." }, 400);
+  const salt = hex(crypto.getRandomValues(new Uint8Array(16)));
+  await env.DB.prepare("UPDATE users SET salt = ?, pass_hash = ? WHERE id = ?").bind(salt, await hashPassword(next, salt), user.id).run();
+  return json({ ok: true });
+}
+
+async function deleteAccount(request, env) {
+  const off = needDb(env); if (off) return off;
+  const user = await currentUser(request, env);
+  if (!user) return json({ error: "Please sign in first." }, 401);
+  let b; try { b = await request.json(); } catch (e) { return json({ error: "The form could not be read." }, 400); }
+  const row = await env.DB.prepare("SELECT salt, pass_hash FROM users WHERE id = ?").bind(user.id).first();
+  if (!row || (await hashPassword(String(b.password || ""), row.salt)) !== row.pass_hash) return json({ error: "Your password does not match." }, 403);
+  for (const t of ["sessions", "applications", "profiles", "addresses", "saved", "orders"]) {
+    await env.DB.prepare("DELETE FROM " + t + " WHERE user_id = ?").bind(user.id).run();
+  }
+  await env.DB.prepare("DELETE FROM users WHERE id = ?").bind(user.id).run();
+  if (env.PHOTOS) { await env.PHOTOS.delete("photos/" + user.id); await env.PHOTOS.delete("avatars/" + user.id); }
+  return json({ ok: true }, 200, { "set-cookie": sessionCookie("", 0) });
 }
 
 
@@ -446,6 +616,15 @@ export default {
     if (url.pathname === "/api/auth/login" && request.method === "POST") return login(request, env);
     if (url.pathname === "/api/auth/logout" && request.method === "POST") return logout(request, env);
     if (url.pathname === "/api/me" && request.method === "GET") return me(request, env);
+    if (url.pathname === "/api/account" && request.method === "GET") return account(request, env);
+    if (url.pathname === "/api/profile" && request.method === "POST") return saveProfile(request, env);
+    if (url.pathname === "/api/avatar" && request.method === "POST") return avatarPost(request, env);
+    if (url.pathname === "/api/avatar" && request.method === "GET") return avatarGet(request, env);
+    if (url.pathname === "/api/address" && request.method === "POST") return addressPost(request, env);
+    if (url.pathname === "/api/saved" && request.method === "POST") return savedPost(request, env);
+    if (url.pathname === "/api/password" && request.method === "POST") return passwordPost(request, env);
+    if (url.pathname === "/api/account/delete" && request.method === "POST") return deleteAccount(request, env);
+    if (url.pathname === "/api/orders/confirm" && request.method === "POST") return confirmOrder(request, env);
     if (url.pathname === "/api/apply" && request.method === "POST") return apply(request, env);
     if (url.pathname === "/api/photo" && request.method === "GET") return ownPhoto(request, env);
     if (url.pathname === "/api/admin/applications" && request.method === "GET") return adminList(request, env);

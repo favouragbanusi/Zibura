@@ -41,14 +41,23 @@ const categories = TAX.map((c) => c.name);
 const countIn = (fn) => products.filter(fn).length;
 
 // Images and films drop in by file name. Add a file such as signal-1-cover.jpg or arc-1-film.mp4 next to build.js and it appears on the page.
-function media(name, alt) {
-  for (const ext of ["jpg", "jpeg", "png", "webp"]) {
-    const file = path.join(root, `${name}.${ext}`);
-    if (fs.existsSync(file)) {
-      write(`assets/media/${name}.${ext}`, fs.readFileSync(file));
-      return `<img src="/assets/media/${name}.${ext}" alt="${esc(alt)}" loading="lazy">`;
+// Real files next to build.js win. The placeholders folder fills any gap until the real image arrives.
+function findImage(name) {
+  for (const dir of [root, path.join(root, "placeholders")]) {
+    for (const ext of ["jpg", "jpeg", "png", "webp"]) {
+      const file = path.join(dir, `${name}.${ext}`);
+      if (fs.existsSync(file)) return { file, ext };
     }
   }
+  return null;
+}
+function media(name, alt) {
+  const hit = findImage(name);
+  if (hit) {
+    write(`assets/media/${name}.${hit.ext}`, fs.readFileSync(hit.file));
+    return `<img src="/assets/media/${name}.${hit.ext}" alt="${esc(alt)}" loading="lazy">`;
+  }
+  if (process.env.LIST_SLOTS) console.log("SLOT image", name, "|", alt);
   return `<div class="ph-empty" role="img" aria-label="${esc(alt)}"></div>`;
 }
 // Returns an <img> for a product photo if the file exists, or an empty string.
@@ -70,6 +79,12 @@ function film(name, caption) {
       return `<figure class="film"><video controls playsinline preload="metadata" src="/assets/media/${name}.${ext}"></video><figcaption>${esc(caption)}</figcaption></figure>`;
     }
   }
+  const poster = findImage(name + "-poster");
+  if (poster) {
+    write(`assets/media/${name}-poster.${poster.ext}`, fs.readFileSync(poster.file));
+    return `<figure class="film"><div class="video-slot has-poster" role="img" aria-label="${esc(caption)}"><img src="/assets/media/${name}-poster.${poster.ext}" alt="" loading="lazy"><span class="film-tag">Film, arriving soon</span></div><figcaption>${esc(caption)}</figcaption></figure>`;
+  }
+  if (process.env.LIST_SLOTS) console.log("SLOT film", name, "|", caption);
   return `<figure class="film"><div class="video-slot" role="img" aria-label="${esc(caption)}"><span class="play"></span></div><figcaption>${esc(caption)}</figcaption></figure>`;
 }
 
@@ -89,15 +104,15 @@ function waitlistForm(id) {
         <div><label for="${id}-first">First name</label><input id="${id}-first" name="first" autocomplete="given-name" required></div>
         <div><label for="${id}-last">Last name</label><input id="${id}-last" name="last" autocomplete="family-name" required></div>
         <div class="full"><label for="${id}-email">Email</label><input id="${id}-email" name="email" type="email" autocomplete="email" required></div>
-        <div><label for="${id}-country">Country</label>
+        <div><label for="${id}-country">Country of origin</label>
           <select id="${id}-country" name="country" autocomplete="country-name" required><option value="">Choose</option>${COUNTRIES.map((c) => `<option>${c}</option>`).join("")}</select></div>
-        <div><label for="${id}-city">City</label><input id="${id}-city" name="city" autocomplete="address-level2" required></div>
+        <div><label for="${id}-city">City of residence</label><input id="${id}-city" name="city" autocomplete="address-level2" required></div>
         <div><label for="${id}-bm">Birthday month <span class="opt-tag">optional</span></label><select id="${id}-bm" name="birth_month">${monthOptions}</select></div>
         <div><label for="${id}-bd">Birthday day <span class="opt-tag">optional</span></label><select id="${id}-bd" name="birth_day">${dayOptions}</select></div>
         <div class="full"><label for="${id}-phone">Phone <span class="opt-tag">optional</span></label><input id="${id}-phone" name="phone" type="tel" autocomplete="tel"></div>
         <div class="full checks">
-          <label class="check"><input type="checkbox" name="email_consent" required><span>Send me news from Zi Republic by email. I can unsubscribe at any time.</span></label>
-          <label class="check"><input type="checkbox" name="sms_consent"><span>Text me about Signal I. Message and data rates may apply. Reply STOP to opt out.</span></label>
+          <label class="check"><input type="checkbox" name="email_consent" required><span>Send me official bulletins from Zi Republic by email. I can renounce them at any time.</span></label>
+          <label class="check"><input type="checkbox" name="sms_consent"><span>Text me the Signal I announcements. Message and data rates may apply. Reply STOP to opt out.</span></label>
         </div>
         <input type="hidden" name="province">
         <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
@@ -112,10 +127,10 @@ function subscribeForm(id) {
       <div class="form-grid">
         <div class="full"><label for="${id}-first">Name</label><input id="${id}-first" name="first" autocomplete="given-name" required></div>
         <div class="full"><label for="${id}-email">Email</label><input id="${id}-email" name="email" type="email" autocomplete="email" required></div>
-        <div class="full checks"><label class="check"><input type="checkbox" name="email_consent" required><span>Send me news from Zi Republic by email. I can unsubscribe at any time.</span></label></div>
+        <div class="full checks"><label class="check"><input type="checkbox" name="email_consent" required><span>Send me official bulletins from Zi Republic by email. I can renounce them at any time.</span></label></div>
         <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
       </div>
-      <button class="btn" type="submit">Subscribe</button>
+      <button class="btn" type="submit">Receive the Gazette</button>
       <div class="msg sub-msg" role="status"></div>
     </form>`;
 }
@@ -190,60 +205,89 @@ function layout({ title, description, page, body }) {
 <script>document.documentElement.className = "js";</script>
 </head>
 <body data-page="${page}">
-<div class="notice">The first Signal is coming. <a href="/waitlist/" data-open-waitlist>Be the first to know</a></div>
+<div class="notice">Official notice: Signal I opens April 18, 2027. <a href="/waitlist/" data-open-waitlist>Get on the Register</a></div>
 <header class="site-header" id="top">
   <div class="wrap">
+    <button type="button" class="burger" id="burger" aria-label="Open menu" aria-expanded="false" aria-controls="drawer"><span></span><span></span><span></span></button>
     <nav class="nav" aria-label="Main">
       <div class="has-mega"><a href="/shop/">Shop</a>${MEGA}</div>
-      <a href="/explore/">Explore</a>
+      <a href="/explore/">The Signals</a>
       <a href="/brand/">Zi Republic</a>
-      <a href="/note/">From the founder</a>
+      <a href="/note/">From the Zi-in-Chief</a>
     </nav>
     <a class="brand" href="/" aria-label="Zibura home"><img src="/assets/logo-wordmark-navy.png" alt="Zibura" width="636" height="120"></a>
     <nav class="nav right" aria-label="Account and cart">
-      <a href="/zi-card/">Zi Card</a>
-      <a href="/account/" id="acct-link">Sign in</a>
-      <a href="/cart/">Cart (<span id="cart-count">0</span>)</a>
-      <select id="currency" aria-label="Currency">
-        <option value="CAD">CAD</option>
-        <option value="USD">USD</option>
-        <option value="GBP">GBP</option>
-        <option value="NGN">NGN</option>
-      </select>
+      <label class="icon-btn cur" title="Currency"><span class="sr">Currency</span><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9S14.5 18.3 12 21c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/></svg><span class="cur-code" id="cur-code">USD</span>
+        <select id="currency" aria-label="Currency">
+          <option value="CAD">CAD</option>
+          <option value="USD">USD</option>
+          <option value="GBP">GBP</option>
+          <option value="NGN">NGN</option>
+        </select></label>
+      <a class="icon-btn" href="/account/" id="acct-link" aria-label="Sign in" title="Sign in"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.2-4 4.2-6 8-6s6.8 2 8 6"/></svg></a>
+      <a class="icon-btn" href="/cart/" id="cart-link" aria-label="Cart" title="Cart"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8V6.5a3 3 0 016 0V8"/></svg><span class="cart-badge" id="cart-count">0</span></a>
+      <a class="btn nav-cta" href="/zi-card/">Apply for Zi Card</a>
     </nav>
   </div>
 </header>
+<div class="drawer" id="drawer" aria-hidden="true">
+  <div class="drawer-in">
+    <a class="d-link big" href="/shop/">Shop</a>
+    <div class="d-sub">${TAX.map((c) => `<a href="/shop/?category=${encodeURIComponent(c.name)}">${esc(c.name)}</a>`).join("")}</div>
+    <a class="d-link big" href="/explore/">The Signals</a>
+    <a class="d-link big" href="/brand/">Zi Republic</a>
+    <a class="d-link big" href="/province/">Find your province</a>
+    <a class="d-link big" href="/note/">From the Zi-in-Chief</a>
+    <a class="d-link" href="/account/" id="acct-link-m">My account</a>
+    <a class="d-link" href="/cart/">Cart</a>
+    <div class="d-cur" role="group" aria-label="Currency">${["CAD", "USD", "GBP", "NGN"].map((c) => `<button type="button" data-cur="${c}">${c}</button>`).join("")}</div>
+    <a class="btn wide" href="/zi-card/">Apply for Zi Card</a>
+  </div>
+</div>
 ${body}
 <footer class="site-footer">
   <div class="wrap">
+    <div class="f-hero">
+      <p class="f-big">Your expression,<br>your world.</p>
+      <div class="f-cta"><p>The Bureau of Arrivals is open for names.</p><a class="btn light" href="/waitlist/">Join the Register</a></div>
+    </div>
     <div class="top">
-      <div>
-        <img class="word" src="/assets/logo-wordmark-navy.png" alt="Zibura" width="636" height="120">
-        <p class="tag">Your expression,<br>your world.</p>
+      <div class="f-brand">
+        <img class="word" src="/assets/logo-wordmark-sky.png" alt="Zibura" width="636" height="120">
+        <p class="s">Zibura is the fashion house of Zi Republic. Founding Day is December 1, 2026. Signal I opens April 18, 2027.</p>
+        <div class="f-prov" aria-hidden="true"><i style="background:#111c44;box-shadow:0 0 0 1px #d2eaff"></i><i style="background:#ffd400"></i><i style="background:#f0182e"></i><i style="background:#17c26a"></i><i style="background:#ff7a00"></i><i style="background:#8a4dff"></i></div>
       </div>
       <div>
-        <h3>Shop</h3>
+        <h3>Trade</h3>
         <a href="/shop/">Every Piece</a>
 ${AUDIENCES.map((a) => `        <a href="/shop/?audience=${a}">${a}</a>`).join("\n")}
+        <a href="/cart/">Your cart</a>
+      </div>
+      <div>
+        <h3>Departments</h3>
 ${categories.map((c) => `        <a href="/shop/?category=${encodeURIComponent(c)}">${esc(c)}</a>`).join("\n")}
       </div>
       <div>
-        <h3>Zi Republic</h3>
+        <h3>Civic services</h3>
         <a href="/brand/">The world</a>
         <a href="/brand/#provinces">The provinces</a>
         <a href="/brand/#calendar">The national calendar</a>
-        <a href="/note/">From the founder</a>
         <a href="/zi-card/">The Zi Card</a>
-        <a href="/explore/">Explore the Signals</a>
         <a href="/province/">Find your province</a>
-        <a href="/waitlist/">Join the Register</a>
+        <a href="/explore/">Read the Signals</a>
+        <a href="/account/">Your passport</a>
       </div>
       <div>
         <h3>The Embassy</h3>
         <p class="s">The Zi Republic Embassy<br>6 Founding Day Avenue<br>Ripple, Zi Republic</p>
+        <a href="/note/">From the Zi-in-Chief</a>
+        <a href="/waitlist/">Join the Register</a>
       </div>
     </div>
-    <p class="legal">&copy; 2026 Zibura. Your expression, your world.</p>
+    <div class="legal-row">
+      <p class="legal">&copy; 2026 Zibura. Printed by authority of the Zi Republic.</p>
+      <button type="button" class="to-top" id="to-top">Back to the capital</button>
+    </div>
   </div>
 </footer>
 ${MODAL}
@@ -278,12 +322,20 @@ write(
   <span class="orb o2" data-depth="-22"></span>
   <span class="orb o3" data-depth="14"></span>
   <div class="center">
-    <h1 class="display rise">${words("Your expression,")}<br>${words("your world.")}</h1>
-    <p class="lede fade">Zi Republic is a fashion country for people with more than one side. The borders open April 18, 2027.</p>
-    <div class="actions fade">
-      <a class="btn" href="#register">Join the Register</a>
-      <a class="btn line" href="/brand/">Enter Zi Republic</a>
+    <div class="hero-copy">
+      <h1 class="display rise">${words("Your expression,")}<br>${words("your world.")}</h1>
+      <p class="lede fade">Zi Republic is a fashion country for people with more than one side. Citizens are welcome, the rules are optional, and the borders open April 18, 2027.</p>
+      <div class="actions fade">
+        <a class="btn" href="#register">Join the Register</a>
+        <a class="btn line" href="/brand/">Cross the border</a>
+      </div>
     </div>
+    <figure class="hero-photo fade" data-tilt-photo>
+      <div class="hp-frame"><img src="/assets/hero.jpg" alt="A portrait in golden light, hands behind the head, wearing a cream tank top with an orange Zi mark" width="1500" height="2249" fetchpriority="high"></div>
+      <span class="hp-chip c1">Signal I, Arc I</span>
+      <span class="hp-chip c2">Opens April 18, 2027</span>
+      <span class="hp-dot"></span>
+    </figure>
   </div>
   <div class="foot"><span>Signal I, Arc I</span><a class="text-link" href="#pieces">Scroll</a></div>
 </section>
@@ -321,16 +373,16 @@ ${products.slice(0, 8).map(card).join("\n")}
 
 <section class="section" style="padding-top:0">
   <div class="wrap">
-    <div class="section-head" data-reveal><h2>Start here.</h2></div>
+    <div class="section-head" data-reveal><h2>Pick your delegation.</h2></div>
     <div class="who" data-reveal>
-${AUDIENCES.map((a) => `      <a href="/shop/?audience=${a}"><span>${a}</span><small>${countIn((p) => p.audience.includes(a))} Pieces</small></a>`).join("\n")}
+${AUDIENCES.map((a) => `      <a href="/shop/?audience=${a}">${media("audience-" + a.toLowerCase(), a)}<span>${a}</span><small>${countIn((p) => p.audience.includes(a))} Pieces</small></a>`).join("\n")}
     </div>
   </div>
 </section>
 
 <section class="section" style="padding-top:0">
   <div class="wrap">
-    <div class="section-head" data-reveal><h2>Around the republic</h2></div>
+    <div class="section-head" data-reveal><h2>Departments of trade</h2></div>
     <div class="cats" data-cats>
 ${TAX.map((c) => {
   const n = countIn((p) => p.category === c.name);
@@ -417,7 +469,7 @@ write(
 
 <section class="section" id="provinces" style="padding-top:0"><div class="wrap">
   <div class="section-head" data-reveal><h2>Six provinces. One is yours.</h2><a class="btn" href="/province/">Find your province</a></div>
-  <p class="province-intro" data-reveal>Every resident of Zi Republic calls one province home. Hover over a province to meet it, or take the seven question quiz and let your answers decide.</p>
+  <p class="province-intro" data-reveal>Every resident of Zi Republic calls one province home. Hover over a province to meet it, or take the twelve question quiz and let your answers decide.</p>
   <div class="provinces" data-reveal>
 ${PROVINCES.map(
   ([n, c, hex, line, note, traits]) => `    <article class="province" tabindex="0" style="--pc:${hex}">
@@ -689,18 +741,31 @@ const PLACEMENT = [
   ["Pick a place.", ["A lake at dawn.", "A rooftop at sunset.", "A stage with the lights on.", "A garden after rain.", "A city street at full speed.", "A foggy hillside at midnight."]],
   ["What do your friends thank you for?", ["Staying calm and seeing clearly.", "Making every moment feel special.", "Saying what everyone was thinking.", "Showing up, every time.", "Getting things moving.", "Seeing something in them nobody else saw."]],
   ["Choose your soundtrack.", ["Slow, spacious, and intelligent.", "Everything you can sing along to.", "Loud, with a point to make.", "Warm, acoustic, and unhurried.", "Fast, with surprises.", "Dreamy, layered, hard to place."]],
-  ["Which word belongs next to your name?", ["Magnetic.", "Radiant.", "Fearless.", "Grounded.", "Unstoppable.", "Enigmatic."]]
+  ["Which word belongs next to your name?", ["Magnetic.", "Radiant.", "Fearless.", "Grounded.", "Unstoppable.", "Enigmatic."]],
+  ["Pick a fabric.", ["Crisp cotton and fine wool.", "Satin with a little shine.", "Leather and sharp structure.", "Linen, knit, and natural weaves.", "Technical nylon and stretch mesh.", "Silk, lace, and sheer layers."]],
+  ["How do you shop?", ["I buy once and wear it for years.", "I buy for the occasion and the photo.", "I know in five seconds and pay at once.", "I wait for the piece that grows on me.", "I take several home and see what sticks.", "I follow a feeling, then find the reasons."]],
+  ["Your closet is mostly:", ["Navy, white, and clean neutrals.", "Sunny, happy, saturated colors.", "Black, red, and one loud piece.", "Earth tones and soft greens.", "Bright colors that mix and match.", "Purples, smoke, and the shades between."]],
+  ["A last minute invite arrives. You:", ["Arrive on time and observe first.", "Bring the snacks and the playlist.", "Walk in as the main character.", "Bring a host gift and stay until the end.", "Stop by four parties in one night.", "Arrive late with a good story."]],
+  ["Pick the accessory you would never leave without.", ["A fine watch or a simple chain.", "Statement earrings.", "A heavy ring or a sharp belt.", "A woven bag or a soft scarf.", "Sneakers made for moving.", "Layered chains and dark sunglasses."]]
+];
+const PROFILES = [
+  { style: "Quiet tailoring", silhouette: "Clean lines, long coats, straight trousers, and precise proportions.", palette: ["Ripple Blue", "White", "Sky Blue", "Silver"], fabrics: "Wool, cotton poplin, fine knit", loves: ["Outerwear with a strong shoulder", "Neutral base layers", "One refined piece of jewelry"], moments: "Early meetings, gallery openings, long train rides, and any room where listening matters.", shopper: "You buy fewer Pieces and wear them for years. Fit comes first and trends come second.", stretch: "Add a single bright accent, like a Sky Blue scarf, and the whole look gains a second voice.", picks: ["halo", "margin", "orbit"], notice: ["You dress with intention, and every detail has a reason.", "You decide when the picture is clear, and then you move without second guessing.", "You buy once and wear it for years.", "Your closet is organized around navy, white, and clean neutrals."] },
+  { style: "Joyful color", silhouette: "Fitted waists, flowing skirts, soft shoulders, and anything that moves when you do.", palette: ["Glow Yellow", "Peach", "Coral", "Cream"], fabrics: "Satin, silk blends, cotton with a bright hand", loves: ["Warm saturated colors", "Statement earrings", "Dresses made for gathering"], moments: "Birthdays, brunches, weddings, and every dinner where you arrive with the playlist.", shopper: "You shop for the occasion and the photograph. A Piece earns its place when it makes the room smile.", stretch: "Try one deep navy Piece and watch your bright colors glow even more against it.", picks: ["ember", "kite", "hearth"], notice: ["You dress to be happy in the room, and the room notices.", "You ask the people you love, and their joy becomes part of the decision.", "You shop for the moment and the photo.", "Your closet is full of sunny, saturated color."] },
+  { style: "Sharp and certain", silhouette: "Structured shoulders, high contrast, strong lines, and one loud focal point.", palette: ["Blaze Red", "Black", "White", "Gold"], fabrics: "Leather, crepe, heavy satin", loves: ["A red Piece you can see from across the street", "Sharp belts and heavy rings", "Black as a base"], moments: "Stages, openings, negotiations, and any room that needs someone to go first.", shopper: "You know in five seconds and pay at once. Hesitation is for other people.", stretch: "Try one soft, warm Piece in Sand or Tan and discover how much louder the red gets.", picks: ["tidal", "stride", "rumour"], notice: ["You treat the rules as suggestions, and your outfit proves it.", "You decide fast and keep moving.", "You buy in five seconds and never look back.", "Your closet runs on black, red, and one loud piece."] },
+  { style: "Natural and lasting", silhouette: "Relaxed shapes, easy trousers, soft layers, and Pieces built to age well.", palette: ["Bloom Green", "Sand", "Olive", "Tan"], fabrics: "Linen, wool knit, soft leather, washed cotton", loves: ["Earth tones and soft greens", "Totes and woven textures", "Candles and slow mornings"], moments: "Weekend markets, long dinners, garden days, and any plan that gets better with time.", shopper: "You wait for the Piece that grows on you. The ones you keep for ten years are the ones you thought about for ten days.", stretch: "Try one bright, saturated Piece and let your earth tones frame it.", picks: ["meridian", "cove", "hearth"], notice: ["You choose comfort and durability, and your wardrobe shows it.", "You give a decision time and let it grow on you.", "You wait for the Piece that earns its place.", "Your closet is built from earth tones and soft greens."] },
+  { style: "Fast and playful", silhouette: "Easy movement, athletic ease, bright layers, and combinations that change by the hour.", palette: ["Dash Orange", "Sky Blue", "Lime", "Hot Pink"], fabrics: "Technical nylon, jersey, stretch mesh, canvas", loves: ["Bright colors that mix and match", "Sneakers and shoes made for moving", "Bags that carry everything"], moments: "City days, travel, side projects, and nights that change plans three times.", shopper: "You take several Pieces home and see what sticks. Your wardrobe is a working lab.", stretch: "Pick one slower, more tailored Piece and see how it calms the whole outfit.", picks: ["ember", "pocket", "cove"], notice: ["You dress in motion, and it works.", "You try it and adjust as you go.", "You take several Pieces home and keep the winners.", "Your closet is bright and everything mixes."] },
+  { style: "Dreamy and layered", silhouette: "Draped shapes, sheer layers, long scarves, and details that reveal themselves slowly.", palette: ["Swirl Purple", "Lilac", "Silver", "Black"], fabrics: "Silk, lace, chiffon, soft velvet", loves: ["Purples, smoke, and shades in between", "Layered chains and scarves", "Perfume with a second note"], moments: "Late dinners, night walks, quiet exhibitions, and any evening that deserves a story.", shopper: "You follow a feeling and find the reasons afterward. The best Pieces feel like they already knew you.", stretch: "Try a crisp white shirt as your base and watch the layers get louder.", picks: ["kite", "orbit", "rumour"], notice: ["You dress in layers with a twist people notice later.", "You follow the feeling you cannot explain, and it is usually right.", "You follow a feeling, then find the reasons.", "Your closet lives between purple, smoke, and shadow."] }
 ];
 write(
   "province/index.html",
   layout({
     title: "Find your province | Zibura",
-    description: "Answer seven questions and find out which of the six provinces of Zi Republic is your home.",
+    description: "Answer twelve questions and find out which of the six provinces of Zi Republic is your home.",
     page: "placement",
     body: `<main>
 <section class="page-head"><div class="wrap">
   <h1 class="display rise">${words("Find your province.")}</h1>
-  <p class="fade">Seven questions. Your answers decide which of the six provinces of Zi Republic you call home.</p>
+  <p class="fade">Twelve questions. Your answers decide which of the six provinces of Zi Republic you call home.</p>
 </div></section>
 <section class="section" style="padding-top:clamp(16px,3vw,40px)"><div class="wrap">
   <div id="quiz" class="quiz" data-quiz>
@@ -709,7 +774,7 @@ write(
     <div class="q-opts" id="q-opts"></div>
   </div>
   <div id="result" class="result" hidden></div>
-  <script type="application/json" id="quiz-data">${JSON.stringify({ questions: PLACEMENT, provinces: PROVINCES.map(([n, c, hex, line, note, traits]) => ({ n, hex, line, note, traits })) })}</script>
+  <script type="application/json" id="quiz-data">${JSON.stringify({ questions: PLACEMENT, provinces: PROVINCES.map(([n, c, hex, line, note, traits], i) => ({ n, hex, line, note, traits, profile: PROFILES[i] })) })}</script>
 </div></section>
 </main>`
   })
@@ -780,11 +845,11 @@ write(
     page: "account",
     body: `<main>
 <section class="page-head"><div class="wrap">
-  <h1 class="display rise" id="acct-h">${words("Your Zi Registry.")}</h1>
-  <p class="fade" id="acct-sub">Create an account to apply for your Zi Card.</p>
+  <h1 class="display rise" id="acct-h">${words("Your Zi passport.")}</h1>
+  <p class="fade" id="acct-sub">Create an account to open your file in the Zi Registry.</p>
 </div></section>
 <section class="section" style="padding-top:clamp(16px,3vw,40px)"><div class="wrap">
-  <div id="acct-loading" class="small">Loading.</div>
+  <div id="acct-loading" class="small">Checking your papers.</div>
 
   <div id="v-auth" class="form-card" hidden>
     <div class="tabs" role="tablist">
@@ -800,7 +865,7 @@ write(
         <div class="full"><label for="s-email">Email</label><input id="s-email" name="email" type="email" autocomplete="email" required></div>
         <div class="full"><label for="s-pass">Password (8 characters or more)</label><input id="s-pass" name="password" type="password" minlength="8" autocomplete="new-password" required></div>
       </div>
-      <button class="btn" type="submit">Create account</button>
+      <button class="btn" type="submit">Open my file</button>
       <div class="msg" role="status"></div>
     </form>
     <form id="f-login" class="acct-form" hidden>
@@ -808,11 +873,30 @@ write(
         <div class="full"><label for="l-email">Email</label><input id="l-email" name="email" type="email" autocomplete="email" required></div>
         <div class="full"><label for="l-pass">Password</label><input id="l-pass" name="password" type="password" autocomplete="current-password" required></div>
       </div>
-      <button class="btn" type="submit">Sign in</button>
+      <button class="btn" type="submit">Present my passport</button>
       <div class="msg" role="status"></div>
     </form>
   </div>
 
+  <div id="dash" hidden>
+    <div class="dash-head">
+      <div class="dash-avatar" id="d-avatar"></div>
+      <div class="dash-who"><h2 class="display" id="d-name"></h2><p id="d-meta" class="small"></p></div>
+      <button type="button" class="btn line" id="signout">Sign out</button>
+    </div>
+    <nav class="dash-nav" id="dash-nav" aria-label="Account sections">
+      <button type="button" data-sec="overview">Overview</button>
+      <button type="button" data-sec="card">Zi Card</button>
+      <button type="button" data-sec="orders">Orders</button>
+      <button type="button" data-sec="style">Style</button>
+      <button type="button" data-sec="saved">Saved</button>
+      <button type="button" data-sec="addresses">Addresses</button>
+      <button type="button" data-sec="profile">Profile</button>
+      <button type="button" data-sec="prefs">Sizes</button>
+      <button type="button" data-sec="security">Security</button>
+    </nav>
+    <section class="panel" data-panel="overview"></section>
+    <section class="panel" data-panel="card" hidden>
   <div id="v-apply" class="form-card" hidden>
     <form id="f-apply" class="acct-form">
       <div class="form-grid">
@@ -825,18 +909,18 @@ write(
         <p class="small">Drag the photo to place your face inside the frame, then use the slider to zoom. This is exactly how it will appear on your card.</p>
       </div>
       <p class="small">Use a clear, front facing portrait with your face and shoulders in view.</p>
-      <button class="btn" type="submit">Submit my application</button>
+      <button class="btn" type="submit">Stamp my application</button>
       <div class="msg" role="status"></div>
     </form>
   </div>
 
   <div id="v-pending" class="form-card" hidden>
-    <h2 class="display" style="font-size:clamp(28px,3.4vw,40px)">We are processing your application.</h2>
+    <h2 class="display" style="font-size:clamp(28px,3.4vw,40px)">Your application is on the Minister's desk.</h2>
     <p class="sub">The Ministry of Zi Interior is reviewing it now. Check your account in a few days to see if you have been approved.</p>
   </div>
 
   <div id="v-declined" class="form-card" hidden>
-    <h2 class="display" style="font-size:clamp(28px,3.4vw,40px)">Not this time.</h2>
+    <h2 class="display" style="font-size:clamp(28px,3.4vw,40px)">Application returned for revision.</h2>
     <p class="sub">The Ministry did not approve this application. You are welcome to apply again with a new portrait.</p>
     <button class="btn" type="button" id="reapply">Apply again</button>
   </div>
@@ -846,7 +930,16 @@ write(
     <p style="margin-top:28px"><button class="btn" type="button" id="dl-card">Download your Zi Card</button></p>
   </div>
 
-  <p id="acct-out" class="small" style="margin-top:40px" hidden><span id="acct-who"></span> <button type="button" class="linkbtn" id="signout">Sign out</button></p>
+    </section>
+    <section class="panel" data-panel="orders" hidden></section>
+    <section class="panel" data-panel="style" hidden></section>
+    <section class="panel" data-panel="saved" hidden></section>
+    <section class="panel" data-panel="addresses" hidden></section>
+    <section class="panel" data-panel="profile" hidden></section>
+    <section class="panel" data-panel="prefs" hidden></section>
+    <section class="panel" data-panel="security" hidden></section>
+    <p id="acct-out" hidden><span id="acct-who"></span></p>
+  </div>
 </div></section>
 </main>`
   })
@@ -895,9 +988,9 @@ write(
       <p>That's Zi Republic, built on the idea that people deserve a place to actually express themselves, however that looks for them. This was never about re-educating anyone or writing a new set of rules to replace the old ones. It's about giving people somewhere to belong, exactly as they already are.</p>
     </div>
     <blockquote class="pull"><span class="qm" aria-hidden="true">&ldquo;</span>How you show up in the world is a language. We built Zibura so more people could speak it fluently, on their own terms.</blockquote>
-    <p class="signature" aria-label="Ruova">Ruova</p>
   </div>
-</main>`
+</main>
+<section class="sig-wrap" aria-label="Signed, Ruova"><p class="signature" id="sig" aria-label="Ruova">Ruova</p></section>`
   })
 );
 
@@ -909,7 +1002,7 @@ write(
     description: "Every Piece in the Zibura world.",
     page: "shop",
     body: `<main class="wrap">
-<div class="page-head" style="padding-left:0;padding-right:0"><h1 class="display rise">${words("Shop the republic.")}</h1><p class="fade">Signal I, Arc I. Pick your color, pick your size, and wear it your way.</p></div>
+<div class="page-head" style="padding-left:0;padding-right:0"><h1 class="display rise">${words("Shop the republic.")}</h1><p class="fade">Signal I, Arc I. Every Piece here has official clearance. Pick your color, pick your size, and wear it your way.</p></div>
 <div class="toolbar">
   <button type="button" class="btn line small-btn" id="open-filters">Filters</button>
   <p class="count" id="count" role="status"></p>
@@ -926,7 +1019,7 @@ write(
   <aside class="filters-pane" id="filters-pane" aria-label="Filters">
     <div class="pane-head"><strong>Filters</strong><button type="button" class="close-pane" id="close-filters" aria-label="Close filters">&times;</button></div>
     <div id="facets"></div>
-    <div class="pane-foot"><button type="button" class="btn" id="apply-filters">Show results</button></div>
+    <div class="pane-foot"><button type="button" class="btn" id="apply-filters">Show cleared Pieces</button></div>
   </aside>
   <div>
     <div class="grid shop-grid" id="grid"></div>
@@ -948,7 +1041,7 @@ products.forEach((p) => {
         `<label class="swatch"><input type="radio" name="color" value="${esc(c)}"${k === 0 ? " checked" : ""}><span class="dot" style="background:${COLORS[c] || "#eef6ff"}" title="${esc(c)}"></span><span class="sr">${esc(c)}</span></label>`
     )
     .join("\n        ");
-  const sizes = p.sizes
+  const sizes = (p.sizes || [])
     .map((s, k) => `<label><input type="radio" name="size" value="${esc(s)}"${k === 0 ? " checked" : ""}><span>${esc(s)}</span></label>`)
     .join("\n        ");
   const related = products.filter((q) => q.slug !== p.slug && q.category === p.category).slice(0, 4);
@@ -978,13 +1071,14 @@ products.forEach((p) => {
         ${colors}
           </div>
         </fieldset>
-        <fieldset class="field">
+        ${sizes ? `<fieldset class="field">
           <legend>Size</legend>
           <div class="opts">
         ${sizes}
           </div>
-        </fieldset>
+        </fieldset>` : ""}
         <button class="btn wide" type="submit">Add to cart</button>
+        <button class="btn line wide" type="button" id="save-btn" data-slug="${p.slug}">Save to my passport</button>
         <div class="msg" id="msg" role="status"></div>
       </form>
     </div>
@@ -1012,7 +1106,7 @@ products.forEach((p) => {
             <div class="full"><label for="rv-body">Your comment</label><textarea id="rv-body" name="body" rows="5" maxlength="1500"></textarea></div>
             <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
           </div>
-          <button class="btn" type="submit">Post my review</button>
+          <button class="btn" type="submit">File my review</button>
           <div class="msg" id="rv-msg" role="status"></div>
         </form>
       </div>
@@ -1038,7 +1132,7 @@ write(
     description: "Your cart.",
     page: "cart",
     body: `<main class="wrap">
-<div class="page-head" style="padding-left:0;padding-right:0"><h1 class="display rise">${words("Your cart.")}</h1></div>
+<div class="page-head" style="padding-left:0;padding-right:0"><h1 class="display rise">${words("Declare your Pieces.")}</h1></div>
 <div id="cart"></div>
 <div class="msg" id="cart-msg" role="status"></div>
 <div style="height:clamp(56px,8vw,110px)"></div>
@@ -1054,9 +1148,10 @@ write(
     description: "Your payment went through.",
     page: "thanks",
     body: `<main class="thanks">
-<h1 class="display rise">${words("Payment received.")}</h1>
-<p class="fade">Welcome to the republic. Your Pieces are now part of your world.</p>
-<a class="btn" href="/shop/">Keep exploring</a>
+<h1 class="display rise">${words("Payment cleared.")}</h1>
+<p class="fade">Customs has stamped your order. Welcome to the republic, your Pieces are on their way into your world.</p>
+<p class="fade" id="order-no" hidden></p>
+<a class="btn" href="/shop/">Back to the republic</a>
 </main>`
   })
 );
@@ -1070,6 +1165,7 @@ for (const f of [
   "logo-icon-navy.png",
   "favicon.png",
   "ruova.jpg",
+  "hero.jpg",
   "zi-card-seal.png",
   "zi-card-bg.png",
   "zi-card-back.png"
