@@ -30,6 +30,10 @@
   "blurb": "Everything you wear on your feet.",
   "types": [
    {
+    "name": "Shoes",
+    "blurb": "Lace-up and slip-on shoes for every day."
+   },
+   {
     "name": "Sneakers",
     "blurb": "Everyday shoes built for movement."
    },

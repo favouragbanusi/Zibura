@@ -225,7 +225,7 @@
   "category": "Footwear",
   "signal": "Signal I",
   "arc": "Arc II",
-  "description": "Leather loafers with a chunky sole. Sample Piece.",
+  "description": "Lace-up leather shoes in a bold zebra print. Sample Piece.",
   "prices": {
    "CAD": 310,
    "USD": 228,
@@ -248,18 +248,18 @@
   "audience": [
    "Men"
   ],
-  "type": "Loafers",
+  "type": "Shoes",
   "material": "Leather",
   "inStock": true,
   "isNew": false
  },
  {
-  "slug": "dusk",
-  "name": "Dusk",
+  "slug": "rumour",
+  "name": "Rumour",
   "category": "Fragrance",
   "signal": "Signal I",
   "arc": "Arc I",
-  "description": "A warm perfume with amber, fig, and cedar. Sample Piece.",
+  "description": "A warm perfume by Ruova with amber, fig, and cedar. Sample Piece.",
   "prices": {
    "CAD": 140,
    "USD": 105,

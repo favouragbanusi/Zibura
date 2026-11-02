@@ -623,3 +623,16 @@ figcaption { font-size: 13px; color: var(--ink-soft); margin-top: 10px; max-widt
 
 /* Larger founder signature */
 .note .signature { font-size: clamp(120px, 16vw, 220px); margin-top: .1em; line-height: .9; }
+
+/* Product photos */
+.plate { position: relative; overflow: hidden; }
+.plate img { width: 100%; height: 100%; object-fit: cover; display: block; position: absolute; inset: 0; }
+.plate .alt { position: absolute; inset: 0; opacity: 0; transition: opacity .35s; }
+.card:hover .plate .alt { opacity: 1; }
+.gallery .ph { overflow: hidden; }
+.gallery .ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Deep blue photo plates */
+.plate { background: var(--navy); }
+.card:hover .plate { background: var(--navy); }
+.gallery .ph { background: var(--navy); }

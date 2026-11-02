@@ -74,7 +74,7 @@
 
   function cardHtml(p) {
     return '<a class="card" href="/piece/' + esc(p.slug) + '/">' +
-      '<div class="plate"></div>' +
+      '<div class="plate">' + (p.photos && p.photos[0] ? '<img src="' + esc(p.photos[0]) + '" alt="' + esc(p.name) + '" loading="lazy">' : '') + (p.photos && p.photos[1] ? '<span class="alt"><img src="' + esc(p.photos[1]) + '" alt=""></span>' : '') + '</div>' +
       '<div class="info"><span class="nm">' + esc(p.name) + '</span>' +
       '<span class="price" data-price-for="' + esc(p.slug) + '"></span>' +
       '<span class="cat">' + esc(p.type) + '</span>' +

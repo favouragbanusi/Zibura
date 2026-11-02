@@ -51,6 +51,17 @@ function media(name, alt) {
   }
   return `<div class="ph-empty" role="img" aria-label="${esc(alt)}"></div>`;
 }
+// Returns an <img> for a product photo if the file exists, or an empty string.
+function photo(name, alt) {
+  for (const ext of ["jpg", "jpeg", "png", "webp"]) {
+    const file = path.join(root, `${name}.${ext}`);
+    if (fs.existsSync(file)) {
+      write(`assets/media/${name}.${ext}`, fs.readFileSync(file));
+      return `<img src="/assets/media/${name}.${ext}" alt="${esc(alt)}" loading="lazy">`;
+    }
+  }
+  return "";
+}
 function film(name, caption) {
   for (const ext of ["mp4", "webm"]) {
     const file = path.join(root, `${name}.${ext}`);
@@ -244,7 +255,7 @@ ${MODAL}
 
 function card(p) {
   return `<a class="card" href="/piece/${esc(p.slug)}/">
-  <div class="plate"></div>
+  <div class="plate">${photo(`${p.slug}-1`, p.name)}${photo(`${p.slug}-2`, p.name) ? `<span class="alt">${photo(`${p.slug}-2`, p.name)}</span>` : ""}</div>
   <div class="info"><span class="nm">${esc(p.name)}</span><span class="price" data-price-for="${esc(p.slug)}"></span><span class="cat">${esc(p.type)}</span><span class="rate" data-rating-for="${esc(p.slug)}"></span></div>
 </a>`;
 }
@@ -478,7 +489,7 @@ const SIGNALS = [
     palette: ["Ripple", "Sky", "Glow", "Dash", "White"],
     materials: "Wool, cotton, silk, brass, leather, and glass.",
     mood: ["Open", "Playful", "Quick", "Warm"],
-    frames: ["Opening frame. The Halo coat in the doorway of a pale studio, daylight behind it.", "Movement. A model mid-spin in the Meridian trousers, fabric catching the air.", "Detail. Brass Orbit jewelry against skin, light on the edge.", "Group. Five people crossing a white floor, each in a different province colour.", "Still life. The Dusk perfume on a pale step, a single Glow yellow ribbon beside it.", "Closing frame. The studio emptied, one coat left on a chair."],
+    frames: ["Opening frame. The Halo coat in the doorway of a pale studio, daylight behind it.", "Movement. A model mid-spin in the Meridian trousers, fabric catching the air.", "Detail. Brass Orbit jewelry against skin, light on the edge.", "Group. Five people crossing a white floor, each in a different province colour.", "Still life. The Rumour perfume on a pale step, a single Glow yellow ribbon beside it.", "Closing frame. The studio emptied, one coat left on a chair."],
     film: "Signal I, in motion. A ninety second film of the first day.",
     arcs: ["arc-1", "arc-2"]
   },
@@ -519,7 +530,7 @@ const ARCS = [
     palette: ["Ripple", "Sky", "Glow", "Dash", "White"],
     materials: "Wool, cotton, brass, leather, glass, and paper.",
     mood: ["Playful", "Bold", "Bright", "Moving"],
-    frames: ["The Halo coat, worn open, mid-stride on a white floor.", "Meridian trousers in a spin, the camera low.", "Orbit jewelry in close detail, brass against Ripple blue.", "The Cove bag swinging from a hand, motion blur on the strap.", "Dusk perfume on a sunlit sill, a hand reaching in.", "The Margin notebook open on a desk, a Glow yellow pen across the page."],
+    frames: ["The Halo coat, worn open, mid-stride on a white floor.", "Meridian trousers in a spin, the camera low.", "Orbit jewelry in close detail, brass against Ripple blue.", "The Cove bag swinging from a hand, motion blur on the strap.", "Rumour perfume on a sunlit sill, a hand reaching in.", "The Margin notebook open on a desk, a Glow yellow pen across the page."],
     film: "Arc I, in motion. Forty five seconds of getting ready to go out.",
     pieces: (p) => p.arc === "Arc I"
   },
@@ -542,7 +553,7 @@ const ARCS = [
     palette: ["Ripple", "Swirl", "Bloom", "Sand", "Cream"],
     materials: "Silk, cotton, leather, soy wax, and silicone.",
     mood: ["Warm", "Slow", "Soft", "Close"],
-    frames: ["Tidal, the silk dress, in lamplight on a low sofa.", "Ember, the cotton top, in close profile, a smile held back.", "Kite, the silk scarf, drifting from a chair back.", "Stride loafers on a worn rug, a candle behind them.", "The Hearth candle lit on a table, hands around a mug.", "The Pocket phone case on a bedside table, the screen dark."],
+    frames: ["Tidal, the silk dress, in lamplight on a low sofa.", "Ember, the cotton top, in close profile, a smile held back.", "Kite, the silk scarf, drifting from a chair back.", "Stride shoes on a worn rug, a candle behind them.", "The Hearth candle lit on a table, hands around a mug.", "The Pocket phone case on a bedside table, the screen dark."],
     film: "Arc II, in motion. Sixty seconds of a quiet room.",
     pieces: (p) => p.arc === "Arc II"
   }
@@ -952,7 +963,7 @@ products.forEach((p) => {
   <nav class="crumbs" aria-label="Breadcrumb"><a href="/shop/">Shop</a> <span>/</span> <a href="/shop/?audience=${esc(p.audience[0])}">${esc(p.audience.join(" and "))}</a> <span>/</span> <a href="/shop/?category=${encodeURIComponent(p.category)}">${esc(p.category)}</a> <span>/</span> <a href="/shop/?category=${encodeURIComponent(p.category)}&amp;type=${encodeURIComponent(p.type)}">${esc(p.type)}</a></nav>
   <div class="piece">
     <div class="gallery" aria-label="Photos of ${esc(p.name)}">
-      <div class="ph big"></div><div class="ph"></div><div class="ph"></div><div class="ph"></div>
+      ${[1, 2, 3, 4].map((n) => ({ n, img: photo(`${p.slug}-${n}`, `${p.name}, photo ${n}`) })).filter((x) => x.img || x.n === 1).map((x) => `<div class="ph${x.n === 1 ? " big" : ""}">${x.img}</div>`).join("")}
     </div>
     <div class="buy">
       <p class="crumb">${esc(p.signal)}, ${esc(p.arc)}</p>
@@ -1066,7 +1077,7 @@ for (const f of [
   write("assets/" + f, fs.readFileSync(find(f)));
 }
 write("_worker.js", fs.readFileSync(find("_worker.js")));
-write("catalog.json", JSON.stringify(products));
+write("catalog.json", JSON.stringify(products.map((p) => ({ ...p, photos: [1, 2].map((n) => { const m = photo(`${p.slug}-${n}`, "").match(/src="([^"]+)"/); return m ? m[1] : null; }).filter(Boolean) }))));
 write("taxonomy.json", JSON.stringify(TAX));
 write("colors.json", JSON.stringify(COLORS));
 
