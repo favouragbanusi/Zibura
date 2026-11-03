@@ -20,7 +20,10 @@ try { require("child_process").execFileSync(process.execPath, [path.join(__dirna
 const fromSheet = (name) => { const f = path.join(__dirname, "content", name); return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, "utf8")) : null; };
 const COPY = fromSheet("copy.json") || {};
 const LINKS = fromSheet("links.json") || {};
-const T = (key, fallback) => (COPY[key] ? esc(COPY[key]) : fallback);
+const REG = [];
+const reg = (key, text) => { if (!REG.some((r) => r.key === key)) REG.push({ key, text }); };
+const T = (key, fallback) => { reg(key, fallback); return COPY[key] ? esc(COPY[key]) : fallback; };
+const TR = (key, raw) => { reg(key, raw); return COPY[key] ? COPY[key] : raw; };
 const products = fromSheet("pieces.json") || JSON.parse(fs.readFileSync(find("products.json", "data/products.json"), "utf8"));
 
 function esc(s) {
@@ -43,8 +46,8 @@ const TAX = JSON.parse(fs.readFileSync(find("taxonomy.json"), "utf8"));
 const COLORS = JSON.parse(fs.readFileSync(find("colors.json"), "utf8"));
 const AUDIENCES = ["Women", "Men"];
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-const monthOptions = `<option value="">Month</option>${MONTHS.map((m, i) => `<option value="${i + 1}">${m}</option>`).join("")}`;
-const dayOptions = `<option value="">Day</option>${Array.from({ length: 31 }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}`;
+const monthOptions = `<option value="">${T("forms.month", "Month")}</option>${MONTHS.map((m, i) => `<option value="${i + 1}">${m}</option>`).join("")}`;
+const dayOptions = `<option value="">${T("forms.day", "Day")}</option>${Array.from({ length: 31 }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}`;
 const categories = TAX.map((c) => c.name);
 const countIn = (fn) => products.filter(fn).length;
 
@@ -88,7 +91,7 @@ function film(name, caption) {
   const poster = findImage(name + "-poster");
   if (poster) {
     write(`assets/media/${name}-poster.${poster.ext}`, fs.readFileSync(poster.file));
-    return `<figure class="film"><div class="video-slot has-poster" role="img" aria-label="${esc(caption)}"><img src="/assets/media/${name}-poster.${poster.ext}" alt="" loading="lazy"><span class="film-tag">Film, arriving soon</span></div><figcaption>${esc(caption)}</figcaption></figure>`;
+    return `<figure class="film"><div class="video-slot has-poster" role="img" aria-label="${esc(caption)}"><img src="/assets/media/${name}-poster.${poster.ext}" alt="" loading="lazy"><span class="film-tag">${T("forms.film-arriving-soon", "Film, arriving soon")}</span></div><figcaption>${esc(caption)}</figcaption></figure>`;
   }
   if (process.env.LIST_SLOTS) console.log("SLOT film", name, "|", caption);
   return `<figure class="film"><div class="video-slot" role="img" aria-label="${esc(caption)}"><span class="play"></span></div><figcaption>${esc(caption)}</figcaption></figure>`;
@@ -107,23 +110,23 @@ const COUNTRIES = ["Canada", "United States", "United Kingdom", "Nigeria", "Qata
 function waitlistForm(id) {
   return `<form class="waitlist-form" novalidate>
       <div class="form-grid">
-        <div><label for="${id}-first">First name</label><input id="${id}-first" name="first" autocomplete="given-name" required></div>
-        <div><label for="${id}-last">Last name</label><input id="${id}-last" name="last" autocomplete="family-name" required></div>
-        <div class="full"><label for="${id}-email">Email</label><input id="${id}-email" name="email" type="email" autocomplete="email" required></div>
-        <div><label for="${id}-country">Country of origin</label>
-          <select id="${id}-country" name="country" autocomplete="country-name" required><option value="">Choose</option>${COUNTRIES.map((c) => `<option>${c}</option>`).join("")}</select></div>
-        <div><label for="${id}-city">City of residence</label><input id="${id}-city" name="city" autocomplete="address-level2" required></div>
-        <div><label for="${id}-bm">Birthday month <span class="opt-tag">optional</span></label><select id="${id}-bm" name="birth_month">${monthOptions}</select></div>
-        <div><label for="${id}-bd">Birthday day <span class="opt-tag">optional</span></label><select id="${id}-bd" name="birth_day">${dayOptions}</select></div>
-        <div class="full"><label for="${id}-phone">Phone <span class="opt-tag">optional</span></label><input id="${id}-phone" name="phone" type="tel" autocomplete="tel"></div>
+        <div><label for="${id}-first">${T("forms.first-name", "First name")}</label><input id="${id}-first" name="first" autocomplete="given-name" required></div>
+        <div><label for="${id}-last">${T("forms.last-name", "Last name")}</label><input id="${id}-last" name="last" autocomplete="family-name" required></div>
+        <div class="full"><label for="${id}-email">${T("forms.email", "Email")}</label><input id="${id}-email" name="email" type="email" autocomplete="email" required></div>
+        <div><label for="${id}-country">${T("forms.country-of-origin", "Country of origin")}</label>
+          <select id="${id}-country" name="country" autocomplete="country-name" required><option value="">${T("forms.choose", "Choose")}</option>${COUNTRIES.map((c) => `<option>${c}</option>`).join("")}</select></div>
+        <div><label for="${id}-city">${T("forms.city-of-residence", "City of residence")}</label><input id="${id}-city" name="city" autocomplete="address-level2" required></div>
+        <div><label for="${id}-bm">${T("forms.birthday-month", "Birthday month")} <span class="opt-tag">${T("forms.optional", "optional")}</span></label><select id="${id}-bm" name="birth_month">${monthOptions}</select></div>
+        <div><label for="${id}-bd">${T("forms.birthday-day", "Birthday day")} <span class="opt-tag">${T("forms.optional", "optional")}</span></label><select id="${id}-bd" name="birth_day">${dayOptions}</select></div>
+        <div class="full"><label for="${id}-phone">${T("forms.phone", "Phone")} <span class="opt-tag">${T("forms.optional", "optional")}</span></label><input id="${id}-phone" name="phone" type="tel" autocomplete="tel"></div>
         <div class="full checks">
-          <label class="check"><input type="checkbox" name="email_consent" required><span>Send me official bulletins from Zi Republic by email. I can renounce them at any time.</span></label>
-          <label class="check"><input type="checkbox" name="sms_consent"><span>Text me the Signal I announcements. Message and data rates may apply. Reply STOP to opt out.</span></label>
+          <label class="check"><input type="checkbox" name="email_consent" required><span>${T("forms.send-me-official-bulletins-from", "Send me official bulletins from Zi Republic by email. I can renounce them at any time.")}</span></label>
+          <label class="check"><input type="checkbox" name="sms_consent"><span>${T("forms.text-me-the-signal-i", "Text me the Signal I announcements. Message and data rates may apply. Reply STOP to opt out.")}</span></label>
         </div>
         <input type="hidden" name="province">
         <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
       </div>
-      <button class="btn" type="submit">Join the Register</button>
+      <button class="btn" type="submit">${T("forms.join-the-register", "Join the Register")}</button>
       <div class="msg wl-msg" role="status"></div>
     </form>`;
 }
@@ -131,12 +134,12 @@ function waitlistForm(id) {
 function subscribeForm(id) {
   return `<form class="subscribe-form" novalidate>
       <div class="form-grid">
-        <div class="full"><label for="${id}-first">Name</label><input id="${id}-first" name="first" autocomplete="given-name" required></div>
-        <div class="full"><label for="${id}-email">Email</label><input id="${id}-email" name="email" type="email" autocomplete="email" required></div>
-        <div class="full checks"><label class="check"><input type="checkbox" name="email_consent" required><span>Send me official bulletins from Zi Republic by email. I can renounce them at any time.</span></label></div>
+        <div class="full"><label for="${id}-first">${T("forms.name", "Name")}</label><input id="${id}-first" name="first" autocomplete="given-name" required></div>
+        <div class="full"><label for="${id}-email">${T("forms.email", "Email")}</label><input id="${id}-email" name="email" type="email" autocomplete="email" required></div>
+        <div class="full checks"><label class="check"><input type="checkbox" name="email_consent" required><span>${T("forms.send-me-official-bulletins-from", "Send me official bulletins from Zi Republic by email. I can renounce them at any time.")}</span></label></div>
         <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
       </div>
-      <button class="btn" type="submit">Receive the Gazette</button>
+      <button class="btn" type="submit">${T("forms.receive-the-gazette", "Receive the Gazette")}</button>
       <div class="msg sub-msg" role="status"></div>
     </form>`;
 }
@@ -145,13 +148,13 @@ function arrivalCard(id) {
   return `<div class="arrival">
     <div class="arr-head">
       <img src="/assets/logo-icon-navy.png" alt="" width="434" height="436">
-      <div><b>Zi Republic</b><span>Bureau of Arrivals</span></div>
-      <span class="arr-tag">Arrival card</span>
+      <div><b>${T("forms.zi-republic", "Zi Republic")}</b><span>${T("forms.bureau-of-arrivals", "Bureau of Arrivals")}</span></div>
+      <span class="arr-tag">${T("forms.arrival-card", "Arrival card")}</span>
     </div>
     ${waitlistForm(id)}
     <div class="arr-foot">
       <img src="/assets/zi-card-seal.png" alt="" width="304" height="300">
-      <span>Signal I opens its borders April 18, 2027</span>
+      <span>${T("forms.signal-i-opens-its-borders", "Signal I opens its borders April 18, 2027")}</span>
     </div>
     <p class="mrz" aria-hidden="true">ZI&lt;REPUBLIC&lt;&lt;ARRIVALS&lt;&lt;SIGNAL&lt;I&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;</p>
   </div>`;
@@ -159,8 +162,8 @@ function arrivalCard(id) {
 
 const MODAL = `<dialog id="wl-modal" aria-labelledby="wl-title">
   <button class="close" type="button" aria-label="Close" data-close-waitlist>&times;</button>
-  <h2 class="display" id="wl-title">Get the Zi Gazette.</h2>
-  <p class="sub">News from Zi Republic, delivered to your inbox.</p>
+  <h2 class="display" id="wl-title">${T("forms.get-the-zi-gazette", "Get the Zi Gazette.")}</h2>
+  <p class="sub">${T("forms.news-from-zi-republic-delivered", "News from Zi Republic, delivered to your inbox.")}</p>
   ${subscribeForm("m")}
 </dialog>`;
 
@@ -175,14 +178,14 @@ function flipCard() {
     <div class="face front">${zcard()}</div>
     <div class="face back"><img src="/assets/zi-card-back.png" alt="" width="1011" height="637"></div>
   </div>
-  <span class="hint">Click to turn it over</span>
+  <span class="hint">${T("forms.click-to-turn-it-over", "Click to turn it over")}</span>
 </div>`;
 }
 
 const MEGA = `<div class="mega" id="mega">
   <div class="mega-grid">
     <div class="mega-col">
-      <a class="mega-h" href="/shop/">Every Piece</a>
+      <a class="mega-h" href="/shop/">${T("forms.every-piece", "Every Piece")}</a>
       ${AUDIENCES.map((a) => `<a href="/shop/?audience=${a}">${a}</a>`).join("")}
     </div>
 ${TAX.map(
@@ -194,7 +197,7 @@ ${c.types.map((t) => `      <a href="/shop/?category=${encodeURIComponent(c.name
   </div>
 </div>`;
 
-const SOCIAL = `<a class="soc" href="${LINKS.instagram || "https://www.instagram.com/thezibura/"}" target="_blank" rel="noopener" aria-label="Zibura on Instagram"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r=".6" fill="currentColor"/></svg><span>Instagram</span></a><a class="soc" href="${LINKS.tiktok || "https://www.tiktok.com/@thezibura"}" target="_blank" rel="noopener" aria-label="Zibura on TikTok"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v11.2a3.7 3.7 0 11-3.7-3.7"/><path d="M14 3c.4 2.6 2 4.2 5 4.4"/></svg><span>TikTok</span></a>`;
+const SOCIAL = `<a class="soc" href="${LINKS.instagram || "https://www.instagram.com/thezibura/"}" target="_blank" rel="noopener" aria-label="Zibura on Instagram"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r=".6" fill="currentColor"/></svg><span>${T("forms.instagram", "Instagram")}</span></a><a class="soc" href="${LINKS.tiktok || "https://www.tiktok.com/@thezibura"}" target="_blank" rel="noopener" aria-label="Zibura on TikTok"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v11.2a3.7 3.7 0 11-3.7-3.7"/><path d="M14 3c.4 2.6 2 4.2 5 4.4"/></svg><span>${T("forms.tiktok", "TikTok")}</span></a>`;
 
 function layout({ title, description, page, body }) {
   return `<!doctype html>
@@ -218,14 +221,14 @@ function layout({ title, description, page, body }) {
   <div class="wrap">
     <button type="button" class="burger" id="burger" data-tip="Menu" aria-label="Open menu" aria-expanded="false" aria-controls="drawer"><span></span><span></span><span></span></button>
     <nav class="nav" aria-label="Main">
-      <div class="has-mega"><a href="/shop/">Shop</a>${MEGA}</div>
-      <a href="/explore/">The Signals</a>
-      <a href="/brand/">Zi Republic</a>
-      <a href="/note/">From the Zi-in-Chief</a>
+      <div class="has-mega"><a href="/shop/">${T("site.shop", "Shop")}</a>${MEGA}</div>
+      <a href="/explore/">${T("site.the-signals", "The Signals")}</a>
+      <a href="/brand/">${T("site.zi-republic", "Zi Republic")}</a>
+      <a href="/note/">${T("site.from-the-ziinchief", "From the Zi-in-Chief")}</a>
     </nav>
     <a class="brand" href="/" aria-label="Zibura home"><img src="/assets/logo-wordmark-navy.png" alt="Zibura" width="636" height="120"></a>
     <nav class="nav right" aria-label="Account and cart">
-      <label class="icon-btn cur" data-tip="Currency"><span class="sr">Currency</span><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9S14.5 18.3 12 21c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/></svg><span class="cur-code" id="cur-code">USD</span>
+      <label class="icon-btn cur" data-tip="Currency"><span class="sr">${T("site.currency", "Currency")}</span><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9S14.5 18.3 12 21c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/></svg><span class="cur-code" id="cur-code">USD</span>
         <select id="currency" aria-label="Currency">
           <option value="CAD">CAD</option>
           <option value="USD">USD</option>
@@ -234,31 +237,31 @@ function layout({ title, description, page, body }) {
         </select></label>
       <a class="icon-btn" href="/account/" id="acct-link" aria-label="Sign in" data-tip="Sign in"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.2-4 4.2-6 8-6s6.8 2 8 6"/></svg></a>
       <a class="icon-btn" href="/cart/" id="cart-link" aria-label="Cart" data-tip="Cart"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8V6.5a3 3 0 016 0V8"/></svg><span class="cart-badge" id="cart-count">0</span></a>
-      <a class="btn nav-cta" href="/zi-card/">Apply for Zi Card</a>
+      <a class="btn nav-cta" href="/zi-card/">${T("site.apply-for-zi-card", "Apply for Zi Card")}</a>
     </nav>
   </div>
 </header>
 <div class="drawer" id="drawer" aria-hidden="true">
   <div class="drawer-in">
-    <a class="d-link big" href="/shop/">Shop</a>
+    <a class="d-link big" href="/shop/">${T("site.shop", "Shop")}</a>
     <div class="d-sub">${TAX.map((c) => `<a href="/shop/?category=${encodeURIComponent(c.name)}">${esc(c.name)}</a>`).join("")}</div>
-    <a class="d-link big" href="/explore/">The Signals</a>
-    <a class="d-link big" href="/brand/">Zi Republic</a>
-    <a class="d-link big" href="/province/">Find your province</a>
-    <a class="d-link big" href="/note/">From the Zi-in-Chief</a>
-    <a class="d-link" href="/account/" id="acct-link-m">My account</a>
-    <a class="d-link" href="/cart/">Cart</a>
+    <a class="d-link big" href="/explore/">${T("site.the-signals", "The Signals")}</a>
+    <a class="d-link big" href="/brand/">${T("site.zi-republic", "Zi Republic")}</a>
+    <a class="d-link big" href="/province/">${T("site.find-your-province", "Find your province")}</a>
+    <a class="d-link big" href="/note/">${T("site.from-the-ziinchief", "From the Zi-in-Chief")}</a>
+    <a class="d-link" href="/account/" id="acct-link-m">${T("site.my-account", "My account")}</a>
+    <a class="d-link" href="/cart/">${T("site.cart", "Cart")}</a>
     <div class="d-cur" role="group" aria-label="Currency">${["CAD", "USD", "GBP", "NGN"].map((c) => `<button type="button" data-cur="${c}">${c}</button>`).join("")}</div>
     <div class="socs d-socs">${SOCIAL}</div>
-    <a class="btn wide" href="/zi-card/">Apply for Zi Card</a>
+    <a class="btn wide" href="/zi-card/">${T("site.apply-for-zi-card", "Apply for Zi Card")}</a>
   </div>
 </div>
 ${body}
 <footer class="site-footer">
   <div class="wrap">
     <div class="f-hero">
-      <p class="f-big">Your expression,<br>your world.</p>
-      <div class="f-cta"><p>${T("footer_cta", "The Bureau of Arrivals is open for names.")}</p><a class="btn light" href="/waitlist/">Join the Register</a></div>
+      <p class="f-big">${T("site.your-expression", "Your expression,")}<br>${T("site.your-world", "your world.")}</p>
+      <div class="f-cta"><p>${T("footer_cta", "The Bureau of Arrivals is open for names.")}</p><a class="btn light" href="/waitlist/">${T("site.join-the-register", "Join the Register")}</a></div>
     </div>
     <div class="top">
       <div class="f-brand">
@@ -266,37 +269,37 @@ ${body}
         <p class="s">${T("footer_about", "Zibura is the fashion house of Zi Republic. Founding Day is December 1, 2026. Signal I opens April 18, 2027.")}</p>
       </div>
       <div>
-        <h3>Trade</h3>
-        <a href="/shop/">Every Piece</a>
+        <h3>${T("site.trade", "Trade")}</h3>
+        <a href="/shop/">${T("site.every-piece", "Every Piece")}</a>
 ${AUDIENCES.map((a) => `        <a href="/shop/?audience=${a}">${a}</a>`).join("\n")}
-        <a href="/cart/">Your cart</a>
+        <a href="/cart/">${T("site.your-cart", "Your cart")}</a>
       </div>
       <div>
-        <h3>Departments</h3>
+        <h3>${T("site.departments", "Departments")}</h3>
 ${categories.map((c) => `        <a href="/shop/?category=${encodeURIComponent(c)}">${esc(c)}</a>`).join("\n")}
       </div>
       <div>
-        <h3>Civic services</h3>
-        <a href="/brand/">The world</a>
-        <a href="/brand/#provinces">The provinces</a>
-        <a href="/brand/#calendar">The national calendar</a>
-        <a href="/zi-card/">The Zi Card</a>
-        <a href="/province/">Find your province</a>
-        <a href="/explore/">Read the Signals</a>
-        <a href="/account/">Your passport</a>
+        <h3>${T("site.civic-services", "Civic services")}</h3>
+        <a href="/brand/">${T("site.the-world", "The world")}</a>
+        <a href="/brand/#provinces">${T("site.the-provinces", "The provinces")}</a>
+        <a href="/brand/#calendar">${T("site.the-national-calendar", "The national calendar")}</a>
+        <a href="/zi-card/">${T("site.the-zi-card", "The Zi Card")}</a>
+        <a href="/province/">${T("site.find-your-province", "Find your province")}</a>
+        <a href="/explore/">${T("site.read-the-signals", "Read the Signals")}</a>
+        <a href="/account/">${T("site.your-passport", "Your passport")}</a>
       </div>
       <div>
-        <h3>The Embassy</h3>
-        <p class="s">The Zi Republic Embassy<br>6 Founding Day Avenue<br>Ripple, Zi Republic</p>
-        <a href="/note/">From the Zi-in-Chief</a>
-        <a href="/waitlist/">Join the Register</a>
-        <h3 class="f-follow">Follow the republic</h3>
+        <h3>${T("site.the-embassy", "The Embassy")}</h3>
+        <p class="s">${T("site.the-zi-republic-embassy", "The Zi Republic Embassy")}<br>${T("site.6-founding-day-avenue", "6 Founding Day Avenue")}<br>${T("site.ripple-zi-republic", "Ripple, Zi Republic")}</p>
+        <a href="/note/">${T("site.from-the-ziinchief", "From the Zi-in-Chief")}</a>
+        <a href="/waitlist/">${T("site.join-the-register", "Join the Register")}</a>
+        <h3 class="f-follow">${T("site.follow-the-republic", "Follow the republic")}</h3>
         <div class="socs">${SOCIAL}</div>
       </div>
     </div>
     <div class="legal-row">
       <p class="legal">${T("legal_line", "&copy; 2026 Zibura. Printed by authority of the Zi Republic.")}</p>
-      <button type="button" class="to-top" id="to-top">Back to the capital</button>
+      <button type="button" class="to-top" id="to-top">${T("site.back-to-the-capital", "Back to the capital")}</button>
     </div>
   </div>
 </footer>
@@ -317,7 +320,7 @@ function card(p) {
 fs.rmSync(dist, { recursive: true, force: true });
 fs.mkdirSync(dist, { recursive: true });
 
-const TICK = Array.from({ length: 5 }, () => `<li>Your expression, your world.</li><li class="gl"></li>`).join("");
+const TICK = Array.from({ length: 5 }, () => `<li>${T("shop.your-expression-your-world", "Your expression, your world.")}</li><li class="gl"></li>`).join("");
 
 const HERO2 = findImage("hero-2");
 if (HERO2) write(`assets/hero-2.${HERO2.ext}`, fs.readFileSync(HERO2.file));
@@ -325,8 +328,8 @@ if (HERO2) write(`assets/hero-2.${HERO2.ext}`, fs.readFileSync(HERO2.file));
 write(
   "index.html",
   layout({
-    title: "Zibura",
-    description: "Zibura is a world built for human expression, in all its complexity.",
+    title: TR("home.meta-title", "Zibura"),
+    description: TR("home.meta-description", "Zibura is a world built for human expression, in all its complexity."),
     page: "home",
     body: `<main>
 <section class="hero-ed" data-hero-ed>
@@ -334,7 +337,7 @@ write(
     <article class="he-slide on">
       <img src="/assets/hero.jpg" alt="Editorial portrait for Zi Republic" width="1500" height="2249" fetchpriority="high">
       <div class="he-copy">
-        <p class="he-eyebrow">Zi Republic</p>
+        <p class="he-eyebrow">${T("home.zi-republic", "Zi Republic")}</p>
         <h1 class="he-title">${T("hero_title", "Your expression, your world.")}</h1>
         <p class="he-lede">${T("hero_lede", "Zi Republic is a fashion country for people with more than one side. Citizens are welcome, the rules are optional, and the borders open April 18, 2027.")}</p>
         <div class="he-actions">
@@ -346,23 +349,23 @@ write(
     ${HERO2 ? `<article class="he-slide">
       <img src="/assets/hero-2.${HERO2.ext}" alt="Signal I, Arc I editorial" width="1500" height="1000" loading="lazy">
       <div class="he-copy">
-        <p class="he-eyebrow">Signal I, Arc I</p>
-        <h2 class="he-title">Everyday, elevated.</h2>
-        <p class="he-lede">A capsule of casual Pieces, taken back to the basics and finished with care.</p>
-        <div class="he-actions"><a class="he-btn" href="/explore/">See the Signals</a></div>
+        <p class="he-eyebrow">${T("home.signal-i-arc-i", "Signal I, Arc I")}</p>
+        <h2 class="he-title">${T("home.everyday-elevated", "Everyday, elevated.")}</h2>
+        <p class="he-lede">${T("home.a-capsule-of-casual-pieces", "A capsule of casual Pieces, taken back to the basics and finished with care.")}</p>
+        <div class="he-actions"><a class="he-btn" href="/explore/">${T("home.see-the-signals", "See the Signals")}</a></div>
       </div>
     </article>` : ""}
   </div>
   <nav class="he-rail" aria-label="Quick links">
-    <a href="/shop/?audience=Women">Shop women</a>
-    <a href="/shop/?audience=Men">Shop men</a>
-    <a href="/province/">Find your province</a>
-    <a href="/brand/#calendar">National calendar</a>
+    <a href="/shop/?audience=Women">${T("home.shop-women", "Shop women")}</a>
+    <a href="/shop/?audience=Men">${T("home.shop-men", "Shop men")}</a>
+    <a href="/province/">${T("home.find-your-province", "Find your province")}</a>
+    <a href="/brand/#calendar">${T("home.national-calendar", "National calendar")}</a>
   </nav>
   <div class="he-ctrl">
     ${HERO2 ? `<button type="button" class="he-prev" aria-label="Previous slide"><svg viewBox="0 0 40 12" width="40" height="12" aria-hidden="true"><path d="M40 6H2M7 1L2 6l5 5" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></button><span class="he-count"><b>1</b> / 2</span><button type="button" class="he-next" aria-label="Next slide"><svg viewBox="0 0 40 12" width="40" height="12" aria-hidden="true"><path d="M0 6h38M33 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></button>` : ""}
   </div>
-  <a class="he-scroll" href="#pieces" aria-label="Scroll to Pieces"><span>Scroll</span><i></i></a>
+  <a class="he-scroll" href="#pieces" aria-label="Scroll to Pieces"><span>${T("home.scroll", "Scroll")}</span><i></i></a>
 </section>
 
 <section class="ticker" aria-hidden="true"><div class="track"><ul>${TICK}</ul><ul>${TICK}</ul></div></section>
@@ -370,12 +373,12 @@ write(
 <section class="section register-band" id="register">
   <div class="wrap split">
     <div data-reveal>
-      <h2 class="display">Join the Register.</h2>
+      <h2 class="display">${T("home.join-the-register", "Join the Register.")}</h2>
       <p class="reg-lead">${T("register_lead", "The Bureau of Arrivals is taking names. Add yours and your name goes on the register of Zi Republic, ahead of the day Signal I opens its borders.")}</p>
       <ul class="reg-points">
-        <li>Your name on the register before the borders open</li>
-        <li>First word on Signal I, April 18, 2027</li>
-        <li>The Zi Gazette, straight to your inbox</li>
+        <li>${T("home.your-name-on-the-register", "Your name on the register before the borders open")}</li>
+        <li>${T("home.first-word-on-signal-i", "First word on Signal I, April 18, 2027")}</li>
+        <li>${T("home.the-zi-gazette-straight-to", "The Zi Gazette, straight to your inbox")}</li>
       </ul>
     </div>
     <div data-reveal>${arrivalCard("h")}</div>
@@ -386,22 +389,22 @@ write(
 <section class="section" id="pieces">
   <div class="wrap">
     <div class="section-head" data-reveal>
-      <h2>Signal I, Arc I</h2>
+      <h2>${T("home.signal-i-arc-i", "Signal I, Arc I")}</h2>
       <div class="rail-nav"><button type="button" data-rail="-1" aria-label="Previous Pieces">&larr;</button><button type="button" data-rail="1" aria-label="Next Pieces">&rarr;</button></div>
     </div>
   </div>
   <div class="rail" data-rail-track>
 ${products.slice(0, 8).map(card).join("\n")}
   </div>
-  <div class="wrap" style="margin-top:36px"><a class="text-link" href="/shop/">See every Piece</a></div>
+  <div class="wrap" style="margin-top:36px"><a class="text-link" href="/shop/">${T("home.see-every-piece", "See every Piece")}</a></div>
 </section>
 
 <section class="hscroll" data-hscroll aria-label="Signal I look book">
   <div class="hs-pin">
-    <div class="wrap hs-head"><h2>The look book</h2><p>Signal I, Arc I, frame by frame.</p></div>
+    <div class="wrap hs-head"><h2>${T("home.the-look-book", "The look book")}</h2><p>${T("home.signal-i-arc-i-frame", "Signal I, Arc I, frame by frame.")}</p></div>
     <div class="hs-track">
-${["Opening frame", "Movement", "Detail", "Group", "Still life", "Closing frame"].map((c, i) => `      <figure class="hs-card${i % 2 ? " low" : ""}">${media("signal-1-" + (i + 1), c)}<figcaption>${c}</figcaption></figure>`).join("\n")}
-      <a class="hs-end" href="/explore/signal-1/"><span>Read the story of Signal I</span></a>
+${[TR("home.opening-frame", "Opening frame"), TR("home.movement", "Movement"), TR("home.detail", "Detail"), TR("home.group", "Group"), TR("home.still-life", "Still life"), TR("home.closing-frame", "Closing frame")].map((c, i) => `      <figure class="hs-card${i % 2 ? " low" : ""}">${media("signal-1-" + (i + 1), c)}<figcaption>${c}</figcaption></figure>`).join("\n")}
+      <a class="hs-end" href="/explore/signal-1/"><span>${T("home.read-the-story-of-signal", "Read the story of Signal I")}</span></a>
     </div>
     <div class="hs-bar" aria-hidden="true"><i></i></div>
   </div>
@@ -409,7 +412,7 @@ ${["Opening frame", "Movement", "Detail", "Group", "Still life", "Closing frame"
 
 <section class="section" style="padding-top:0">
   <div class="wrap">
-    <div class="section-head" data-reveal><h2>Pick your delegation.</h2></div>
+    <div class="section-head" data-reveal><h2>${T("home.pick-your-delegation", "Pick your delegation.")}</h2></div>
     <div class="who" data-reveal>
 ${AUDIENCES.map((a) => `      <a href="/shop/?audience=${a}">${media("audience-" + a.toLowerCase(), a)}<span>${a}</span><small>${countIn((p) => p.audience.includes(a))} Pieces</small></a>`).join("\n")}
     </div>
@@ -418,7 +421,7 @@ ${AUDIENCES.map((a) => `      <a href="/shop/?audience=${a}">${media("audience-"
 
 <section class="section" style="padding-top:0">
   <div class="wrap">
-    <div class="section-head" data-reveal><h2>Departments of trade</h2></div>
+    <div class="section-head" data-reveal><h2>${T("home.departments-of-trade", "Departments of trade")}</h2></div>
     <div class="cats" data-cats>
 ${TAX.map((c) => {
   const n = countIn((p) => p.category === c.name);
@@ -435,22 +438,22 @@ ${TAX.map((c) => {
       <figure class="cl b" data-parallax="-0.1">${media("signal-1-4", "Editorial frame")}</figure>
       <figure class="cl c" data-parallax="0.2">${media("signal-1-6", "Editorial frame")}</figure>
     </div>
-    <p class="scrollwords" data-scrollwords>Some brands sell you clothes. Zi Republic hands you a passport. It has provinces, a currency, a calendar, and a card with your name on it. Every Signal opens a new era. Every Arc tells its story. Every Piece lets you say a little more of who you are.</p>
-    <p style="margin-top:40px" data-reveal><a class="btn line" href="/explore/">Explore the Signals</a></p>
+    <p class="scrollwords" data-scrollwords>${T("home.some-brands-sell-you-clothes", "Some brands sell you clothes. Zi Republic hands you a passport. It has provinces, a currency, a calendar, and a card with your name on it. Every Signal opens a new era. Every Arc tells its story. Every Piece lets you say a little more of who you are.")}</p>
+    <p style="margin-top:40px" data-reveal><a class="btn line" href="/explore/">${T("home.explore-the-signals", "Explore the Signals")}</a></p>
   </div>
 </section>
 
 <section class="wrap" data-reveal style="margin-bottom:clamp(56px,8vw,120px)">
-  ${film("signal-1-home-film", "Signal I, in motion. The first day of the republic.")}
+  ${film("signal-1-home-film", TR("brand.signal-i-in-motion-the", "Signal I, in motion. The first day of the republic."))}
 </section>
 
 <section class="section navy-band">
   <div class="wrap split">
     <div data-reveal>${flipCard()}</div>
     <div data-reveal>
-      <h2 class="display">Become a resident.</h2>
-      <p class="lead">The Zi Card is your passport into the republic. Apply, and the Ministry of Zi Interior reviews your application. Every resident receives standing, Zillar, and experiences money alone cannot buy.</p>
-      <p style="margin-top:32px"><a class="btn light" href="/zi-card/">Apply for your Zi Card</a></p>
+      <h2 class="display">${T("home.become-a-resident", "Become a resident.")}</h2>
+      <p class="lead">${T("home.the-zi-card-is-your", "The Zi Card is your passport into the republic. Apply, and the Ministry of Zi Interior reviews your application. Every resident receives standing, Zillar, and experiences money alone cannot buy.")}</p>
+      <p style="margin-top:32px"><a class="btn light" href="/zi-card/">${T("home.apply-for-your-zi-card", "Apply for your Zi Card")}</a></p>
     </div>
   </div>
 </section>
@@ -472,46 +475,55 @@ const CALENDAR = [
   ["Ziesta", "The festival of rest, where fiesta meets siesta. The whole republic slows down, gathers, and dresses for joy.", ""],
   ["Zi Dawn", "The morning a new Signal opens its borders. The first Zi Dawn, the opening of Signal I, is April 18, 2027.", "April 18, 2027"]
 ];
+PROVINCES.forEach((p) => {
+  p[3] = TR(`brand.province-${p[0]}-tagline`, p[3]);
+  p[4] = TR(`brand.province-${p[0]}-note`, p[4]);
+  p[5] = p[5].map((t, k) => TR(`brand.province-${p[0]}-trait-${k + 1}`, t));
+});
+CALENDAR.forEach((c) => {
+  c[1] = TR(`brand.calendar-${c[0]}-description`, c[1]);
+  if (c[2]) c[2] = TR(`brand.calendar-${c[0]}-date`, c[2]);
+});
 write(
   "brand/index.html",
   layout({
-    title: "Zi Republic | Zibura",
-    description: "Zi Republic is a fashion country for people with more than one side. Provinces, a calendar, a currency, and a passport of its own.",
+    title: TR("brand.meta-title", "Zi Republic | Zibura"),
+    description: TR("brand.meta-description", "Zi Republic is a fashion country for people with more than one side. Provinces, a calendar, a currency, and a passport of its own."),
     page: "brand",
     body: `<main>
 <section class="page-head"><div class="wrap">
-  <h1 class="display rise">${words("Every version of you has a place here.")}</h1>
-  <p class="fade">Expression is the most human thing we do. There is no single right way to exist, and every side of you deserves space.</p>
+  <h1 class="display rise">${words(TR("brand.every-version-of-you-has", "Every version of you has a place here."))}</h1>
+  <p class="fade">${T("brand.expression-is-the-most-human", "Expression is the most human thing we do. There is no single right way to exist, and every side of you deserves space.")}</p>
 </div></section>
 
 <section class="wrap" data-reveal>
-  ${film("republic-film", "The republic in motion. A short film introducing Zi Republic.")}
+  ${film("republic-film", TR("brand.the-republic-in-motion-a", "The republic in motion. A short film introducing Zi Republic."))}
 </section>
 
 <section class="section"><div class="wrap split">
-  <h2 class="display" data-reveal>A fashion country, open to anyone.</h2>
+  <h2 class="display" data-reveal>${T("brand.a-fashion-country-open-to", "A fashion country, open to anyone.")}</h2>
   <div class="prose" data-reveal>
-    <p class="big">Zi Republic is where everything we make lives.</p>
-    <p>It has provinces, a calendar, a currency, and a passport, because belonging should feel like belonging somewhere.</p>
-    <p>The republic opens to you in Signals, creative eras that begin when the vision is ready and end when it has been fully expressed. Each Signal holds Arcs, full collections with a story of their own.</p>
-    <p><a class="btn line" href="/explore/">Explore the Signals</a></p>
+    <p class="big">${T("brand.zi-republic-is-where-everything", "Zi Republic is where everything we make lives.")}</p>
+    <p>${T("brand.it-has-provinces-a-calendar", "It has provinces, a calendar, a currency, and a passport, because belonging should feel like belonging somewhere.")}</p>
+    <p>${T("brand.the-republic-opens-to-you", "The republic opens to you in Signals, creative eras that begin when the vision is ready and end when it has been fully expressed. Each Signal holds Arcs, full collections with a story of their own.")}</p>
+    <p><a class="btn line" href="/explore/">${T("brand.explore-the-signals", "Explore the Signals")}</a></p>
   </div>
 </div></section>
 
 <section class="hscroll" data-hscroll aria-label="The Charter"><div class="hs-pin">
-  <div class="wrap hs-head"><h2>The Charter</h2><p>What the republic stands on.</p></div>
+  <div class="wrap hs-head"><h2>${T("brand.the-charter", "The Charter")}</h2><p>${T("brand.what-the-republic-stands-on", "What the republic stands on.")}</p></div>
   <div class="hs-track">
-    <div class="hs-card text"><b>Article I</b><span>Expression is the most human thing we do.</span></div>
-    <div class="hs-card text low"><b>Article II</b><span>There is no single right way to exist.</span></div>
-    <div class="hs-card text"><b>Article III</b><span>Every side of you, every version, deserves space.</span></div>
-    <div class="hs-card text low"><b>Article IV</b><span>Nobody is re-educated. Everyone belongs exactly as they already are.</span></div>
+    <div class="hs-card text"><div class="hs-bg">${media("charter-1", "")}</div><b>${T("brand.article-i", "Article I")}</b><span>${T("brand.expression-is-the-most-human-2", "Expression is the most human thing we do.")}</span></div>
+    <div class="hs-card text low"><div class="hs-bg">${media("charter-2", "")}</div><b>${T("brand.article-ii", "Article II")}</b><span>${T("brand.there-is-no-single-right", "There is no single right way to exist.")}</span></div>
+    <div class="hs-card text"><div class="hs-bg">${media("charter-3", "")}</div><b>${T("brand.article-iii", "Article III")}</b><span>${T("brand.every-side-of-you-every", "Every side of you, every version, deserves space.")}</span></div>
+    <div class="hs-card text low"><div class="hs-bg">${media("charter-4", "")}</div><b>${T("brand.article-iv", "Article IV")}</b><span>${T("brand.nobody-is-reeducated-everyone-belongs", "Nobody is re-educated. Everyone belongs exactly as they already are.")}</span></div>
   </div>
   <div class="hs-bar" aria-hidden="true"><i></i></div>
 </div></section>
 
 <section class="section" id="provinces" style="padding-top:0"><div class="wrap">
-  <div class="section-head" data-reveal><h2>Six provinces. One is yours.</h2><a class="btn" href="/province/">Find your province</a></div>
-  <p class="province-intro" data-reveal>Every resident of Zi Republic calls one province home. Hover over a province to meet it, or take the twelve question quiz and let your answers decide.</p>
+  <div class="section-head" data-reveal><h2>${T("brand.six-provinces-one-is-yours", "Six provinces. One is yours.")}</h2><a class="btn" href="/province/">${T("brand.find-your-province", "Find your province")}</a></div>
+  <p class="province-intro" data-reveal>${T("brand.every-resident-of-zi-republic", "Every resident of Zi Republic calls one province home. Hover over a province to meet it, or take the twelve question quiz and let your answers decide.")}</p>
   <div class="provinces" data-reveal>
 ${PROVINCES.map(
   ([n, c, hex, line, note, traits]) => `    <article class="province" tabindex="0" style="--pc:${hex}">
@@ -528,34 +540,34 @@ ${PROVINCES.map(
 </div></section>
 
 <section class="section" id="calendar" style="padding-top:0"><div class="wrap split">
-  <h2 class="display" data-reveal>The national calendar.</h2>
+  <h2 class="display" data-reveal>${T("brand.the-national-calendar", "The national calendar.")}</h2>
   <dl class="plain-list" data-reveal>
 ${CALENDAR.map(([n, d, dt]) => `    <div><dt>${n}</dt><dd>${d}</dd><span class="tag-soon">${dt || "Date announced soon"}</span></div>`).join("\n")}
   </dl>
 </div></section>
 
-<section class="section" style="padding-top:0"><div class="wrap">
-  <div class="section-head" data-reveal><h2>Belonging, in three parts.</h2></div>
-  <p class="big-p" data-reveal>A passport gets you in. Standing lets you stay. A currency lets you live well.</p>
-  <ol class="ladder" data-reveal>
-    <li><span class="rung">1</span><h3>Zi Resident</h3><p class="what">Your passport</p><p>Everyone begins here. Apply for a Zi Card and the Ministry of Zi Interior writes your name into the register. From that day you live in Zi Republic, with a card that proves it and a province to call home.</p></li>
-    <li><span class="rung">2</span><h3>Zitizen</h3><p class="what">Your standing</p><p>Zitizens are the inner circle of the republic. The title is earned by how you show up, season after season, in what you wear, what you say, and who you bring with you. Every order builds your standing.</p></li>
-    <li><span class="rung">3</span><h3>Zillar</h3><p class="what">Your currency</p><p>The republic keeps its own money. Zillar is earned with every order and spent on access and experiences that money alone cannot buy. The more you take part, the further it takes you.</p></li>
-  </ol>
+<section class="hscroll" data-hscroll aria-label="Belonging, in three parts"><div class="hs-pin">
+  <div class="wrap hs-head"><h2>${T("brand.belonging-in-three-parts", "Belonging, in three parts.")}</h2><p>${T("brand.a-passport-gets-you-in", "A passport gets you in. Standing lets you stay. A currency lets you live well.")}</p></div>
+  <div class="hs-track">
+    <div class="hs-card tier"><div class="hs-bg">${media("tier-resident", "")}</div><span class="rung">1</span><h3>${T("brand.zi-resident", "Zi Resident")}</h3><p class="what">${T("brand.your-passport", "Your passport")}</p><p>${T("brand.everyone-begins-here-apply-for", "Everyone begins here. Apply for a Zi Card and the Ministry of Zi Interior writes your name into the register. From that day you live in Zi Republic, with a card that proves it and a province to call home.")}</p></div>
+    <div class="hs-card tier"><div class="hs-bg">${media("tier-zitizen", "")}</div><span class="rung">2</span><h3>${T("brand.zitizen", "Zitizen")}</h3><p class="what">${T("brand.your-standing", "Your standing")}</p><p>${T("brand.zitizens-are-the-inner-circle", "Zitizens are the inner circle of the republic. The title is earned by how you show up, season after season, in what you wear, what you say, and who you bring with you. Every order builds your standing.")}</p></div>
+    <div class="hs-card tier"><div class="hs-bg">${media("tier-zillar", "")}</div><span class="rung">3</span><h3>${T("brand.zillar", "Zillar")}</h3><p class="what">${T("brand.your-currency", "Your currency")}</p><p>${T("brand.the-republic-keeps-its-own", "The republic keeps its own money. Zillar is earned with every order and spent on access and experiences that money alone cannot buy. The more you take part, the further it takes you.")}</p></div>
+  </div>
+  <div class="hs-bar" aria-hidden="true"><i></i></div>
 </div></section>
 
 <section class="section" style="padding-top:0"><div class="wrap">
-  <div class="section-head" data-reveal><h2>The departments</h2></div>
+  <div class="section-head" data-reveal><h2>${T("brand.the-departments", "The departments")}</h2></div>
   <ul class="world-list" data-reveal>
 ${TAX.map((c) => `    <li><a href="/shop/?category=${encodeURIComponent(c.name)}">${esc(c.name)}</a></li>`).join("\n")}
   </ul>
 </div></section>
 
 <section class="section navy-band"><div class="wrap split">
-  <h2 class="display" data-reveal>Take your place in the republic.</h2>
+  <h2 class="display" data-reveal>${T("brand.take-your-place-in-the", "Take your place in the republic.")}</h2>
   <div class="prose" data-reveal>
-    <p class="big">Join the Register and hear first when Signal I opens its borders.</p>
-    <p style="margin-top:28px"><a class="btn light" href="/waitlist/">Join the Register</a></p>
+    <p class="big">${T("brand.join-the-register-and-hear", "Join the Register and hear first when Signal I opens its borders.")}</p>
+    <p style="margin-top:28px"><a class="btn light" href="/waitlist/">${T("brand.join-the-register", "Join the Register")}</a></p>
   </div>
 </div></section>
 </main>`
@@ -653,6 +665,10 @@ const ARCS = [
     pieces: (p) => p.arc === "Arc II"
   }
 ];
+[...SIGNALS, ...ARCS].forEach((it) => {
+  ["tag", "status", "lead", "materials", "film"].forEach((f) => { if (typeof it[f] === "string") it[f] = TR(`story.${it.id}.${f}`, it[f]); });
+  ["story", "direction", "rationale", "mood", "frames"].forEach((f) => { if (Array.isArray(it[f])) it[f] = it[f].map((t, k) => TR(`story.${it.id}.${f}-${k + 1}`, t)); });
+});
 const sigById = Object.fromEntries(SIGNALS.map((s) => [s.id, s]));
 const arcById = Object.fromEntries(ARCS.map((a) => [a.id, a]));
 
@@ -663,7 +679,7 @@ function paras(list) { return list.map((t) => `<p>${esc(t)}</p>`).join(""); }
 function frames(prefix, list) {
   if (!list.length) return "";
   return `<section class="hscroll" data-hscroll aria-label="Images"><div class="hs-pin">
-  <div class="wrap hs-head"><h2>The images</h2></div>
+  <div class="wrap hs-head"><h2>${T("story.the-images", "The images")}</h2></div>
   <div class="hs-track">
 ${list.map((c, i) => `    <figure class="hs-card${i % 2 ? " low" : ""}">${media(`${prefix}-${i + 1}`, c)}<figcaption>${esc(c)}</figcaption></figure>`).join("\n")}
   </div>
@@ -672,8 +688,8 @@ ${list.map((c, i) => `    <figure class="hs-card${i % 2 ? " low" : ""}">${media(
 }
 
 function arcTile(sigId, a) {
-  if (a.soon) return `<div class="arc arc-soon" aria-disabled="true"><h3>${a.name}</h3><p class="arc-line">Coming soon</p></div>`;
-  return `<a class="arc arc-link" href="/explore/${sigId}/${a.id}/"><h3>${a.name}</h3><p class="arc-line">${esc(a.tag)}</p><p>${esc(a.lead)}</p><span class="text-link">Read the full story</span></a>`;
+  if (a.soon) return `<div class="arc arc-soon" aria-disabled="true"><h3>${a.name}</h3><p class="arc-line">${T("story.coming-soon", "Coming soon")}</p></div>`;
+  return `<a class="arc arc-link" href="/explore/${sigId}/${a.id}/"><h3>${a.name}</h3><p class="arc-line">${esc(a.tag)}</p><p>${esc(a.lead)}</p><span class="text-link">${T("story.read-the-full-story", "Read the full story")}</span></a>`;
 }
 function storyPage(item, parent) {
   const isArc = !!parent;
@@ -690,28 +706,28 @@ function storyPage(item, parent) {
       page: "story",
       body: `<main>
 <section class="story-head"><div class="wrap">
-  <nav class="crumbs" aria-label="Breadcrumb"><a href="/explore/">Explore</a> <span>/</span> ${isArc ? `<a href="/explore/${sig.id}/">${sig.name}</a> <span>/</span> ${item.name}` : item.name}</nav>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/explore/">${T("story.explore", "Explore")}</a> <span>/</span> ${isArc ? `<a href="/explore/${sig.id}/">${sig.name}</a> <span>/</span> ${item.name}` : item.name}</nav>
   <p class="small">${esc(item.status)}</p>
   <h1 class="display rise">${words(item.name)}</h1>
   <p class="story-tag fade">${esc(item.tag)}</p>
   <p class="story-lead fade">${esc(item.lead)}</p>
 </div></section>
-<section class="wrap" data-reveal><figure class="hero-fig">${media(prefix + "-cover", `${item.name} cover image`)}<figcaption>Cover image for ${esc(item.name)}.</figcaption></figure></section>
+<section class="wrap" data-reveal><figure class="hero-fig"><div class="hf-img">${media(prefix + "-cover", `${item.name} cover image`)}</div><figcaption>${esc(TR("story.cover-caption", "Cover image for {name}.").replace("{name}", item.name))}</figcaption></figure></section>
 
 <section class="section"><div class="wrap split">
-  <h2 class="display" data-reveal>The story.</h2>
+  <h2 class="display" data-reveal>${T("story.the-story", "The story.")}</h2>
   <div class="prose" data-reveal>${paras(item.story)}</div>
 </div></section>
 
 <section class="section" style="padding-top:0"><div class="wrap split">
-  <div data-reveal><h2 class="display">Art direction.</h2><div class="prose" style="margin-top:24px">${paras(item.direction)}</div></div>
-  <div data-reveal><h2 class="display">Why it exists.</h2><div class="prose" style="margin-top:24px">${paras(item.rationale)}</div></div>
+  <div data-reveal><h2 class="display">${T("story.art-direction", "Art direction.")}</h2><div class="prose" style="margin-top:24px">${paras(item.direction)}</div></div>
+  <div data-reveal><h2 class="display">${T("story.why-it-exists", "Why it exists.")}</h2><div class="prose" style="margin-top:24px">${paras(item.rationale)}</div></div>
 </div></section>
 
 <section class="section" style="padding-top:0"><div class="wrap facts" data-reveal>
-  <div><h3>Palette</h3>${pals(item.palette)}</div>
-  <div><h3>Materials</h3><p>${esc(item.materials)}</p></div>
-  <div><h3>Mood</h3><ul class="moods">${item.mood.map((m) => `<li>${esc(m)}</li>`).join("")}</ul></div>
+  <div><h3>${T("story.palette", "Palette")}</h3>${pals(item.palette)}</div>
+  <div><h3>${T("story.materials", "Materials")}</h3><p>${esc(item.materials)}</p></div>
+  <div><h3>${T("story.mood", "Mood")}</h3><ul class="moods">${item.mood.map((m) => `<li>${esc(m)}</li>`).join("")}</ul></div>
 </div></section>
 
 ${frames(isArc ? prefix : prefix + "-story", item.frames)}
@@ -719,7 +735,7 @@ ${frames(isArc ? prefix : prefix + "-story", item.frames)}
 ${item.film ? `<section class="wrap" data-reveal style="margin-bottom:clamp(56px,8vw,120px)">${film(prefix + "-film", item.film)}</section>` : ""}
 
 ${pieces.length ? `<section class="section" style="padding-top:0"><div class="wrap">
-  <div class="section-head" data-reveal><h2>The Pieces</h2><a class="text-link" href="/shop/?signal=${encodeURIComponent(sig.name)}&amp;arc=${encodeURIComponent(item.name)}">Shop ${item.name}</a></div>
+  <div class="section-head" data-reveal><h2>${T("story.the-pieces", "The Pieces")}</h2><a class="text-link" href="/shop/?signal=${encodeURIComponent(sig.name)}&amp;arc=${encodeURIComponent(item.name)}">${esc(TR("story.shop-link", "Shop {name}").replace("{name}", item.name))}</a></div>
 </div>
   <div class="rail" data-rail-track>
 ${pieces.map(card).join("\n")}
@@ -727,24 +743,24 @@ ${pieces.map(card).join("\n")}
 </section>` : ""}
 
 ${!isArc && siblings.length ? `<section class="section" style="padding-top:0"><div class="wrap">
-  <div class="section-head" data-reveal><h2>The Arcs inside ${item.name}</h2></div>
+  <div class="section-head" data-reveal><h2>${esc(TR("story.arcs-inside", "The Arcs inside {name}").replace("{name}", item.name))}</h2></div>
   <div class="arcs">${siblings.map((a) => `
     ${arcTile(item.id, a)}`).join("")}
   </div>
 </div></section>` : ""}
 
 ${isArc && siblings.length ? `<section class="section" style="padding-top:0"><div class="wrap">
-  <div class="section-head" data-reveal><h2>Also in ${sig.name}</h2></div>
+  <div class="section-head" data-reveal><h2>${esc(TR("story.also-in", "Also in {name}").replace("{name}", sig.name))}</h2></div>
   <div class="arcs">${siblings.map((a) => `
     ${arcTile(sig.id, a)}`).join("")}
   </div>
 </div></section>` : ""}
 
 <section class="section navy-band"><div class="wrap split">
-  <h2 class="display" data-reveal>${pieces.length || !isArc && sig.arcs.length ? "Be in the room when it opens." : "Hear first, when it is time."}</h2>
+  <h2 class="display" data-reveal>${pieces.length || !isArc && sig.arcs.length ? TR("story.band-title-open", "Be in the room when it opens.") : TR("story.band-title-soon", "Hear first, when it is time.")}</h2>
   <div class="prose" data-reveal>
-    <p class="big">Join the Register and the Bureau of Arrivals will tell you the moment ${esc(item.name)} opens its borders.</p>
-    <p style="margin-top:28px"><a class="btn light" href="/waitlist/">Join the Register</a></p>
+    <p class="big">${esc(TR("story.band-text", "Join the Register and the Bureau of Arrivals will tell you the moment {name} opens its borders.").replace("{name}", item.name))}</p>
+    <p style="margin-top:28px"><a class="btn light" href="/waitlist/">${T("story.join-the-register", "Join the Register")}</a></p>
   </div>
 </div></section>
 </main>`
@@ -757,13 +773,13 @@ ARCS.filter((a) => !a.soon).forEach((a) => storyPage(a, sigById[a.signal]));
 write(
   "explore/index.html",
   layout({
-    title: "Explore | Zibura",
-    description: "Explore every Signal and Arc in Zi Republic.",
+    title: TR("quiz.meta-title", "Explore | Zibura"),
+    description: TR("quiz.meta-description", "Explore every Signal and Arc in Zi Republic."),
     page: "explore",
     body: `<main>
 <section class="page-head"><div class="wrap">
-  <h1 class="display rise">${words("Explore the Signals.")}</h1>
-  <p class="fade">A Signal is an era of the republic. Each one holds Arcs, collections with a story of their own. Open a Signal to see what is inside, then read the full story.</p>
+  <h1 class="display rise">${words(TR("quiz.explore-the-signals", "Explore the Signals."))}</h1>
+  <p class="fade">${T("explore.a-signal-is-an-era", "A Signal is an era of the republic. Each one holds Arcs, collections with a story of their own. Open a Signal to see what is inside, then read the full story.")}</p>
 </div></section>
 <section class="wrap" data-reveal>
 ${SIGNALS.filter((x) => !x.soon).map((x) => `  <a class="sg-feature" href="/explore/${x.id}/">
@@ -779,26 +795,26 @@ ${SIGNALS.filter((x) => !x.soon).map((x) => `  <a class="sg-feature" href="/expl
 </section>
 
 <section class="section" style="padding-top:0"><div class="wrap">
-  <div class="section-head" data-reveal><h2>The Arcs</h2><span class="small">Collections inside Signal I</span></div>
+  <div class="section-head" data-reveal><h2>${T("explore.the-arcs", "The Arcs")}</h2><span class="small">${T("explore.collections-inside-signal-i", "Collections inside Signal I")}</span></div>
   <div class="arc-photos" data-reveal>
 ${ARCS.filter((a) => a.signal === "signal-1").map((a) => a.soon
-  ? `    <div class="arc-photo soon" aria-disabled="true">${media("signal-1-" + a.id + "-cover", a.name + " cover image")}<div class="ap-txt"><h3>${a.name}</h3><span class="tag-soon">Coming soon</span></div></div>`
-  : `    <a class="arc-photo" href="/explore/signal-1/${a.id}/">${media("signal-1-" + a.id + "-cover", a.name + " cover image")}<div class="ap-txt"><h3>${a.name}</h3><p>${esc(a.tag)}</p><span class="text-link">Read the full story</span></div></a>`).join("\n")}
+  ? `    <div class="arc-photo soon" aria-disabled="true">${media("signal-1-" + a.id + "-cover", a.name + " cover image")}<div class="ap-txt"><h3>${a.name}</h3><span class="tag-soon">${T("explore.coming-soon", "Coming soon")}</span></div></div>`
+  : `    <a class="arc-photo" href="/explore/signal-1/${a.id}/">${media("signal-1-" + a.id + "-cover", a.name + " cover image")}<div class="ap-txt"><h3>${a.name}</h3><p>${esc(a.tag)}</p><span class="text-link">${T("explore.read-the-full-story", "Read the full story")}</span></div></a>`).join("\n")}
   </div>
 </div></section>
 
 <section class="section" style="padding-top:0"><div class="wrap">
-  <div class="section-head" data-reveal><h2>Next Signals</h2><span class="small">Sealed until the dates are announced</span></div>
+  <div class="section-head" data-reveal><h2>${T("explore.next-signals", "Next Signals")}</h2><span class="small">${T("explore.sealed-until-the-dates-are", "Sealed until the dates are announced")}</span></div>
   <div class="sg-soon-row" data-reveal>
-${SIGNALS.filter((x) => x.soon).map((x) => `    <div class="sg-soon" aria-disabled="true">${media(x.id + "-cover", x.name + " cover image")}<div class="ap-txt"><h3>${x.name}</h3><span class="tag-soon">Coming soon</span></div></div>`).join("\n")}
+${SIGNALS.filter((x) => x.soon).map((x) => `    <div class="sg-soon" aria-disabled="true">${media(x.id + "-cover", x.name + " cover image")}<div class="ap-txt"><h3>${x.name}</h3><span class="tag-soon">${T("explore.coming-soon", "Coming soon")}</span></div></div>`).join("\n")}
   </div>
 </div></section>
 
 <section class="hscroll" data-hscroll aria-label="The republic in frames"><div class="hs-pin">
-  <div class="wrap hs-head"><h2>The republic in frames</h2><p>Silhouette, colour, texture, light and attitude.</p></div>
+  <div class="wrap hs-head"><h2>${T("explore.the-republic-in-frames", "The republic in frames")}</h2><p>${T("explore.silhouette-colour-texture-light-and", "Silhouette, colour, texture, light and attitude.")}</p></div>
   <div class="hs-track">
-${["Silhouette", "Colour", "Texture", "Light", "Attitude"].map((c, i) => `    <figure class="hs-card${i % 2 ? " low" : ""}">${media("explore-" + (i + 1), c)}<figcaption>${c}</figcaption></figure>`).join("\n")}
-    <a class="hs-end" href="/shop/"><span>Shop the Pieces</span></a>
+${[TR("explore.silhouette", "Silhouette"), TR("explore.colour", "Colour"), TR("explore.texture", "Texture"), TR("explore.light", "Light"), TR("explore.attitude", "Attitude")].map((c, i) => `    <figure class="hs-card${i % 2 ? " low" : ""}">${media("explore-" + (i + 1), c)}<figcaption>${c}</figcaption></figure>`).join("\n")}
+    <a class="hs-end" href="/shop/"><span>${T("explore.shop-the-pieces", "Shop the Pieces")}</span></a>
   </div>
   <div class="hs-bar" aria-hidden="true"><i></i></div>
 </div></section>
@@ -829,16 +845,26 @@ const PROFILES = [
   { style: "Fast and playful", silhouette: "Easy movement, athletic ease, bright layers, and combinations that change by the hour.", palette: ["Dash Orange", "Sky Blue", "Lime", "Hot Pink"], fabrics: "Technical nylon, jersey, stretch mesh, canvas", loves: ["Bright colors that mix and match", "Sneakers and shoes made for moving", "Bags that carry everything"], moments: "City days, travel, side projects, and nights that change plans three times.", shopper: "You take several Pieces home and see what sticks. Your wardrobe is a working lab.", stretch: "Pick one slower, more tailored Piece and see how it calms the whole outfit.", picks: ["ember", "pocket", "cove"], notice: ["You dress in motion, and it works.", "You try it and adjust as you go.", "You take several Pieces home and keep the winners.", "Your closet is bright and everything mixes."] },
   { style: "Dreamy and layered", silhouette: "Draped shapes, sheer layers, long scarves, and details that reveal themselves slowly.", palette: ["Swirl Purple", "Lilac", "Silver", "Black"], fabrics: "Silk, lace, chiffon, soft velvet", loves: ["Purples, smoke, and shades in between", "Layered chains and scarves", "Perfume with a second note"], moments: "Late dinners, night walks, quiet exhibitions, and any evening that deserves a story.", shopper: "You follow a feeling and find the reasons afterward. The best Pieces feel like they already knew you.", stretch: "Try a crisp white shirt as your base and watch the layers get louder.", picks: ["kite", "orbit", "rumour"], notice: ["You dress in layers with a twist people notice later.", "You follow the feeling you cannot explain, and it is usually right.", "You follow a feeling, then find the reasons.", "Your closet lives between purple, smoke, and shadow."] }
 ];
+PLACEMENT.forEach((q, qi) => {
+  q[0] = TR(`quiz.question-${qi + 1}`, q[0]);
+  q[1] = q[1].map((t, k) => TR(`quiz.question-${qi + 1}-answer-${k + 1}`, t));
+});
+PROFILES.forEach((pr, pi) => {
+  const n = PROVINCES[pi][0];
+  ["style", "silhouette", "fabrics", "moments", "shopper", "stretch"].forEach((f) => { pr[f] = TR(`quiz.${n}-${f}`, pr[f]); });
+  ["loves", "notice"].forEach((f) => { pr[f] = pr[f].map((t, k) => TR(`quiz.${n}-${f}-${k + 1}`, t)); });
+});
+
 write(
   "province/index.html",
   layout({
-    title: "Find your province | Zibura",
-    description: "Answer twelve questions and find out which of the six provinces of Zi Republic is your home.",
+    title: TR("account.meta-title", "Find your province | Zibura"),
+    description: TR("account.meta-description", "Answer twelve questions and find out which of the six provinces of Zi Republic is your home."),
     page: "placement",
     body: `<main>
 <section class="page-head"><div class="wrap">
-  <h1 class="display rise">${words("Find your province.")}</h1>
-  <p class="fade">Twelve questions. Your answers decide which of the six provinces of Zi Republic you call home.</p>
+  <h1 class="display rise">${words(TR("account.find-your-province", "Find your province."))}</h1>
+  <p class="fade">${T("quiz.twelve-questions-your-answers-decide", "Twelve questions. Your answers decide which of the six provinces of Zi Republic you call home.")}</p>
 </div></section>
 <section class="section" style="padding-top:clamp(16px,3vw,40px)"><div class="wrap">
   <div id="quiz" class="quiz" data-quiz>
@@ -857,13 +883,13 @@ write(
 write(
   "waitlist/index.html",
   layout({
-    title: "Join the Register | Zibura",
-    description: "Join the Zi Republic Register for first word on Signal I.",
+    title: TR("account.meta-title", "Join the Register | Zibura"),
+    description: TR("account.meta-description", "Join the Zi Republic Register for first word on Signal I."),
     page: "waitlist",
     body: `<main>
 <section class="page-head"><div class="wrap">
-  <h1 class="display rise">${words("Join the Register.")}</h1>
-  <p class="fade">The Bureau of Arrivals is taking names. Add yours and you will hear first when Signal I opens its borders.</p>
+  <h1 class="display rise">${words(TR("account.join-the-register", "Join the Register."))}</h1>
+  <p class="fade">${T("register.the-bureau-of-arrivals-is", "The Bureau of Arrivals is taking names. Add yours and you will hear first when Signal I opens its borders.")}</p>
 </div></section>
 <section class="section" style="padding-top:clamp(16px,3vw,40px)"><div class="wrap">
   <div class="register-page">${arrivalCard("p")}</div>
@@ -876,32 +902,32 @@ write(
 write(
   "zi-card/index.html",
   layout({
-    title: "The Zi Card | Zibura",
-    description: "Apply for the Zi Card, your passport into Zi Republic.",
+    title: TR("account.meta-title", "The Zi Card | Zibura"),
+    description: TR("account.meta-description", "Apply for the Zi Card, your passport into Zi Republic."),
     page: "zicard",
     body: `<main>
 <section class="page-head"><div class="wrap">
-  <h1 class="display rise">${words("Your passport into Zi Republic.")}</h1>
-  <p class="fade">Residency is by application. Every application is reviewed by the Ministry of Zi Interior.</p>
+  <h1 class="display rise">${words(TR("account.your-passport-into-zi-republic", "Your passport into Zi Republic."))}</h1>
+  <p class="fade">${T("zi-card.residency-is-by-application-every", "Residency is by application. Every application is reviewed by the Ministry of Zi Interior.")}</p>
 </div></section>
 <section class="section" style="padding-top:clamp(16px,3vw,40px)"><div class="wrap split">
   <div data-reveal>${flipCard()}</div>
   <div data-reveal>
     <ol class="steps">
-      <li><div><b>Create your account.</b><span>Your file in the Zi Registry begins here.</span></div></li>
-      <li><div><b>Upload your portrait and apply.</b><span>Your portrait appears on your card, so choose one that looks like you.</span></div></li>
-      <li><div><b>Collect your Zi Card.</b><span>Once your application is accepted, your Zi Card appears in your account, ready to download.</span></div></li>
+      <li><div><b>${T("zi-card.create-your-account", "Create your account.")}</b><span>${T("zi-card.your-file-in-the-zi", "Your file in the Zi Registry begins here.")}</span></div></li>
+      <li><div><b>${T("zi-card.upload-your-portrait-and-apply", "Upload your portrait and apply.")}</b><span>${T("zi-card.your-portrait-appears-on-your", "Your portrait appears on your card, so choose one that looks like you.")}</span></div></li>
+      <li><div><b>${T("zi-card.collect-your-zi-card", "Collect your Zi Card.")}</b><span>${T("zi-card.once-your-application-is-accepted", "Once your application is accepted, your Zi Card appears in your account, ready to download.")}</span></div></li>
     </ol>
-    <p style="margin-top:40px"><a class="btn" href="/account/">Start your application</a></p>
-    <p class="small" style="margin-top:16px">Want first word on Signal I? <a href="/waitlist/">Join the Register</a>.</p>
+    <p style="margin-top:40px"><a class="btn" href="/account/">${T("zi-card.start-your-application", "Start your application")}</a></p>
+    <p class="small" style="margin-top:16px">${T("zi-card.want-first-word-on-signal", "Want first word on Signal I?")} <a href="/waitlist/">${T("zi-card.join-the-register", "Join the Register")}</a>.</p>
   </div>
 </div></section>
 <section class="section navy-band"><div class="wrap split">
-  <h2 class="display" data-reveal>Arrive as a Resident. Rise to Zitizen.</h2>
+  <h2 class="display" data-reveal>${T("zi-card.arrive-as-a-resident-rise", "Arrive as a Resident. Rise to Zitizen.")}</h2>
   <dl class="plain-list light" data-reveal>
-    <div><dt>Zi Resident</dt><dd>Your passport. Every approved applicant begins here, with a card and a province to call home.</dd></div>
-    <div><dt>Zitizen</dt><dd>Your standing. The inner circle of the republic, earned by how you show up.</dd></div>
-    <div><dt>Zillar</dt><dd>Your currency. Earned with every order, spent on access money alone cannot buy.</dd></div>
+    <div><dt>${T("zi-card.zi-resident", "Zi Resident")}</dt><dd>${T("zi-card.your-passport-every-approved-applicant", "Your passport. Every approved applicant begins here, with a card and a province to call home.")}</dd></div>
+    <div><dt>${T("zi-card.zitizen", "Zitizen")}</dt><dd>${T("zi-card.your-standing-the-inner-circle", "Your standing. The inner circle of the republic, earned by how you show up.")}</dd></div>
+    <div><dt>${T("zi-card.zillar", "Zillar")}</dt><dd>${T("zi-card.your-currency-earned-with-every", "Your currency. Earned with every order, spent on access money alone cannot buy.")}</dd></div>
   </dl>
 </div></section>
 </main>`
@@ -913,48 +939,48 @@ write(
 write(
   "account/index.html",
   layout({
-    title: "Your account | Zibura",
-    description: "Sign in to apply for your Zi Card or collect it once approved.",
+    title: TR("account.meta-title", "Your account | Zibura"),
+    description: TR("account.meta-description", "Sign in to apply for your Zi Card or collect it once approved."),
     page: "account",
     body: `<main>
 <section class="page-head"><div class="wrap">
-  <h1 class="display rise" id="acct-h">${words("Your Zi passport.")}</h1>
-  <p class="fade" id="acct-sub">Create an account to open your file in the Zi Registry.</p>
+  <h1 class="display rise" id="acct-h">${words(TR("account.your-zi-passport", "Your Zi passport."))}</h1>
+  <p class="fade" id="acct-sub">${T("account.create-an-account-to-open", "Create an account to open your file in the Zi Registry.")}</p>
 </div></section>
 <section class="section" style="padding-top:clamp(16px,3vw,40px)"><div class="wrap">
-  <div id="acct-loading" class="small">Checking your papers.</div>
+  <div id="acct-loading" class="small">${T("account.checking-your-papers", "Checking your papers.")}</div>
 
   <div id="v-auth" class="form-card" hidden>
     <div class="tabs" role="tablist">
-      <button type="button" class="tab on" data-tab="signup">Create account</button>
-      <button type="button" class="tab" data-tab="login">Sign in</button>
+      <button type="button" class="tab on" data-tab="signup">${T("account.create-account", "Create account")}</button>
+      <button type="button" class="tab" data-tab="login">${T("account.sign-in", "Sign in")}</button>
     </div>
     <form id="f-signup" class="acct-form">
       <div class="form-grid">
-        <div><label for="s-first">First name</label><input id="s-first" name="first" autocomplete="given-name" required></div>
-        <div><label for="s-last">Last name</label><input id="s-last" name="last" autocomplete="family-name" required></div>
-        <div><label for="s-bm">Birthday month</label><select id="s-bm" name="birth_month">${monthOptions}</select></div>
-        <div><label for="s-bd">Birthday day</label><select id="s-bd" name="birth_day">${dayOptions}</select></div>
-        <div class="full"><label for="s-email">Email</label><input id="s-email" name="email" type="email" autocomplete="email" required></div>
-        <div class="full"><label for="s-pass">Password (8 characters or more)</label><input id="s-pass" name="password" type="password" minlength="8" autocomplete="new-password" required></div>
+        <div><label for="s-first">${T("account.first-name", "First name")}</label><input id="s-first" name="first" autocomplete="given-name" required></div>
+        <div><label for="s-last">${T("account.last-name", "Last name")}</label><input id="s-last" name="last" autocomplete="family-name" required></div>
+        <div><label for="s-bm">${T("account.birthday-month", "Birthday month")}</label><select id="s-bm" name="birth_month">${monthOptions}</select></div>
+        <div><label for="s-bd">${T("account.birthday-day", "Birthday day")}</label><select id="s-bd" name="birth_day">${dayOptions}</select></div>
+        <div class="full"><label for="s-email">${T("account.email", "Email")}</label><input id="s-email" name="email" type="email" autocomplete="email" required></div>
+        <div class="full"><label for="s-pass">${T("account.password-8-characters-or-more", "Password (8 characters or more)")}</label><input id="s-pass" name="password" type="password" minlength="8" autocomplete="new-password" required></div>
       </div>
-      <button class="btn" type="submit">Open my file</button>
+      <button class="btn" type="submit">${T("account.open-my-file", "Open my file")}</button>
       <div class="msg" role="status"></div>
     </form>
     <form id="f-login" class="acct-form" hidden>
       <div class="form-grid">
-        <div class="full"><label for="l-email">Email</label><input id="l-email" name="email" type="email" autocomplete="email" required></div>
-        <div class="full"><label for="l-pass">Password</label><input id="l-pass" name="password" type="password" autocomplete="current-password" required></div>
+        <div class="full"><label for="l-email">${T("account.email", "Email")}</label><input id="l-email" name="email" type="email" autocomplete="email" required></div>
+        <div class="full"><label for="l-pass">${T("account.password", "Password")}</label><input id="l-pass" name="password" type="password" autocomplete="current-password" required></div>
       </div>
-      <button class="btn" type="submit">Present my passport</button>
-      <p class="small" style="margin-top:14px"><button type="button" class="linkbtn" id="show-forgot">Forgot your password?</button></p>
+      <button class="btn" type="submit">${T("account.present-my-passport", "Present my passport")}</button>
+      <p class="small" style="margin-top:14px"><button type="button" class="linkbtn" id="show-forgot">${T("account.forgot-your-password", "Forgot your password?")}</button></p>
       <div class="msg" role="status"></div>
     </form>
     <form id="f-forgot" class="acct-form" hidden>
-      <p class="sub">Enter the email on your file. The Ministry will send a reset link that works for one hour.</p>
-      <div class="form-grid"><div class="full"><label for="fg-email">Email</label><input id="fg-email" name="email" type="email" autocomplete="email" required></div></div>
-      <button class="btn" type="submit">Send reset link</button>
-      <p class="small" style="margin-top:14px"><button type="button" class="linkbtn" id="back-login">Back to sign in</button></p>
+      <p class="sub">${T("account.enter-the-email-on-your", "Enter the email on your file. The Ministry will send a reset link that works for one hour.")}</p>
+      <div class="form-grid"><div class="full"><label for="fg-email">${T("account.email", "Email")}</label><input id="fg-email" name="email" type="email" autocomplete="email" required></div></div>
+      <button class="btn" type="submit">${T("account.send-reset-link", "Send reset link")}</button>
+      <p class="small" style="margin-top:14px"><button type="button" class="linkbtn" id="back-login">${T("account.back-to-sign-in", "Back to sign in")}</button></p>
       <div class="msg" role="status"></div>
     </form>
   </div>
@@ -963,52 +989,52 @@ write(
     <div class="dash-head">
       <div class="dash-avatar" id="d-avatar"></div>
       <div class="dash-who"><h2 class="display" id="d-name"></h2><p id="d-meta" class="small"></p></div>
-      <button type="button" class="btn line" id="signout">Sign out</button>
+      <button type="button" class="btn line" id="signout">${T("account.sign-out", "Sign out")}</button>
     </div>
     <nav class="dash-nav" id="dash-nav" aria-label="Account sections">
-      <button type="button" data-sec="overview">Overview</button>
-      <button type="button" data-sec="card">Zi Card</button>
-      <button type="button" data-sec="orders">Orders</button>
-      <button type="button" data-sec="style">Style</button>
-      <button type="button" data-sec="saved">Saved</button>
-      <button type="button" data-sec="addresses">Addresses</button>
-      <button type="button" data-sec="profile">Profile</button>
-      <button type="button" data-sec="prefs">Sizes</button>
-      <button type="button" data-sec="security">Security</button>
+      <button type="button" data-sec="overview">${T("account.overview", "Overview")}</button>
+      <button type="button" data-sec="card">${T("account.zi-card", "Zi Card")}</button>
+      <button type="button" data-sec="orders">${T("account.orders", "Orders")}</button>
+      <button type="button" data-sec="style">${T("account.style", "Style")}</button>
+      <button type="button" data-sec="saved">${T("account.saved", "Saved")}</button>
+      <button type="button" data-sec="addresses">${T("account.addresses", "Addresses")}</button>
+      <button type="button" data-sec="profile">${T("account.profile", "Profile")}</button>
+      <button type="button" data-sec="prefs">${T("account.sizes", "Sizes")}</button>
+      <button type="button" data-sec="security">${T("account.security", "Security")}</button>
     </nav>
     <section class="panel" data-panel="overview"></section>
     <section class="panel" data-panel="card" hidden>
   <div id="v-apply" class="form-card" hidden>
     <form id="f-apply" class="acct-form">
       <div class="form-grid">
-        <div class="full"><label for="a-name">Name as it will appear on your card</label><input id="a-name" name="name" maxlength="40" required></div>
-        <div class="full"><label for="a-photo">Portrait photo (JPG, PNG, or WebP)</label><input id="a-photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" required></div>
+        <div class="full"><label for="a-name">${T("account.name-as-it-will-appear", "Name as it will appear on your card")}</label><input id="a-name" name="name" maxlength="40" required></div>
+        <div class="full"><label for="a-photo">${T("account.portrait-photo-jpg-png-or", "Portrait photo (JPG, PNG, or WebP)")}</label><input id="a-photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" required></div>
       </div>
       <div class="cropper" id="a-crop" hidden>
         <canvas id="a-canvas" width="562" height="724" aria-label="Portrait frame. Drag to position."></canvas>
-        <label class="zoom">Zoom <input type="range" id="a-zoom" min="1" max="3" step="0.01" value="1"></label>
-        <p class="small">Drag the photo to place your face inside the frame, then use the slider to zoom. This is exactly how it will appear on your card.</p>
+        <label class="zoom">${T("account.zoom", "Zoom")} <input type="range" id="a-zoom" min="1" max="3" step="0.01" value="1"></label>
+        <p class="small">${T("account.drag-the-photo-to-place", "Drag the photo to place your face inside the frame, then use the slider to zoom. This is exactly how it will appear on your card.")}</p>
       </div>
-      <p class="small">Use a clear, front facing portrait with your face and shoulders in view.</p>
-      <button class="btn" type="submit">Stamp my application</button>
+      <p class="small">${T("account.use-a-clear-front-facing", "Use a clear, front facing portrait with your face and shoulders in view.")}</p>
+      <button class="btn" type="submit">${T("account.stamp-my-application", "Stamp my application")}</button>
       <div class="msg" role="status"></div>
     </form>
   </div>
 
   <div id="v-pending" class="form-card" hidden>
-    <h2 class="display" style="font-size:clamp(28px,3.4vw,40px)">Your application is on the Minister's desk.</h2>
-    <p class="sub">The Ministry of Zi Interior is reviewing it now. Check your account in a few days to see if you have been approved.</p>
+    <h2 class="display" style="font-size:clamp(28px,3.4vw,40px)">${T("account.your-application-is-on-the", "Your application is on the Minister's desk.")}</h2>
+    <p class="sub">${T("account.the-ministry-of-zi-interior", "The Ministry of Zi Interior is reviewing it now. Check your account in a few days to see if you have been approved.")}</p>
   </div>
 
   <div id="v-declined" class="form-card" hidden>
-    <h2 class="display" style="font-size:clamp(28px,3.4vw,40px)">Application returned for revision.</h2>
-    <p class="sub">The Ministry did not approve this application. You are welcome to apply again with a new portrait.</p>
-    <button class="btn" type="button" id="reapply">Apply again</button>
+    <h2 class="display" style="font-size:clamp(28px,3.4vw,40px)">${T("account.application-returned-for-revision", "Application returned for revision.")}</h2>
+    <p class="sub">${T("account.the-ministry-did-not-approve", "The Ministry did not approve this application. You are welcome to apply again with a new portrait.")}</p>
+    <button class="btn" type="button" id="reapply">${T("account.apply-again", "Apply again")}</button>
   </div>
 
   <div id="v-card" hidden>
     <div class="card-out"><canvas id="card-canvas" width="2022" height="1274" aria-label="Your Zi Card"></canvas></div>
-    <p style="margin-top:28px"><button class="btn" type="button" id="dl-card">Download your Zi Card</button></p>
+    <p style="margin-top:28px"><button class="btn" type="button" id="dl-card">${T("account.download-your-zi-card", "Download your Zi Card")}</button></p>
   </div>
 
     </section>
@@ -1030,18 +1056,18 @@ write(
 write(
   "reset/index.html",
   layout({
-    title: "Reset your password | Zibura",
-    description: "Choose a new password for your Zi passport.",
+    title: TR("shop.meta-title", "Reset your password | Zibura"),
+    description: TR("shop.meta-description", "Choose a new password for your Zi passport."),
     page: "reset",
     body: `<main>
 <section class="page-head"><div class="wrap">
-  <h1 class="display rise">${words("Choose a new password.")}</h1>
-  <p class="fade">Pick something of 8 characters or more. Signing in on other devices will be asked again.</p>
+  <h1 class="display rise">${words(TR("shop.choose-a-new-password", "Choose a new password."))}</h1>
+  <p class="fade">${T("reset.pick-something-of-8-characters", "Pick something of 8 characters or more. Signing in on other devices will be asked again.")}</p>
 </div></section>
 <section class="section" style="padding-top:clamp(16px,3vw,40px)"><div class="wrap">
   <form id="f-reset" class="form-card acct-form">
-    <div class="form-grid"><div class="full"><label for="rs-pass">New password</label><input id="rs-pass" type="password" minlength="8" autocomplete="new-password" required></div></div>
-    <button class="btn" type="submit">Save new password</button>
+    <div class="form-grid"><div class="full"><label for="rs-pass">${T("reset.new-password", "New password")}</label><input id="rs-pass" type="password" minlength="8" autocomplete="new-password" required></div></div>
+    <button class="btn" type="submit">${T("reset.save-new-password", "Save new password")}</button>
     <div class="msg" role="status"></div>
   </form>
 </div></section>
@@ -1053,8 +1079,8 @@ write(
 write(
   "admin/index.html",
   layout({
-    title: "Ministry | Zibura",
-    description: "Ministry of Zi Interior review desk.",
+    title: TR("shop.meta-title", "Ministry | Zibura"),
+    description: TR("shop.meta-description", "Ministry of Zi Interior review desk."),
     page: "admin",
     body: `<main>
 <section class="page-head"><div class="wrap">
@@ -1076,23 +1102,23 @@ write(
 write(
   "note/index.html",
   layout({
-    title: "From the founder | Zibura",
-    description: "A letter from Ruova, founder of Zibura.",
+    title: TR("cart.meta-title", "From the founder | Zibura"),
+    description: TR("cart.meta-description", "A letter from Ruova, founder of Zibura."),
     page: "note",
     body: `<main class="note">
   <div class="photo" data-reveal><img src="/assets/ruova.jpg" alt="Ruova, founder of Zibura" width="1000" height="1500">
-    <h1 class="who-name">Ruova</h1>
-    <p class="who-role">Zi-in-Chief</p>
+    <h1 class="who-name">${T("note.ruova", "Ruova")}</h1>
+    <p class="who-role">${T("note.ziinchief", "Zi-in-Chief")}</p>
   </div>
   <div class="body">
     <p class="lead-b fade">${T("founder_lead", "Expression is the most human thing we do. There's no single right way to exist, and every side of you, every version, deserves space.")}</p>
     <div class="letter fade">
       <p>${T("founder_p1", "Fashion has always been a language to me, maybe the first one I ever really learned to speak on my own terms. It's how I've found the truest way to express who I am.")}</p>
-      <p>I wanted that for other people too. Because if I'm honest, life comes with so many rules and regulations, so many quiet ideas about what's appropriate, what's too much, what belongs together and what doesn't. One morning I just thought, I'm going to build a new country because who is going to check me? So I did.</p>
-      <p>That's Zi Republic, built on the idea that people deserve a place to actually express themselves, however that looks for them. This was never about re-educating anyone or writing a new set of rules to replace the old ones. It's about giving people somewhere to belong, exactly as they already are.</p>
+      <p>${T("note.i-wanted-that-for-other", "I wanted that for other people too. Because if I'm honest, life comes with so many rules and regulations, so many quiet ideas about what's appropriate, what's too much, what belongs together and what doesn't. One morning I just thought, I'm going to build a new country because who is going to check me? So I did.")}</p>
+      <p>${T("note.thats-zi-republic-built-on", "That's Zi Republic, built on the idea that people deserve a place to actually express themselves, however that looks for them. This was never about re-educating anyone or writing a new set of rules to replace the old ones. It's about giving people somewhere to belong, exactly as they already are.")}</p>
     </div>
-    <blockquote class="pull"><span class="qm" aria-hidden="true">&ldquo;</span>How you show up in the world is a language. We built Zibura so more people could speak it fluently, on their own terms.</blockquote>
-    <p class="signature" id="sig" aria-label="Ruova">Ruova</p>
+    <blockquote class="pull"><span class="qm" aria-hidden="true">&ldquo;</span>${T("note.pull-quote", "How you show up in the world is a language. We built Zibura so more people could speak it fluently, on their own terms.")}</blockquote>
+    <p class="signature" id="sig" aria-label="Ruova">${T("note.ruova", "Ruova")}</p>
   </div>
 </main>`
   })
@@ -1108,22 +1134,22 @@ write(
     body: `<main class="wrap">
 <div class="page-head" style="padding-left:0;padding-right:0"><h1 class="display rise">${words("Shop the republic.")}</h1><p class="fade">${T("shop_subtitle", "Signal I, Arc I. Every Piece here has official clearance. Pick your color, pick your size, and wear it your way.")}</p></div>
 <div class="toolbar">
-  <button type="button" class="btn line small-btn" id="open-filters">Filters</button>
+  <button type="button" class="btn line small-btn" id="open-filters">${T("shop.filters", "Filters")}</button>
   <p class="count" id="count" role="status"></p>
-  <label class="sort">Sort <select id="sort" aria-label="Sort Pieces">
-    <option value="new">Newest</option>
-    <option value="rated">Top rated</option>
-    <option value="low">Price, low to high</option>
-    <option value="high">Price, high to low</option>
-    <option value="az">Name, A to Z</option>
+  <label class="sort">${T("shop.sort", "Sort")} <select id="sort" aria-label="Sort Pieces">
+    <option value="new">${T("shop.newest", "Newest")}</option>
+    <option value="rated">${T("shop.top-rated", "Top rated")}</option>
+    <option value="low">${T("shop.price-low-to-high", "Price, low to high")}</option>
+    <option value="high">${T("shop.price-high-to-low", "Price, high to low")}</option>
+    <option value="az">${T("shop.name-a-to-z", "Name, A to Z")}</option>
   </select></label>
 </div>
 <div class="chips" id="chips"></div>
 <div class="shop-layout">
   <aside class="filters-pane" id="filters-pane" aria-label="Filters">
-    <div class="pane-head"><strong>Filters</strong><button type="button" class="close-pane" id="close-filters" aria-label="Close filters">&times;</button></div>
+    <div class="pane-head"><strong>${T("shop.filters", "Filters")}</strong><button type="button" class="close-pane" id="close-filters" aria-label="Close filters">&times;</button></div>
     <div id="facets"></div>
-    <div class="pane-foot"><button type="button" class="btn" id="apply-filters">Show cleared Pieces</button></div>
+    <div class="pane-foot"><button type="button" class="btn" id="apply-filters">${T("shop.show-cleared-pieces", "Show cleared Pieces")}</button></div>
   </aside>
   <div>
     <div class="grid shop-grid" id="grid"></div>
@@ -1157,7 +1183,7 @@ products.forEach((p) => {
       description: p.description,
       page: "piece",
       body: `<main class="wrap piece-page" data-slug="${esc(p.slug)}">
-  <nav class="crumbs" aria-label="Breadcrumb"><a href="/shop/">Shop</a> <span>/</span> <a href="/shop/?audience=${esc(p.audience[0])}">${esc(p.audience.join(" and "))}</a> <span>/</span> <a href="/shop/?category=${encodeURIComponent(p.category)}">${esc(p.category)}</a> <span>/</span> <a href="/shop/?category=${encodeURIComponent(p.category)}&amp;type=${encodeURIComponent(p.type)}">${esc(p.type)}</a></nav>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/shop/">${T("shop.shop", "Shop")}</a> <span>/</span> <a href="/shop/?audience=${esc(p.audience[0])}">${esc(p.audience.join(" and "))}</a> <span>/</span> <a href="/shop/?category=${encodeURIComponent(p.category)}">${esc(p.category)}</a> <span>/</span> <a href="/shop/?category=${encodeURIComponent(p.category)}&amp;type=${encodeURIComponent(p.type)}">${esc(p.type)}</a></nav>
   <div class="piece">
     <div class="gallery" aria-label="Photos of ${esc(p.name)}">
       ${[1, 2, 3, 4].map((n) => ({ n, img: photo(`${p.slug}-${n}`, `${p.name}, photo ${n}`) })).filter((x) => x.img || x.n === 1).map((x) => `<div class="ph${x.n === 1 ? " big" : ""}">${x.img}</div>`).join("")}
@@ -1170,19 +1196,19 @@ products.forEach((p) => {
       <p class="desc">${esc(p.description)}</p>
       <form id="add-form">
         <fieldset class="field">
-          <legend>Color: <b id="color-name">${esc(p.colors[0])}</b></legend>
+          <legend>${T("shop.color", "Color:")} <b id="color-name">${esc(p.colors[0])}</b></legend>
           <div class="opts swatches">
         ${colors}
           </div>
         </fieldset>
         ${sizes ? `<fieldset class="field">
-          <legend>Size</legend>
+          <legend>${T("shop.size", "Size")}</legend>
           <div class="opts">
         ${sizes}
           </div>
         </fieldset>` : ""}
-        <button class="btn wide" type="submit">Add to cart</button>
-        <button class="btn line wide" type="button" id="save-btn" data-slug="${p.slug}">Save to my passport</button>
+        <button class="btn wide" type="submit">${T("shop.add-to-cart", "Add to cart")}</button>
+        <button class="btn line wide" type="button" id="save-btn" data-slug="${p.slug}">${T("shop.save-to-my-passport", "Save to my passport")}</button>
         <div class="msg" id="msg" role="status"></div>
       </form>
     </div>
@@ -1191,26 +1217,26 @@ products.forEach((p) => {
   <section class="reviews" id="reviews" aria-labelledby="rev-h">
     <div class="rev-grid">
       <div>
-        <h2 class="display" id="rev-h">Reviews</h2>
+        <h2 class="display" id="rev-h">${T("shop.reviews", "Reviews")}</h2>
         <div id="rev-summary" class="rev-summary"></div>
       </div>
       <div>
         <div id="rev-list" class="rev-list"></div>
         <form id="review-form" class="review-form" novalidate>
-          <h3>Share your take</h3>
+          <h3>${T("shop.share-your-take", "Share your take")}</h3>
           <fieldset class="rate-input">
-            <legend>Your rating</legend>
+            <legend>${T("shop.your-rating", "Your rating")}</legend>
             <div class="rate-stars">
               ${[5, 4, 3, 2, 1].map((n) => `<input type="radio" id="r${n}" name="rating" value="${n}"><label for="r${n}" title="${n} out of 5">★</label>`).join("")}
             </div>
           </fieldset>
           <div class="form-grid">
-            <div class="full"><label for="rv-name">Your name</label><input id="rv-name" name="name" autocomplete="name" maxlength="60"></div>
-            <div class="full"><label for="rv-title">Headline</label><input id="rv-title" name="title" maxlength="100"></div>
-            <div class="full"><label for="rv-body">Your comment</label><textarea id="rv-body" name="body" rows="5" maxlength="1500"></textarea></div>
+            <div class="full"><label for="rv-name">${T("shop.your-name", "Your name")}</label><input id="rv-name" name="name" autocomplete="name" maxlength="60"></div>
+            <div class="full"><label for="rv-title">${T("shop.headline", "Headline")}</label><input id="rv-title" name="title" maxlength="100"></div>
+            <div class="full"><label for="rv-body">${T("shop.your-comment", "Your comment")}</label><textarea id="rv-body" name="body" rows="5" maxlength="1500"></textarea></div>
             <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
           </div>
-          <button class="btn" type="submit">File my review</button>
+          <button class="btn" type="submit">${T("shop.file-my-review", "File my review")}</button>
           <div class="msg" id="rv-msg" role="status"></div>
         </form>
       </div>
@@ -1218,7 +1244,7 @@ products.forEach((p) => {
   </section>
 
   <section class="more">
-    <div class="section-head"><h2>More from ${esc(p.category)}</h2><a class="text-link" href="/shop/?category=${encodeURIComponent(p.category)}">See all</a></div>
+    <div class="section-head"><h2>More from ${esc(p.category)}</h2><a class="text-link" href="/shop/?category=${encodeURIComponent(p.category)}">${T("shop.see-all", "See all")}</a></div>
     <div class="grid">
 ${more}
     </div>
@@ -1255,7 +1281,7 @@ write(
 <h1 class="display rise">${words("Payment cleared.")}</h1>
 <p class="fade">${T("thanks_text", "Customs has stamped your order. Welcome to the republic, your Pieces are on their way into your world.")}</p>
 <p class="fade" id="order-no" hidden></p>
-<a class="btn" href="/shop/">Back to the republic</a>
+<a class="btn" href="/shop/">${T("thanks.back-to-the-republic", "Back to the republic")}</a>
 </main>`
   })
 );
@@ -1286,3 +1312,5 @@ write("taxonomy.json", JSON.stringify(TAX));
 write("colors.json", JSON.stringify(COLORS));
 
 console.log("Built " + products.length + " Pieces into dist/");
+
+if (process.env.COPY_EXPORT) fs.writeFileSync(process.env.COPY_EXPORT, JSON.stringify(REG));
