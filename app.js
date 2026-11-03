@@ -104,7 +104,7 @@
   }
   function initScrollFx() {
     var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    $all(".hero-fig .hf-img, .sg-img, .arc-photo, .sg-soon, .who a, .film .video-slot, .province .pimg").forEach(function (el) { el.setAttribute("data-drift", ""); });
+    $all(".hero-fig .hf-img, .sg-bg, .sg-img, .arc-photo, .sg-soon, .who a, .film .video-slot, .province .pimg").forEach(function (el) { el.setAttribute("data-drift", ""); });
     var drift = $all("[data-drift]");
     var par = $all("[data-parallax]");
     var hs = $all("[data-hscroll]");
@@ -181,6 +181,53 @@
     window.addEventListener("orientationchange", function () { setTimeout(function () { sizeH(); req(); }, 250); });
     window.addEventListener("load", function () { sizeH(); req(); });
     sizeH(); req();
+  }
+  function initSignalScenes() {
+    $all("[data-sg]").forEach(function (sc) {
+      var btn = sc.querySelector(".sg-open");
+      if (!btn) return;
+      btn.addEventListener("click", function () {
+        var on = !sc.classList.contains("open");
+        sc.classList.toggle("open", on);
+        btn.setAttribute("aria-expanded", on ? "true" : "false");
+        if (on) {
+          var tgt = sc.querySelector(".sg-arcs");
+          setTimeout(function () { if (tgt && tgt.scrollIntoView) tgt.scrollIntoView({ behavior: "smooth", block: "center" }); }, 420);
+        }
+      });
+    });
+  }
+  function initFounderReel() {
+    var reels = $all("[data-fn-reel]");
+    var tick = $all("[data-ticker]");
+    if (!reels.length && !tick.length) return;
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var lastY = window.scrollY, vel = 0, off = tick.map(function () { return 0; });
+    var base = 0.5;
+    function frame() {
+      var y = window.scrollY; vel = vel * 0.9 + (y - lastY) * 0.1; lastY = y;
+      reels.forEach(function (rl) {
+        var steps = $all(".fn-step", rl), n = steps.length;
+        var r = rl.getBoundingClientRect();
+        var span = Math.max(1, rl.offsetHeight - window.innerHeight);
+        var p = Math.min(0.999, Math.max(0, -r.top / span));
+        var idx = Math.floor(p * n);
+        steps.forEach(function (s, i) { s.classList.toggle("on", i === idx); s.classList.toggle("past", i < idx); });
+        var bar = rl.querySelector(".fn-progress i");
+        if (bar) bar.style.transform = "scaleX(" + p.toFixed(3) + ")";
+      });
+      if (!reduce) tick.forEach(function (tr, i) {
+        var dir = parseFloat(tr.getAttribute("data-ticker")) || -1;
+        var w = tr.scrollWidth / 2;
+        if (!w) return;
+        off[i] += dir * (base + Math.min(14, Math.abs(vel)) * 0.35);
+        if (off[i] <= -w) off[i] += w; if (off[i] > 0) off[i] -= w;
+        tr.style.transform = "translate3d(" + off[i].toFixed(1) + "px,0,0)";
+      });
+      requestAnimationFrame(frame);
+    }
+    tick.forEach(function (tr) { tr.style.animation = "none"; });
+    requestAnimationFrame(frame);
   }
   function initHeroSlides() {
     var root = document.querySelector("[data-hero-ed]");
@@ -933,21 +980,20 @@
     }
 
     // Scroll-lit statement
-    var sw = $("[data-scrollwords]");
-    var swords = [];
-    if (sw) {
-      var txt = sw.textContent.trim().split(/\s+/);
-      sw.innerHTML = txt.map(function (w) { return '<span class="sw">' + esc(w) + "</span>"; }).join(" ");
-      swords = $all(".sw", sw);
-    }
+    var swEls = $all("[data-scrollwords]").map(function (el) {
+      var txt = el.textContent.trim().split(/\s+/);
+      el.innerHTML = txt.map(function (w) { return '<span class="sw">' + esc(w) + "</span>"; }).join(" ");
+      return { el: el, words: $all(".sw", el) };
+    });
     function lit() {
-      if (!swords.length) return;
-      var r = sw.getBoundingClientRect();
       var vh = window.innerHeight;
-      var p = (vh * 0.85 - r.top) / (r.height + vh * 0.35);
-      p = Math.max(0, Math.min(1, p));
-      var n = Math.round(p * swords.length);
-      swords.forEach(function (s, i) { s.classList.toggle("on", i < n); });
+      swEls.forEach(function (o) {
+        var r = o.el.getBoundingClientRect();
+        var p = (vh * 0.85 - r.top) / (r.height + vh * 0.35);
+        p = Math.max(0, Math.min(1, p));
+        var n = Math.round(p * o.words.length);
+        o.words.forEach(function (s, i) { s.classList.toggle("on", i < n); });
+      });
     }
     lit();
 
@@ -1233,7 +1279,7 @@
     }
 
     var acct = null, taxCache = null;
-    var PROV_HEX = { Ripple: "#111c44", Glow: "#ffd400", Blaze: "#f0182e", Bloom: "#17c26a", Dash: "#ff7a00", Swirl: "#8a4dff" };
+    var PROV_HEX = { Ripple: "#111c44", Glow: "#d9a21b", Blaze: "#960018", Bloom: "#3a5a54", Dash: "#c9561a", Swirl: "#684787" };
     var MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     function fmtMoney(cents, cur) {
       try { return new Intl.NumberFormat("en", { style: "currency", currency: cur || "USD" }).format((cents || 0) / 100); } catch (e) { return (cur || "") + " " + ((cents || 0) / 100).toFixed(2); }
@@ -1701,7 +1747,7 @@
     var page = document.body.getAttribute("data-page");
     initModal();
     initFx();
-    initUx(); initHeroSlides(); initScrollFx();
+    initUx(); initHeroSlides(); initScrollFx(); initSignalScenes(); initFounderReel();
     initSampleCards();
     var select = $("#currency");
 

@@ -320,7 +320,7 @@ function card(p) {
 fs.rmSync(dist, { recursive: true, force: true });
 fs.mkdirSync(dist, { recursive: true });
 
-const TICK = Array.from({ length: 5 }, () => `<li>${T("shop.your-expression-your-world", "Your expression, your world.")}</li><li class="gl"></li>`).join("");
+const TICK = Array.from({ length: 5 }, (_, i) => `<li${i % 2 ? ' class="out"' : ""}>${T("shop.your-expression-your-world", "Your expression, your world.")}</li><li class="gl" aria-hidden="true"></li>`).join("");
 
 const HERO2 = findImage("hero-2");
 if (HERO2) write(`assets/hero-2.${HERO2.ext}`, fs.readFileSync(HERO2.file));
@@ -368,7 +368,7 @@ write(
   <a class="he-scroll" href="#pieces" aria-label="Scroll to Pieces"><span>${T("home.scroll", "Scroll")}</span><i></i></a>
 </section>
 
-<section class="ticker" aria-hidden="true"><div class="track"><ul>${TICK}</ul><ul>${TICK}</ul></div></section>
+<section class="ticker" aria-hidden="true"><div class="track" data-ticker="-1"><ul>${TICK}</ul><ul>${TICK}</ul></div><div class="track rev" data-ticker="1"><ul>${TICK}</ul><ul>${TICK}</ul></div></section>
 
 <section class="section register-band" id="register">
   <div class="wrap split">
@@ -781,34 +781,41 @@ write(
   <h1 class="display rise">${words(TR("quiz.explore-the-signals", "Explore the Signals."))}</h1>
   <p class="fade">${T("explore.a-signal-is-an-era", "A Signal is an era of the republic. Each one holds Arcs, collections with a story of their own. Open a Signal to see what is inside, then read the full story.")}</p>
 </div></section>
-<section class="wrap" data-reveal>
-${SIGNALS.filter((x) => !x.soon).map((x) => `  <a class="sg-feature" href="/explore/${x.id}/">
-    <div class="sg-img">${media(x.id + "-cover", x.name + " cover image")}</div>
-    <div class="sg-txt">
-      <p class="small">${esc(x.tag)}. ${esc(x.status)}.</p>
-      <h2 class="display">${x.name}</h2>
-      <p class="big-p">${esc(x.lead)}</p>
-      <p>${esc(x.story[0])}</p>
-      <span class="btn">Read the story of ${x.name}</span>
+<section class="sg-stage" aria-label="Signals">
+${SIGNALS.filter((x) => !x.soon).map((x) => `  <article class="sg-scene" data-sg>
+    <div class="sg-bg" data-drift>${media(x.id + "-cover", x.name + " cover image")}</div>
+    <div class="sg-body">
+      <p class="sg-tag">${esc(x.tag)}. ${esc(x.status)}.</p>
+      <h2 class="sg-title">${x.name}</h2>
+      <p class="sg-lead">${esc(x.lead)}</p>
+      <div class="sg-actions">
+        <button type="button" class="sg-open" aria-expanded="false" aria-controls="arcs-${x.id}"><span class="o">${esc(TR("explore.open-signal", "Open {name}").replace("{name}", x.name))}</span><span class="c">${esc(TR("explore.close-signal", "Close {name}").replace("{name}", x.name))}</span></button>
+        <a class="sg-read" href="/explore/${x.id}/">${esc(TR("explore.read-the-story-of", "Read the story of {name}").replace("{name}", x.name))}</a>
+      </div>
+      <div class="sg-arcs" id="arcs-${x.id}">
+        <div class="sg-arcs-in">
+          <p class="sg-arcs-label">${esc(TR("explore.arcs-inside", "The Arcs inside {name}").replace("{name}", x.name))}</p>
+          <div class="sg-arc-row">
+${ARCS.filter((a) => a.signal === x.id).map((a) => a.soon
+  ? `            <div class="sg-arc soon" aria-disabled="true">${media(x.id + "-" + a.id + "-cover", a.name + " cover image")}<div class="sga-txt"><h3>${a.name}</h3><span class="tag-soon">${T("explore.coming-soon", "Coming soon")}</span></div></div>`
+  : `            <a class="sg-arc" href="/explore/${x.id}/${a.id}/">${media(x.id + "-" + a.id + "-cover", a.name + " cover image")}<div class="sga-txt"><h3>${a.name}</h3><p>${esc(a.tag)}</p><span class="text-link">${T("explore.read-the-full-story", "Read the full story")}</span></div></a>`).join("\n")}
+          </div>
+        </div>
+      </div>
     </div>
-  </a>`).join("\n")}
+  </article>`).join("\n")}
 </section>
 
-<section class="section" style="padding-top:0"><div class="wrap">
-  <div class="section-head" data-reveal><h2>${T("explore.the-arcs", "The Arcs")}</h2><span class="small">${T("explore.collections-inside-signal-i", "Collections inside Signal I")}</span></div>
-  <div class="arc-photos" data-reveal>
-${ARCS.filter((a) => a.signal === "signal-1").map((a) => a.soon
-  ? `    <div class="arc-photo soon" aria-disabled="true">${media("signal-1-" + a.id + "-cover", a.name + " cover image")}<div class="ap-txt"><h3>${a.name}</h3><span class="tag-soon">${T("explore.coming-soon", "Coming soon")}</span></div></div>`
-  : `    <a class="arc-photo" href="/explore/signal-1/${a.id}/">${media("signal-1-" + a.id + "-cover", a.name + " cover image")}<div class="ap-txt"><h3>${a.name}</h3><p>${esc(a.tag)}</p><span class="text-link">${T("explore.read-the-full-story", "Read the full story")}</span></div></a>`).join("\n")}
-  </div>
-</div></section>
-
-<section class="section" style="padding-top:0"><div class="wrap">
-  <div class="section-head" data-reveal><h2>${T("explore.next-signals", "Next Signals")}</h2><span class="small">${T("explore.sealed-until-the-dates-are", "Sealed until the dates are announced")}</span></div>
-  <div class="sg-soon-row" data-reveal>
-${SIGNALS.filter((x) => x.soon).map((x) => `    <div class="sg-soon" aria-disabled="true">${media(x.id + "-cover", x.name + " cover image")}<div class="ap-txt"><h3>${x.name}</h3><span class="tag-soon">${T("explore.coming-soon", "Coming soon")}</span></div></div>`).join("\n")}
-  </div>
-</div></section>
+<section class="sg-sealed-wrap" aria-label="${esc(TR("explore.next-signals", "Next Signals"))}">
+${SIGNALS.filter((x) => x.soon).map((x) => `  <div class="sg-sealed" aria-disabled="true">
+    <div class="sg-bg" data-drift>${media(x.id + "-cover", x.name + " cover image")}</div>
+    <div class="sg-body">
+      <span class="tag-soon">${T("explore.coming-soon", "Coming soon")}</span>
+      <h2 class="sg-title">${x.name}</h2>
+      <p class="sg-lead">${esc(x.lead)}</p>
+    </div>
+  </div>`).join("\n")}
+</section>
 
 <section class="hscroll" data-hscroll aria-label="The republic in frames"><div class="hs-pin">
   <div class="wrap hs-head"><h2>${T("explore.the-republic-in-frames", "The republic in frames")}</h2><p>${T("explore.silhouette-colour-texture-light-and", "Silhouette, colour, texture, light and attitude.")}</p></div>
@@ -1105,21 +1112,30 @@ write(
     title: TR("cart.meta-title", "From the founder | Zibura"),
     description: TR("cart.meta-description", "A letter from Ruova, founder of Zibura."),
     page: "note",
-    body: `<main class="note">
-  <div class="photo" data-reveal><img src="/assets/ruova.jpg" alt="Ruova, founder of Zibura" width="1000" height="1500">
-    <h1 class="who-name">${T("note.ruova", "Ruova")}</h1>
-    <p class="who-role">${T("note.ziinchief", "Zi-in-Chief")}</p>
+    body: `<main class="fn">
+<section class="fn-hero" aria-label="${esc(TR("note.ruova", "Ruova"))}">
+  <div class="fn-photo"><div class="fn-photo-in" data-drift><img src="/assets/ruova.jpg" alt="Ruova, founder of Zibura" width="1000" height="1500"></div></div>
+  <div class="fn-copy">
+    <p class="fn-name">${T("note.ruova", "Ruova")}<span>${T("note.ziinchief", "Zi-in-Chief")}</span></p>
+    <p class="fn-lead scrollwords" data-scrollwords>${T("founder_lead", "Expression is the most human thing we do. There's no single right way to exist, and every side of you, every version, deserves space.")}</p>
   </div>
-  <div class="body">
-    <p class="lead-b fade">${T("founder_lead", "Expression is the most human thing we do. There's no single right way to exist, and every side of you, every version, deserves space.")}</p>
-    <div class="letter fade">
-      <p>${T("founder_p1", "Fashion has always been a language to me, maybe the first one I ever really learned to speak on my own terms. It's how I've found the truest way to express who I am.")}</p>
-      <p>${T("note.i-wanted-that-for-other", "I wanted that for other people too. Because if I'm honest, life comes with so many rules and regulations, so many quiet ideas about what's appropriate, what's too much, what belongs together and what doesn't. One morning I just thought, I'm going to build a new country because who is going to check me? So I did.")}</p>
-      <p>${T("note.thats-zi-republic-built-on", "That's Zi Republic, built on the idea that people deserve a place to actually express themselves, however that looks for them. This was never about re-educating anyone or writing a new set of rules to replace the old ones. It's about giving people somewhere to belong, exactly as they already are.")}</p>
+</section>
+<section class="fn-reel" data-fn-reel style="--n:3" aria-label="Letter">
+  <div class="fn-pin">
+    <div class="fn-bg">${media("note-bg", "")}</div>
+    <div class="fn-steps">
+      <p class="fn-step on">${T("founder_p1", "Fashion has always been a language to me, maybe the first one I ever really learned to speak on my own terms. It's how I've found the truest way to express who I am.")}</p>
+      <p class="fn-step">${T("note.i-wanted-that-for-other", "I wanted that for other people too. Because if I'm honest, life comes with so many rules and regulations, so many quiet ideas about what's appropriate, what's too much, what belongs together and what doesn't. One morning I just thought, I'm going to build a new country because who is going to check me? So I did.")}</p>
+      <p class="fn-step">${T("note.thats-zi-republic-built-on", "That's Zi Republic, built on the idea that people deserve a place to actually express themselves, however that looks for them. This was never about re-educating anyone or writing a new set of rules to replace the old ones. It's about giving people somewhere to belong, exactly as they already are.")}</p>
     </div>
-    <blockquote class="pull"><span class="qm" aria-hidden="true">&ldquo;</span>${T("note.pull-quote", "How you show up in the world is a language. We built Zibura so more people could speak it fluently, on their own terms.")}</blockquote>
-    <p class="signature" id="sig" aria-label="Ruova">${T("note.ruova", "Ruova")}</p>
+    <div class="fn-progress" aria-hidden="true"><i></i></div>
   </div>
+</section>
+<section class="fn-end">
+  <blockquote class="fn-quote scrollwords" data-scrollwords>${T("note.pull-quote", "How you show up in the world is a language. We built Zibura so more people could speak it fluently, on their own terms.")}</blockquote>
+  <p class="signature" id="sig" aria-label="Ruova">${T("note.ruova", "Ruova")}</p>
+  <a class="btn" href="/waitlist/" data-open-waitlist>${T("site.join-the-register", "Join the Register")}</a>
+</section>
 </main>`
   })
 );
