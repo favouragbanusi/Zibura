@@ -264,7 +264,6 @@ ${body}
       <div class="f-brand">
         <img class="word" src="/assets/logo-wordmark-sky.png" alt="Zibura" width="636" height="120">
         <p class="s">${T("footer_about", "Zibura is the fashion house of Zi Republic. Founding Day is December 1, 2026. Signal I opens April 18, 2027.")}</p>
-        <div class="f-prov" aria-hidden="true"><i style="background:#111c44;box-shadow:0 0 0 1px #d2eaff"></i><i style="background:#ffd400"></i><i style="background:#f0182e"></i><i style="background:#17c26a"></i><i style="background:#ff7a00"></i><i style="background:#8a4dff"></i></div>
       </div>
       <div>
         <h3>Trade</h3>
@@ -320,6 +319,8 @@ fs.mkdirSync(dist, { recursive: true });
 
 const TICK = Array.from({ length: 5 }, () => `<li>Your expression, your world.</li><li class="gl"></li>`).join("");
 
+const HERO2 = findImage("hero-2");
+if (HERO2) write(`assets/hero-2.${HERO2.ext}`, fs.readFileSync(HERO2.file));
 // Home
 write(
   "index.html",
@@ -328,27 +329,40 @@ write(
     description: "Zibura is a world built for human expression, in all its complexity.",
     page: "home",
     body: `<main>
-<section class="hero" data-hero>
-  <span class="orb o1" data-depth="34"></span>
-  <span class="orb o2" data-depth="-22"></span>
-  <span class="orb o3" data-depth="14"></span>
-  <div class="center">
-    <div class="hero-copy">
-      <h1 class="display rise">${words("Your expression,")}<br>${words("your world.")}</h1>
-      <p class="lede fade">${T("hero_lede", "Zi Republic is a fashion country for people with more than one side. Citizens are welcome, the rules are optional, and the borders open April 18, 2027.")}</p>
-      <div class="actions fade">
-        <a class="btn" href="#register">${T("hero_button_1", "Join the Register")}</a>
-        <a class="btn line" href="/brand/">${T("hero_button_2", "Cross the border")}</a>
+<section class="hero-ed" data-hero-ed>
+  <div class="he-slides">
+    <article class="he-slide on">
+      <img src="/assets/hero.jpg" alt="Editorial portrait for Zi Republic" width="1500" height="2249" fetchpriority="high">
+      <div class="he-copy">
+        <p class="he-eyebrow">Zi Republic</p>
+        <h1 class="he-title">${T("hero_title", "Your expression, your world.")}</h1>
+        <p class="he-lede">${T("hero_lede", "Zi Republic is a fashion country for people with more than one side. Citizens are welcome, the rules are optional, and the borders open April 18, 2027.")}</p>
+        <div class="he-actions">
+          <a class="he-btn" href="#register">${T("hero_button_1", "Join the Register")}</a>
+          <a class="he-btn ghost" href="/brand/">${T("hero_button_2", "Cross the border")}</a>
+        </div>
       </div>
-    </div>
-    <figure class="hero-photo fade" data-tilt-photo>
-      <div class="hp-frame"><img src="/assets/hero.jpg" alt="A portrait in golden light, hands behind the head, wearing a cream tank top with an orange Zi mark" width="1500" height="2249" fetchpriority="high"></div>
-      <span class="hp-chip c1">Signal I, Arc I</span>
-      <span class="hp-chip c2">Opens April 18, 2027</span>
-      <span class="hp-dot"></span>
-    </figure>
+    </article>
+    ${HERO2 ? `<article class="he-slide">
+      <img src="/assets/hero-2.${HERO2.ext}" alt="Signal I, Arc I editorial" width="1500" height="1000" loading="lazy">
+      <div class="he-copy">
+        <p class="he-eyebrow">Signal I, Arc I</p>
+        <h2 class="he-title">Everyday, elevated.</h2>
+        <p class="he-lede">A capsule of casual Pieces, taken back to the basics and finished with care.</p>
+        <div class="he-actions"><a class="he-btn" href="/explore/">See the Signals</a></div>
+      </div>
+    </article>` : ""}
   </div>
-  <div class="foot"><span>Signal I, Arc I</span><a class="text-link" href="#pieces">Scroll</a></div>
+  <nav class="he-rail" aria-label="Quick links">
+    <a href="/brand/">The republic</a>
+    <a href="/explore/">Signals</a>
+    <a href="/zi-card/">Zi Card</a>
+    <a href="/note/">From the Zi-in-Chief</a>
+  </nav>
+  <div class="he-ctrl">
+    ${HERO2 ? `<button type="button" class="he-prev" aria-label="Previous slide"><svg viewBox="0 0 40 12" width="40" height="12" aria-hidden="true"><path d="M40 6H2M7 1L2 6l5 5" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></button><span class="he-count"><b>1</b> / 2</span><button type="button" class="he-next" aria-label="Next slide"><svg viewBox="0 0 40 12" width="40" height="12" aria-hidden="true"><path d="M0 6h38M33 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></button>` : ""}
+  </div>
+  <a class="he-scroll" href="#pieces" aria-label="Scroll to Pieces"><span>Scroll</span><i></i></a>
 </section>
 
 <section class="ticker" aria-hidden="true"><div class="track"><ul>${TICK}</ul><ul>${TICK}</ul></div></section>
@@ -382,6 +396,17 @@ ${products.slice(0, 8).map(card).join("\n")}
   <div class="wrap" style="margin-top:36px"><a class="text-link" href="/shop/">See every Piece</a></div>
 </section>
 
+<section class="hscroll" data-hscroll aria-label="Signal I look book">
+  <div class="hs-pin">
+    <div class="wrap hs-head"><h2>The look book</h2><p>Signal I, Arc I, frame by frame.</p></div>
+    <div class="hs-track">
+${["Opening frame", "Movement", "Detail", "Group", "Still life", "Closing frame"].map((c, i) => `      <figure class="hs-card${i % 2 ? " low" : ""}">${media("signal-1-" + (i + 1), c)}<figcaption>${c}</figcaption></figure>`).join("\n")}
+      <a class="hs-end" href="/explore/signal-1/"><span>Read the story of Signal I</span></a>
+    </div>
+    <div class="hs-bar" aria-hidden="true"><i></i></div>
+  </div>
+</section>
+
 <section class="section" style="padding-top:0">
   <div class="wrap">
     <div class="section-head" data-reveal><h2>Pick your delegation.</h2></div>
@@ -403,8 +428,13 @@ ${TAX.map((c) => {
   </div>
 </section>
 
-<section class="section statement">
-  <div class="wrap">
+<section class="section statement collage-sec">
+  <div class="wrap collage-wrap">
+    <div class="collage" aria-hidden="true">
+      <figure class="cl a" data-parallax="0.12">${media("signal-1-2", "Editorial frame")}</figure>
+      <figure class="cl b" data-parallax="-0.1">${media("signal-1-4", "Editorial frame")}</figure>
+      <figure class="cl c" data-parallax="0.2">${media("signal-1-6", "Editorial frame")}</figure>
+    </div>
     <p class="scrollwords" data-scrollwords>Some brands sell you clothes. Zi Republic hands you a passport. It has provinces, a currency, a calendar, and a card with your name on it. Every Signal opens a new era. Every Arc tells its story. Every Piece lets you say a little more of who you are.</p>
     <p style="margin-top:40px" data-reveal><a class="btn line" href="/explore/">Explore the Signals</a></p>
   </div>
@@ -468,14 +498,15 @@ write(
   </div>
 </div></section>
 
-<section class="section" style="padding-top:0"><div class="wrap">
-  <div class="section-head" data-reveal><h2>The Charter</h2><span class="small">What the republic stands on</span></div>
-  <ol class="charter" data-reveal>
-    <li><b>Article I</b><span>Expression is the most human thing we do.</span></li>
-    <li><b>Article II</b><span>There is no single right way to exist.</span></li>
-    <li><b>Article III</b><span>Every side of you, every version, deserves space.</span></li>
-    <li><b>Article IV</b><span>Nobody is re-educated. Everyone belongs exactly as they already are.</span></li>
-  </ol>
+<section class="hscroll" data-hscroll aria-label="The Charter"><div class="hs-pin">
+  <div class="wrap hs-head"><h2>The Charter</h2><p>What the republic stands on.</p></div>
+  <div class="hs-track">
+    <div class="hs-card text"><b>Article I</b><span>Expression is the most human thing we do.</span></div>
+    <div class="hs-card text low"><b>Article II</b><span>There is no single right way to exist.</span></div>
+    <div class="hs-card text"><b>Article III</b><span>Every side of you, every version, deserves space.</span></div>
+    <div class="hs-card text low"><b>Article IV</b><span>Nobody is re-educated. Everyone belongs exactly as they already are.</span></div>
+  </div>
+  <div class="hs-bar" aria-hidden="true"><i></i></div>
 </div></section>
 
 <section class="section" id="provinces" style="padding-top:0"><div class="wrap">
@@ -484,6 +515,7 @@ write(
   <div class="provinces" data-reveal>
 ${PROVINCES.map(
   ([n, c, hex, line, note, traits]) => `    <article class="province" tabindex="0" style="--pc:${hex}">
+      <div class="pimg">${media("province-" + n.toLowerCase(), n + " province")}</div>
       <span class="pdot"></span>
       <div class="pbody">
         <h3>${n}</h3>
@@ -557,7 +589,7 @@ const SIGNALS = [
     arcs: ["arc-1", "arc-2"]
   },
   {
-    id: "signal-2", name: "Signal II", tag: "Sealed", status: "Date announced soon",
+    id: "signal-2", soon: true, name: "Signal II", tag: "Sealed", status: "Date announced soon",
     lead: "The next era of the republic, still sealed.",
     story: ["A Signal begins when the vision is ready and ends when it has been fully expressed. Signal II begins when Signal I is complete.", "What we can tell you now is that it will not repeat the first one. Each era has to earn its place, and this one is still being written."],
     direction: ["The direction for Signal II is held until the first Signal has said everything it has to say."],
@@ -565,7 +597,7 @@ const SIGNALS = [
     palette: ["Ripple", "Sky", "White"], materials: "Announced soon.", mood: ["Sealed", "Patient"], frames: [], film: "", arcs: []
   },
   {
-    id: "signal-3", name: "Signal III", tag: "Sealed", status: "Date announced soon",
+    id: "signal-3", soon: true, name: "Signal III", tag: "Sealed", status: "Date announced soon",
     lead: "Further down the line.",
     story: ["Every Signal opens a new chapter of the republic. Signal III is a long way ahead, and the people on the Register will hear about it first."],
     direction: ["The direction for Signal III is held."],
@@ -575,30 +607,30 @@ const SIGNALS = [
 ];
 const ARCS = [
   {
-    id: "arc-1", signal: "signal-1", name: "Arc I", tag: "Play, turned all the way up.", status: "Opens April 18, 2027",
-    lead: "A collection for the version of you who is already dancing before the music starts.",
+    id: "arc-1", signal: "signal-1", name: "Arc I", tag: "Back to basics, elevated.", status: "Opens April 18, 2027",
+    lead: "A capsule of everyday pieces, made casual on purpose and finished with care.",
     story: [
-      "Arc I begins with one question. When did getting dressed stop being fun?",
-      "Somewhere between the first job and the tenth meeting, most of us traded play for polish. Arc I gives it back. The coats are generous. The colours are loud on purpose. The jewelry catches the light when you turn your head.",
-      "Nothing in this Arc asks you to tone anything down. It asks you to turn it up and see who notices."
+      "Arc I is a capsule. It starts with the clothes you reach for first: the coat by the door, the trousers that go with everything, the bag that carries the whole day.",
+      "We took those everyday Pieces back to the basics and raised the standard. The cuts are easy. The fabrics are considered. Every detail is chosen so a casual day looks like you meant it.",
+      "Nothing in this Arc is dressed up for an occasion. It is the everyday, elevated."
     ],
     direction: [
-      "Colour blocking, big silhouettes, and one unexpected accent on every look. Navy and white do the talking, and Glow yellow and Dash orange answer back.",
-      "Photographed in motion and in daylight. A Piece is shown the way it is worn at its best, which is on someone who is laughing."
+      "Clean silhouettes, honest fabrics, and one considered detail on every Piece. Navy and white lead, with Glow yellow and Dash orange as quiet accents.",
+      "Photographed in daylight and in motion, on streets and in rooms that look lived in. Each Piece appears the way it is worn: on an ordinary day, looking better than ordinary."
     ],
     rationale: [
-      "Adults dress for rules. Arc I is built to remind people they were once allowed to dress for joy.",
-      "It is also the right place to begin. A country that opens with play tells everyone who comes in that they can relax."
+      "A wardrobe is built from everyday Pieces, so the best place to begin a country is with them.",
+      "A capsule keeps the first collection simple. Fewer Pieces, each one worn often and worn well."
     ],
     palette: ["Ripple", "Sky", "Glow", "Dash", "White"],
     materials: "Wool, cotton, brass, leather, glass, and paper.",
-    mood: ["Playful", "Bold", "Bright", "Moving"],
+    mood: ["Easy", "Considered", "Everyday", "Elevated"],
     frames: ["The Halo coat, worn open, mid-stride on a white floor.", "Meridian trousers in a spin, the camera low.", "Orbit jewelry in close detail, brass against Ripple blue.", "The Cove bag swinging from a hand, motion blur on the strap.", "Rumour perfume on a sunlit sill, a hand reaching in.", "The Margin notebook open on a desk, a Glow yellow pen across the page."],
     film: "Arc I, in motion. Forty five seconds of getting ready to go out.",
     pieces: (p) => p.arc === "Arc I"
   },
   {
-    id: "arc-2", signal: "signal-1", name: "Arc II", tag: "Slow down. Stay a while.", status: "Opens April 18, 2027",
+    id: "arc-2", soon: true, signal: "signal-1", name: "Arc II", tag: "Slow down. Stay a while.", status: "Opens April 18, 2027",
     lead: "A collection for the hour after the party, when the lights go low and the best conversations start.",
     story: [
       "Arc II is what happens after the music softens. People find a corner, a sofa, a candle, a long conversation.",
@@ -630,14 +662,19 @@ function pals(list) {
 function paras(list) { return list.map((t) => `<p>${esc(t)}</p>`).join(""); }
 function frames(prefix, list) {
   if (!list.length) return "";
-  return `<section class="section" style="padding-top:0"><div class="wrap">
-  <div class="section-head" data-reveal><h2>The images</h2></div>
-  <div class="frames" data-reveal>
-${list.map((c, i) => `    <figure>${media(`${prefix}-${i + 1}`, c)}<figcaption>${esc(c)}</figcaption></figure>`).join("\n")}
+  return `<section class="hscroll" data-hscroll aria-label="Images"><div class="hs-pin">
+  <div class="wrap hs-head"><h2>The images</h2></div>
+  <div class="hs-track">
+${list.map((c, i) => `    <figure class="hs-card${i % 2 ? " low" : ""}">${media(`${prefix}-${i + 1}`, c)}<figcaption>${esc(c)}</figcaption></figure>`).join("\n")}
   </div>
+  <div class="hs-bar" aria-hidden="true"><i></i></div>
 </div></section>`;
 }
 
+function arcTile(sigId, a) {
+  if (a.soon) return `<div class="arc arc-soon" aria-disabled="true"><h3>${a.name}</h3><p class="arc-line">Coming soon</p></div>`;
+  return `<a class="arc arc-link" href="/explore/${sigId}/${a.id}/"><h3>${a.name}</h3><p class="arc-line">${esc(a.tag)}</p><p>${esc(a.lead)}</p><span class="text-link">Read the full story</span></a>`;
+}
 function storyPage(item, parent) {
   const isArc = !!parent;
   const sig = parent || item;
@@ -677,7 +714,7 @@ function storyPage(item, parent) {
   <div><h3>Mood</h3><ul class="moods">${item.mood.map((m) => `<li>${esc(m)}</li>`).join("")}</ul></div>
 </div></section>
 
-${frames(prefix, item.frames)}
+${frames(isArc ? prefix : prefix + "-story", item.frames)}
 
 ${item.film ? `<section class="wrap" data-reveal style="margin-bottom:clamp(56px,8vw,120px)">${film(prefix + "-film", item.film)}</section>` : ""}
 
@@ -692,14 +729,14 @@ ${pieces.map(card).join("\n")}
 ${!isArc && siblings.length ? `<section class="section" style="padding-top:0"><div class="wrap">
   <div class="section-head" data-reveal><h2>The Arcs inside ${item.name}</h2></div>
   <div class="arcs">${siblings.map((a) => `
-    <a class="arc arc-link" href="/explore/${item.id}/${a.id}/"><h3>${a.name}</h3><p class="arc-line">${esc(a.tag)}</p><p>${esc(a.lead)}</p><span class="text-link">Read the full story</span></a>`).join("")}
+    ${arcTile(item.id, a)}`).join("")}
   </div>
 </div></section>` : ""}
 
 ${isArc && siblings.length ? `<section class="section" style="padding-top:0"><div class="wrap">
   <div class="section-head" data-reveal><h2>Also in ${sig.name}</h2></div>
   <div class="arcs">${siblings.map((a) => `
-    <a class="arc arc-link" href="/explore/${sig.id}/${a.id}/"><h3>${a.name}</h3><p class="arc-line">${esc(a.tag)}</p><p>${esc(a.lead)}</p><span class="text-link">Read the full story</span></a>`).join("")}
+    ${arcTile(sig.id, a)}`).join("")}
   </div>
 </div></section>` : ""}
 
@@ -714,8 +751,8 @@ ${isArc && siblings.length ? `<section class="section" style="padding-top:0"><di
     })
   );
 }
-SIGNALS.forEach((s) => storyPage(s, null));
-ARCS.forEach((a) => storyPage(a, sigById[a.signal]));
+SIGNALS.filter((s) => !s.soon).forEach((s) => storyPage(s, null));
+ARCS.filter((a) => !a.soon).forEach((a) => storyPage(a, sigById[a.signal]));
 
 write(
   "explore/index.html",
@@ -728,17 +765,42 @@ write(
   <h1 class="display rise">${words("Explore the Signals.")}</h1>
   <p class="fade">A Signal is an era of the republic. Each one holds Arcs, collections with a story of their own. Open a Signal to see what is inside, then read the full story.</p>
 </div></section>
-<section class="section" style="padding-top:0"><div class="wrap signals">
-${SIGNALS.map((s, i) => `  <details class="signal" id="${s.id}"${i === 0 ? " open" : ""} data-reveal>
-    <summary><span class="sg-name">${s.name}</span><span class="sg-lead">${esc(s.lead)}</span><span class="tag-soon">${esc(s.status)}</span></summary>
-    <div class="sg-body">
-      <p class="big-p">${esc(s.story[0])}</p>
-${ARCS.filter((a) => a.signal === s.id).length ? `      <div class="arcs">${ARCS.filter((a) => a.signal === s.id).map((a) => `
-        <a class="arc arc-link" href="/explore/${s.id}/${a.id}/"><h3>${a.name}</h3><p class="arc-line">${esc(a.tag)}</p><p>${esc(a.lead)}</p><span class="text-link">Read the full story</span></a>`).join("")}
-      </div>` : ""}
-      <p style="margin-top:24px"><a class="btn" href="/explore/${s.id}/">Read the story of ${s.name}</a></p>
+<section class="wrap" data-reveal>
+${SIGNALS.filter((x) => !x.soon).map((x) => `  <a class="sg-feature" href="/explore/${x.id}/">
+    <div class="sg-img">${media(x.id + "-cover", x.name + " cover image")}</div>
+    <div class="sg-txt">
+      <p class="small">${esc(x.tag)}. ${esc(x.status)}.</p>
+      <h2 class="display">${x.name}</h2>
+      <p class="big-p">${esc(x.lead)}</p>
+      <p>${esc(x.story[0])}</p>
+      <span class="btn">Read the story of ${x.name}</span>
     </div>
-  </details>`).join("\n")}
+  </a>`).join("\n")}
+</section>
+
+<section class="section" style="padding-top:0"><div class="wrap">
+  <div class="section-head" data-reveal><h2>The Arcs</h2><span class="small">Collections inside Signal I</span></div>
+  <div class="arc-photos" data-reveal>
+${ARCS.filter((a) => a.signal === "signal-1").map((a) => a.soon
+  ? `    <div class="arc-photo soon" aria-disabled="true">${media("signal-1-" + a.id + "-cover", a.name + " cover image")}<div class="ap-txt"><h3>${a.name}</h3><span class="tag-soon">Coming soon</span></div></div>`
+  : `    <a class="arc-photo" href="/explore/signal-1/${a.id}/">${media("signal-1-" + a.id + "-cover", a.name + " cover image")}<div class="ap-txt"><h3>${a.name}</h3><p>${esc(a.tag)}</p><span class="text-link">Read the full story</span></div></a>`).join("\n")}
+  </div>
+</div></section>
+
+<section class="section" style="padding-top:0"><div class="wrap">
+  <div class="section-head" data-reveal><h2>Next Signals</h2><span class="small">Sealed until the dates are announced</span></div>
+  <div class="sg-soon-row" data-reveal>
+${SIGNALS.filter((x) => x.soon).map((x) => `    <div class="sg-soon" aria-disabled="true">${media(x.id + "-cover", x.name + " cover image")}<div class="ap-txt"><h3>${x.name}</h3><span class="tag-soon">Coming soon</span></div></div>`).join("\n")}
+  </div>
+</div></section>
+
+<section class="hscroll" data-hscroll aria-label="The republic in frames"><div class="hs-pin">
+  <div class="wrap hs-head"><h2>The republic in frames</h2><p>Silhouette, colour, texture, light and attitude.</p></div>
+  <div class="hs-track">
+${["Silhouette", "Colour", "Texture", "Light", "Attitude"].map((c, i) => `    <figure class="hs-card${i % 2 ? " low" : ""}">${media("explore-" + (i + 1), c)}<figcaption>${c}</figcaption></figure>`).join("\n")}
+    <a class="hs-end" href="/shop/"><span>Shop the Pieces</span></a>
+  </div>
+  <div class="hs-bar" aria-hidden="true"><i></i></div>
 </div></section>
 </main>`
   })

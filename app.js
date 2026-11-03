@@ -102,6 +102,75 @@
     var cb = code && code.closest(".icon-btn"); if (cb) cb.setAttribute("data-tip", "Currency: " + s.value);
     $all(".d-cur button").forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-cur") === s.value); });
   }
+  function initScrollFx() {
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    $all(".hero-fig, .sg-img, .arc-photo, .sg-soon, .who a, .film .video-slot, .province .pimg").forEach(function (el) { el.setAttribute("data-drift", ""); });
+    var drift = $all("[data-drift]");
+    var par = $all("[data-parallax]");
+    var hs = $all("[data-hscroll]");
+    if (reduce || (!par.length && !hs.length && !drift.length)) return;
+    function sizeH() {
+      hs.forEach(function (sec) {
+        var track = sec.querySelector(".hs-track");
+        if (!track) return;
+        if (window.innerWidth <= 860) { sec.style.height = ""; track.style.transform = ""; return; }
+        var dist = Math.max(0, track.scrollWidth - window.innerWidth);
+        sec.style.height = (window.innerHeight + dist) + "px";
+        sec._dist = dist;
+      });
+    }
+    var ticking = false;
+    function frame() {
+      ticking = false;
+      var vh = window.innerHeight;
+      par.forEach(function (el) {
+        var r = el.getBoundingClientRect();
+        if (r.bottom < -200 || r.top > vh + 200) return;
+        var k = parseFloat(el.getAttribute("data-parallax")) || 0.1;
+        el.style.setProperty("--py", ((r.top + r.height / 2 - vh / 2) * -k).toFixed(1) + "px");
+      });
+      drift.forEach(function (el) {
+        var r = el.getBoundingClientRect();
+        if (r.bottom < -100 || r.top > vh + 100) return;
+        var d = (r.top + r.height / 2 - vh / 2) / vh;
+        el.style.setProperty("--dy", (Math.max(-1, Math.min(1, d)) * -28).toFixed(1) + "px");
+      });
+      hs.forEach(function (sec) {
+        if (window.innerWidth <= 860 || !sec._dist) return;
+        var track = sec.querySelector(".hs-track"), bar = sec.querySelector(".hs-bar i");
+        var r = sec.getBoundingClientRect();
+        var p = Math.min(1, Math.max(0, -r.top / (sec.offsetHeight - vh)));
+        track.style.transform = "translate3d(" + (-p * sec._dist).toFixed(1) + "px,0,0)";
+        if (bar) bar.style.transform = "scaleX(" + p.toFixed(3) + ")";
+      });
+    }
+    function req() { if (!ticking) { ticking = true; requestAnimationFrame(frame); } }
+    window.addEventListener("scroll", req, { passive: true });
+    window.addEventListener("resize", function () { sizeH(); req(); });
+    window.addEventListener("load", function () { sizeH(); req(); });
+    sizeH(); req();
+  }
+  function initHeroSlides() {
+    var root = document.querySelector("[data-hero-ed]");
+    if (!root) return;
+    var slides = $all(".he-slide", root);
+    if (slides.length < 2) return;
+    var i = 0, timer = null, count = root.querySelector(".he-count b");
+    function go(n) {
+      slides[i].classList.remove("on");
+      i = (n + slides.length) % slides.length;
+      slides[i].classList.add("on");
+      if (count) count.textContent = i + 1;
+    }
+    function play() { stop(); timer = setInterval(function () { go(i + 1); }, 7000); }
+    function stop() { if (timer) clearInterval(timer); timer = null; }
+    var prev = root.querySelector(".he-prev"), next = root.querySelector(".he-next");
+    if (prev) prev.addEventListener("click", function () { go(i - 1); play(); });
+    if (next) next.addEventListener("click", function () { go(i + 1); play(); });
+    root.addEventListener("mouseenter", stop);
+    root.addEventListener("mouseleave", play);
+    if (!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) play();
+  }
   function initCursor() {
     var fine = window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
     var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -1595,7 +1664,7 @@
     var page = document.body.getAttribute("data-page");
     initModal();
     initFx();
-    initUx();
+    initUx(); initHeroSlides(); initScrollFx();
     initSampleCards();
     var select = $("#currency");
 
