@@ -320,7 +320,6 @@ function card(p) {
 fs.rmSync(dist, { recursive: true, force: true });
 fs.mkdirSync(dist, { recursive: true });
 
-const TICK = Array.from({ length: 5 }, (_, i) => `<li${i % 2 ? ' class="out"' : ""}>${T("shop.your-expression-your-world", "Your expression, your world.")}</li><li class="gl" aria-hidden="true"></li>`).join("");
 
 const HERO2 = findImage("hero-2");
 if (HERO2) write(`assets/hero-2.${HERO2.ext}`, fs.readFileSync(HERO2.file));
@@ -368,7 +367,6 @@ write(
   <a class="he-scroll" href="#pieces" aria-label="Scroll to Pieces"><span>${T("home.scroll", "Scroll")}</span><i></i></a>
 </section>
 
-<section class="ticker" aria-hidden="true"><div class="track" data-ticker="-1"><ul>${TICK}</ul><ul>${TICK}</ul></div><div class="track rev" data-ticker="1"><ul>${TICK}</ul><ul>${TICK}</ul></div></section>
 
 <section class="section register-band" id="register">
   <div class="wrap split">
@@ -554,13 +552,6 @@ ${CALENDAR.map(([n, d, dt]) => `    <div><dt>${n}</dt><dd>${d}</dd><span class="
     <div class="hs-card tier"><div class="hs-bg">${media("tier-zillar", "")}</div><span class="rung">3</span><h3>${T("brand.zillar", "Zillar")}</h3><p class="what">${T("brand.your-currency", "Your currency")}</p><p>${T("brand.the-republic-keeps-its-own", "The republic keeps its own money. Zillar is earned with every order and spent on access and experiences that money alone cannot buy. The more you take part, the further it takes you.")}</p></div>
   </div>
   <div class="hs-bar" aria-hidden="true"><i></i></div>
-</div></section>
-
-<section class="section" style="padding-top:0"><div class="wrap">
-  <div class="section-head" data-reveal><h2>${T("brand.the-departments", "The departments")}</h2></div>
-  <ul class="world-list" data-reveal>
-${TAX.map((c) => `    <li><a href="/shop/?category=${encodeURIComponent(c.name)}">${esc(c.name)}</a></li>`).join("\n")}
-  </ul>
 </div></section>
 
 <section class="section navy-band"><div class="wrap split">
@@ -1112,30 +1103,21 @@ write(
     title: TR("cart.meta-title", "From the founder | Zibura"),
     description: TR("cart.meta-description", "A letter from Ruova, founder of Zibura."),
     page: "note",
-    body: `<main class="fn">
-<section class="fn-hero" aria-label="${esc(TR("note.ruova", "Ruova"))}">
-  <div class="fn-photo"><div class="fn-photo-in" data-drift><img src="/assets/ruova.jpg" alt="Ruova, founder of Zibura" width="1000" height="1500"></div></div>
-  <div class="fn-copy">
-    <p class="fn-name">${T("note.ruova", "Ruova")}<span>${T("note.ziinchief", "Zi-in-Chief")}</span></p>
-    <p class="fn-lead scrollwords" data-scrollwords>${T("founder_lead", "Expression is the most human thing we do. There's no single right way to exist, and every side of you, every version, deserves space.")}</p>
+    body: `<main class="note">
+  <div class="photo" data-reveal><div class="photo-frame"><img src="/assets/ruova.jpg" alt="Ruova, founder of Zibura" width="1000" height="1500"></div>
+    <h1 class="who-name">${T("note.ruova", "Ruova")}</h1>
+    <p class="who-role">${T("note.ziinchief", "Zi-in-Chief")}</p>
   </div>
-</section>
-<section class="fn-reel" data-fn-reel style="--n:3" aria-label="Letter">
-  <div class="fn-pin">
-    <div class="fn-bg">${media("note-bg", "")}</div>
-    <div class="fn-steps">
-      <p class="fn-step on">${T("founder_p1", "Fashion has always been a language to me, maybe the first one I ever really learned to speak on my own terms. It's how I've found the truest way to express who I am.")}</p>
-      <p class="fn-step">${T("note.i-wanted-that-for-other", "I wanted that for other people too. Because if I'm honest, life comes with so many rules and regulations, so many quiet ideas about what's appropriate, what's too much, what belongs together and what doesn't. One morning I just thought, I'm going to build a new country because who is going to check me? So I did.")}</p>
-      <p class="fn-step">${T("note.thats-zi-republic-built-on", "That's Zi Republic, built on the idea that people deserve a place to actually express themselves, however that looks for them. This was never about re-educating anyone or writing a new set of rules to replace the old ones. It's about giving people somewhere to belong, exactly as they already are.")}</p>
+  <div class="body">
+    <p class="lead-b scrollwords" data-scrollwords>${T("founder_lead", "Expression is the most human thing we do. There's no single right way to exist, and every side of you, every version, deserves space.")}</p>
+    <div class="letter">
+      <p data-reveal>${T("founder_p1", "Fashion has always been a language to me, maybe the first one I ever really learned to speak on my own terms. It's how I've found the truest way to express who I am.")}</p>
+      <p data-reveal>${T("note.i-wanted-that-for-other", "I wanted that for other people too. Because if I'm honest, life comes with so many rules and regulations, so many quiet ideas about what's appropriate, what's too much, what belongs together and what doesn't. One morning I just thought, I'm going to build a new country because who is going to check me? So I did.")}</p>
+      <p data-reveal>${T("note.thats-zi-republic-built-on", "That's Zi Republic, built on the idea that people deserve a place to actually express themselves, however that looks for them. This was never about re-educating anyone or writing a new set of rules to replace the old ones. It's about giving people somewhere to belong, exactly as they already are.")}</p>
     </div>
-    <div class="fn-progress" aria-hidden="true"><i></i></div>
+    <blockquote class="pull" data-reveal><span class="qm" aria-hidden="true">&ldquo;</span><span class="pq scrollwords" data-scrollwords>${T("note.pull-quote", "How you show up in the world is a language. We built Zibura so more people could speak it fluently, on their own terms.")}</span></blockquote>
+    <div class="sig-box" data-reveal><p class="signature" id="sig" aria-label="Ruova">${T("note.ruova", "Ruova")}</p></div>
   </div>
-</section>
-<section class="fn-end">
-  <blockquote class="fn-quote scrollwords" data-scrollwords>${T("note.pull-quote", "How you show up in the world is a language. We built Zibura so more people could speak it fluently, on their own terms.")}</blockquote>
-  <p class="signature" id="sig" aria-label="Ruova">${T("note.ruova", "Ruova")}</p>
-  <a class="btn" href="/waitlist/" data-open-waitlist>${T("site.join-the-register", "Join the Register")}</a>
-</section>
 </main>`
   })
 );
