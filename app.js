@@ -250,7 +250,7 @@
       slides[i].classList.add("on");
       if (count) count.textContent = i + 1;
     }
-    function play() { stop(); timer = setInterval(function () { go(i + 1); }, 4000); }
+    function play() { stop(); timer = setInterval(function () { go(i + 1); }, 8000); }
     function stop() { if (timer) clearInterval(timer); timer = null; }
     var prev = root.querySelector(".he-prev"), next = root.querySelector(".he-next");
     if (prev) prev.addEventListener("click", function () { go(i - 1); play(); });
@@ -1362,12 +1362,12 @@
       av.innerHTML = pf.avatar ? '<img src="/api/avatar?v=' + Date.now() + '" alt="Your photo">' : "<span>" + esc((u.first[0] || "") + (u.last[0] || "")) + "</span>";
       document.getElementById("d-name").textContent = u.first + " " + u.last;
       var meta = [];
-      if (prov) meta.push("Style Profile: " + legName(prov));
+      if (prov) meta.push("Style Compass: " + legName(prov));
       if (me.card) meta.push(me.card.id);
       meta.push("Zi Resident since " + fmtDate(u.since));
       document.getElementById("d-meta").textContent = meta.join(", ");
       document.getElementById("acct-who").textContent = u.email;
-      document.getElementById("acct-sub").textContent = "Your orders, Zi Card, Style Profile and saved details.";
+      document.getElementById("acct-sub").textContent = "Your orders, Zi Card, Style Compass and saved details.";
 
       // Overview
       var cardState = me.card ? "Issued" : (me.application ? (me.application.status === "pending" ? "In review" : me.application.status === "declined" ? "Declined" : "In review") : "Not applied");
@@ -1376,16 +1376,16 @@
         '<button type="button" class="tile" data-go="card"><b>' + cardState + '</b><span>Zi Card</span></button>' +
         '<button type="button" class="tile" data-go="orders"><b>' + acct.orders.length + '</b><span>' + (acct.orders.length === 1 ? "Order" : "Orders") + '</span></button>' +
         '<button type="button" class="tile" data-go="saved"><b>' + acct.saved.length + '</b><span>Saved products</span></button>' +
-        '<button type="button" class="tile" data-go="style"><b>' + esc(prov ? legName(prov) : "Not set") + '</b><span>Style Profile</span></button></div>';
+        '<button type="button" class="tile" data-go="style"><b>' + esc(prov ? legName(prov) : "Not set") + '</b><span>Style Compass</span></button></div>';
       var todo = [];
       if (!me.card && !me.application) todo.push(['Apply for Zi Residency', "card"]);
-      if (!st) todo.push(['Take the Style Profile', "style"]);
+      if (!st) todo.push(['Take the Style Compass', "style"]);
       if (!pf.avatar) todo.push(['Add your photo', "profile"]);
       if (!acct.addresses.length) todo.push(['Add a shipping address', "addresses"]);
       if (!pf.prefs || !Object.keys(pf.prefs).length) todo.push(['Save your sizes', "prefs"]);
       if (todo.length) ov += '<div class="box"><h3>Finish your account</h3><ul class="todo">' + todo.map(function (t) { return '<li><button type="button" class="linkbtn" data-go="' + t[1] + '">' + t[0] + "</button></li>"; }).join("") + "</ul></div>";
       if (last) ov += '<div class="box"><h3>Latest order</h3><p><b>' + last.number + "</b>, " + fmtDate(last.at) + ", " + (last.status === "paid" ? "Paid" : "Awaiting payment") + ", " + fmtMoney(last.total, last.currency) + '. <button type="button" class="linkbtn" data-go="orders">View all orders</button></p></div>';
-      if (st) ov += '<div class="box"><h3>Your Style Profile</h3><p><b>' + esc(st.style) + "</b>, close to " + esc(legName(st.second)) + '. <button type="button" class="linkbtn" data-go="style">See your Style Profile</button></p></div>';
+      if (st) ov += '<div class="box"><h3>Your Style Compass</h3><p><b>' + esc(st.style) + "</b>, close to " + esc(legName(st.second)) + '. <button type="button" class="linkbtn" data-go="style">See your Style Compass</button></p></div>';
       if (u.birth_month && u.birth_day) ov += '<div class="box"><h3>Birthday on file</h3><p>' + MONTHS[u.birth_month - 1] + " " + u.birth_day + ".</p></div>";
       panel("overview").innerHTML = '<h2 class="display h2">Welcome back, ' + esc(u.first) + ".</h2>" + ov;
 
@@ -1404,8 +1404,8 @@
       var quizHtml = '<div id="quiz" class="quiz" data-quiz hidden><div class="q-bar"><span id="q-step"></span><div class="q-track"><i id="q-fill"></i></div></div><h2 class="display q-title" id="q-title" tabindex="-1"></h2><div class="q-opts" id="q-opts"></div></div><div id="result" class="result" hidden></div>';
       if (st) {
         var bars = (st.shares || []).map(function (s) { return '<div class="r-bar"><span>' + esc(legName(s.n)) + '</span><div><i style="width:' + Math.max(s.pct, 2) + '%"></i></div><b>' + s.pct + "%</b></div>"; }).join("");
-        panel("style").innerHTML = '<h2 class="display h2">Your Style Profile</h2><div id="sty-sum"><div class="box"><p class="r-big">' + esc(st.style) + '.</p><p class="prose">Taken ' + fmtDate(st.at) + '. A Style Profile describes your preferences. It does not affect your Zi Residency or Zitizenship.</p><div class="r-bars">' + bars + '</div></div><p><button type="button" class="btn line" id="start-quiz">Retake the Style Profile</button></p></div>' + quizHtml;
-      } else panel("style").innerHTML = '<h2 class="display h2">Your Style Profile</h2><div id="sty-sum">' + empty("Eighteen questions match you to one of ten Style Profiles.", "", "") + '<p><button type="button" class="btn" id="start-quiz">Take the Style Profile</button></p></div>' + quizHtml;
+        panel("style").innerHTML = '<h2 class="display h2">Your Style Compass</h2><div id="sty-sum"><div class="box"><p class="r-big">' + esc(st.style) + '.</p><p class="prose">Taken ' + fmtDate(st.at) + '. A Style Compass describes your preferences. It does not affect your Zi Residency or Zitizenship.</p><div class="r-bars">' + bars + '</div></div><p><button type="button" class="btn line" id="start-quiz">Retake the Style Compass</button></p></div>' + quizHtml;
+      } else panel("style").innerHTML = '<h2 class="display h2">Your Style Compass</h2><div id="sty-sum">' + empty("Eighteen questions match you to one of ten style leanings.", "", "") + '<p><button type="button" class="btn" id="start-quiz">Take the Style Compass</button></p></div>' + quizHtml;
       var sq = document.getElementById("start-quiz");
       if (sq) sq.addEventListener("click", function () { document.getElementById("sty-sum").hidden = true; initQuiz(); });
 
@@ -1726,7 +1726,7 @@
     if (key) load();
   }
 
-  /* The Style Profile quiz */
+  /* The Style Compass quiz */
   function initQuiz() {
     var data = JSON.parse($("#quiz-data").textContent);
     var AX = data.axes, Q = data.questions, P = data.profiles;
@@ -1783,7 +1783,7 @@
       var sPick = catalog.filter(function (c) { return c.slug === second.picks[0] && best.picks.indexOf(c.slug) === -1; })[0] || catalog.filter(function (c) { return c.slug === second.picks[1]; })[0];
       box.hidden = true; res.hidden = false;
       res.innerHTML =
-        '<div class="r-head"><p class="small">Your Style Profile</p><h2 class="display">' + esc(best.n) + '.</h2><p class="r-line">' + esc(best.line) + " " + esc(best.define) + '</p><p class="small">Match: ' + ranked[0].pct + "%. Also close to " + esc(second.n) + " (" + ranked[1].pct + "%).</p></div>" +
+        '<div class="r-head"><p class="small">Your Style Compass</p><h2 class="display">' + esc(best.n) + '.</h2><p class="r-line">' + esc(best.line) + " " + esc(best.define) + '</p><p class="small">Match: ' + ranked[0].pct + "%. Also close to " + esc(second.n) + " (" + ranked[1].pct + "%).</p></div>" +
         '<div class="r-cols"><section><h3>Your eight dimensions</h3><div class="r-bis">' + meters + '</div></section>' +
         '<section><h3>What we noticed</h3><ul class="r-list">' + (notes.length ? notes : ["Your answers sit near the middle on every dimension, so your style moves easily between profiles."]).map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + '</ul></section></div>' +
         '<div class="r-cols"><section><h3>Silhouette and fabric</h3><p class="prose"><b>Silhouette.</b> ' + esc(best.silhouette) + '</p><p class="prose"><b>Fabrics.</b> ' + esc(best.fabrics) + '</p></section>' +
@@ -1791,8 +1791,8 @@
         '<div class="r-cols"><section><h3>Your palette</h3><div class="r-sws">' + swatches + '</div></section><section><h3>You probably love</h3><ul class="r-list">' + best.loves.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + '</ul></section></div>' +
         '<section class="r-stretch"><h3>Try something different</h3><p class="prose">' + esc(best.stretch) + "</p></section>" +
         '<section><h3>Matching products</h3><div class="r-picks" id="r-picks">' + picks.concat(sPick ? [sPick] : []).map(cardHtml).join("") + '</div></section>' +
-        '<p class="small">A Style Profile describes your preferences. It does not affect your Zi Residency or Zitizenship, and you can retake it at any time.</p>' +
-        '<div class="r-actions"><a class="btn" href="/shop/">Shop the collection</a><a class="btn line" href="/account/#style">Save to my account</a><button type="button" class="btn line" id="retake">Retake the Style Profile</button></div>';
+        '<p class="small">A Style Compass describes your preferences. It does not affect your Zi Residency or Zitizenship, and you can retake it at any time.</p>' +
+        '<div class="r-actions"><a class="btn" href="/shop/">Shop the collection</a><a class="btn line" href="/account/#style">Save to my account</a><button type="button" class="btn line" id="retake">Retake the Style Compass</button></div>';
       function paint() { Array.prototype.forEach.call(res.querySelectorAll(".r-sw"), function (el) { var c = window.__colors && window.__colors[el.getAttribute("data-c")]; if (c) el.firstChild.style.background = c; }); }
       if (window.__colors) paint(); else fetch("/colors.json").then(function (r) { return r.json(); }).then(function (m) { window.__colors = m; paint(); });
       $("#retake").addEventListener("click", start);

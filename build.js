@@ -134,7 +134,7 @@ function waitlistForm(id) {
           <div class="full"><label for="${id}-phone">${T("forms.phone", "Phone")} <span class="opt-tag">${T("forms.optional", "optional")}</span></label><input id="${id}-phone" name="phone" type="tel" autocomplete="tel"></div>
           <div class="full checks">
             <label class="check"><input type="checkbox" name="email_consent" required><span>${T("forms.email-consent", "Send me the Zi Memo and news from Zibura and Zi Republic by email. I can unsubscribe at any time.")}</span></label>
-            <label class="check"><input type="checkbox" name="sms_consent"><span>${T("forms.sms-consent", "Text me the Collection I announcements. Message and data rates may apply. Reply STOP to opt out.")}</span></label>
+            <label class="check"><input type="checkbox" name="sms_consent"><span>${T("forms.sms-consent", "Text me the capsule collection announcements. Message and data rates may apply. Reply STOP to opt out.")}</span></label>
           </div>
         </div>
       </div>
@@ -172,17 +172,26 @@ function arrivalCard(id) {
     ${waitlistForm(id)}
     <div class="arr-foot">
       <img src="/assets/zi-card-seal.png" alt="" width="304" height="300">
-      <span>${T("forms.collection-launch", "Collection I is launching soon")}</span>
+      <span>${T("forms.collection-launch", "The capsule collection is launching soon")}</span>
     </div>
     <p class="mrz" aria-hidden="true">ZI&lt;REPUBLIC&lt;&lt;WAITLIST&lt;&lt;COLLECTION&lt;I&lt;&lt;&lt;&lt;&lt;&lt;</p>
   </div>`;
 }
 
-const MODAL = `<dialog id="wl-modal" aria-labelledby="wl-title">
+const MODAL = `<dialog id="wl-modal" class="memo" aria-labelledby="wl-title">
   <button class="close" type="button" aria-label="Close" data-close-waitlist>&times;</button>
-  <h2 class="display" id="wl-title">${T("forms.newsletter-title", "Get the Zi Memo.")}</h2>
-  <p class="sub">${T("forms.newsletter-sub", "The Zi Memo is the Zibura newsletter, with news from Zibura and Zi Republic.")}</p>
-  ${subscribeForm("m")}
+  <div class="memo-art" aria-hidden="false">
+    <span class="ring r1"></span><span class="ring r2"></span><span class="ring r3"></span>
+    <img class="memo-seal" src="/assets/zi-card-seal.png" alt="" width="152" height="150">
+    <div class="memo-head">
+      <p class="memo-tag">${T("forms.memo-tag", "Official memo")}</p>
+      <h2 class="display" id="wl-title">${T("forms.newsletter-title", "Get the Zi Memo.")}</h2>
+      <p class="sub">${T("forms.newsletter-sub", "The Zi Memo is the Zibura newsletter, with news from Zibura and Zi Republic.")}</p>
+    </div>
+  </div>
+  <div class="memo-body">
+    ${subscribeForm("m")}
+  </div>
 </dialog>`;
 
 function zcard() {
@@ -234,15 +243,15 @@ function layout({ title, description, page, body }) {
 <script>document.documentElement.className = "js";</script>
 </head>
 <body data-page="${page}">
-<div class="notice">${T("notice_text", "Official notice: Collection I is launching soon.")} <a href="/waitlist/">${T("notice_link", "Join the waitlist")}</a></div>
+<div class="notice">${T("notice_text", "Official notice: The capsule collection is launching soon.")} <a href="/waitlist/">${T("notice_link", "Join the waitlist")}</a></div>
 <header class="site-header" id="top">
   <div class="wrap">
     <button type="button" class="burger" id="burger" data-tip="Menu" aria-label="Open menu" aria-expanded="false" aria-controls="drawer"><span></span><span></span><span></span></button>
     <nav class="nav" aria-label="Main">
       <div class="has-mega"><a href="/shop/">${T("site.shop", "Shop")}</a>${MEGA}</div>
-      <a href="/explore/">${T("site.collections", "The Edit")}</a>
+      <a class="has-sub" href="/explore/">${T("site.collections", "Zi Archive")}<small class="nav-sub">${T("site.collections-sub", "collections and capsules")}</small></a>
       <a href="/brand/">${T("site.zi-republic", "Zi Republic")}</a>
-      <a href="/style-profile/">${T("site.style-profile", "Style Profile")}</a>
+      <a href="/style-compass/">${T("site.style-profile", "Style Compass")}</a>
       <a href="/note/">${T("site.from-the-zi-in-chief", "From the Zi-in-Chief")}</a>
     </nav>
     <a class="brand" href="/" aria-label="Zibura home"><img src="/assets/logo-wordmark-navy.png" alt="Zibura" width="636" height="120"></a>
@@ -268,9 +277,9 @@ function layout({ title, description, page, body }) {
   <div class="drawer-in">
     <a class="d-link big" href="/shop/">${T("site.shop", "Shop")}</a>
     <div class="d-sub">${TAX.map((c) => `<a href="/shop/?category=${encodeURIComponent(c.name)}">${esc(c.name)}</a>`).join("")}</div>
-    <a class="d-link big" href="/explore/">${T("site.collections", "The Edit")}</a>
+    <a class="d-link big has-sub" href="/explore/">${T("site.collections", "Zi Archive")}<small class="nav-sub">${T("site.collections-sub", "collections and capsules")}</small></a>
     <a class="d-link big" href="/brand/">${T("site.zi-republic", "Zi Republic")}</a>
-    <a class="d-link big" href="/style-profile/">${T("site.style-profile", "Style Profile")}</a>
+    <a class="d-link big" href="/style-compass/">${T("site.style-profile", "Style Compass")}</a>
     <a class="d-link big" href="/note/">${T("site.from-the-zi-in-chief", "From the Zi-in-Chief")}</a>
     <a class="d-link" href="/account/" id="acct-link-m">${T("site.my-account", "My account")}</a>
     <a class="d-link" href="/cart/">${T("site.cart", "Cart")}</a>
@@ -284,12 +293,12 @@ ${body}
   <div class="wrap">
     <div class="f-hero">
       <p class="f-big">${T("site.your-expression", "Your expression,")}<br>${T("site.your-world", "your world.")}</p>
-      <div class="f-cta"><p>${T("footer_cta", "Join the waitlist to hear when Collection I launches.")}</p><div class="cta-pair"><a class="btn light" href="/waitlist/">${T("site.join-the-waitlist", "Join the waitlist")}</a><a class="btn ghost-light" href="/waitlist/" data-open-waitlist>${T("site.get-the-zi-memo", "Get the Zi Memo")}</a></div></div>
+      <div class="f-cta"><p>${T("footer_cta", "Join the waitlist to hear when the capsule collection launches.")}</p><div class="cta-pair"><a class="btn light" href="/waitlist/">${T("site.join-the-waitlist", "Join the waitlist")}</a><a class="btn ghost-light" href="/waitlist/" data-open-waitlist>${T("site.get-the-zi-memo", "Get the Zi Memo")}</a></div></div>
     </div>
     <div class="top">
       <div class="f-brand">
         <img class="word" src="/assets/logo-wordmark-sky.png" alt="Zibura" width="636" height="120">
-        <p class="s">${T("footer_about", "Zibura is a lifestyle brand with its own country. Zi Republic has a flag, a currency, public institutions and a membership open to anyone who applies. Both are built around personal expression.")}</p>
+        <p class="s">${T("footer_about", "Zibura is a lifestyle brand built around personal expression. Zi Republic is its country, and anyone may apply to join.")}</p>
       </div>
       <div>
         <h3>${T("site.shop-heading", "Shop")}</h3>
@@ -311,8 +320,8 @@ ${categories.map((c) => `        <a href="/shop/?category=${encodeURIComponent(c
       </div>
       <div>
         <h3>${T("site.explore-heading", "Explore")}</h3>
-        <a href="/explore/">${T("site.collections", "The Edit")}</a>
-        <a href="/style-profile/">${T("site.style-profile", "Style Profile")}</a>
+        <a href="/explore/">${T("site.collections", "Zi Archive")}</a>
+        <a href="/style-compass/">${T("site.style-profile", "Style Compass")}</a>
         <a href="/note/">${T("site.from-the-zi-in-chief", "From the Zi-in-Chief")}</a>
         <a href="/waitlist/">${T("site.join-the-waitlist", "Join the waitlist")}</a>
         <a href="/account/">${T("site.your-account", "Your account")}</a>
@@ -354,7 +363,7 @@ write(
   "index.html",
   layout({
     title: TR("home.meta-title", "Zibura"),
-    description: TR("home.meta-description", "Zibura is a lifestyle brand with its own country. Zi Republic has a flag, a currency, public institutions and a membership open to anyone who applies."),
+    description: TR("home.meta-description", "Zibura is a lifestyle brand built around personal expression. Zi Republic is its country, and anyone may apply to join."),
     page: "home",
     body: `<main>
 <section class="hero-ed" data-hero-ed>
@@ -372,16 +381,16 @@ write(
     ${HERO3 ? `<article class="he-slide">
       <img src="/assets/hero-3.${HERO3.ext}" alt="Editorial image for Zi Republic" width="1500" height="1000" loading="lazy">
       <div class="he-copy">
-        <h2 class="he-title">${T("home.hero2-title", "A country of our own. A style of your own.")}</h2>
+        <h2 class="he-title two">${T("home.hero2-title", "A country of our own. A style of your own.").replace(". ", ".<br>")}</h2>
         <p class="he-lede">${T("home.hero2-sub", "Welcome to Zibura and Zi Republic.")}</p>
         <div class="he-actions"><a class="he-btn" href="/brand/">${T("home.hero2-button", "Enter the Republic")}</a><a class="he-btn ghost" href="/zi-card/">${T("home.hero2-button2", "Apply for Zi Residency")}</a></div>
       </div>
     </article>` : ""}
     ${HERO2 ? `<article class="he-slide">
-      <img src="/assets/hero-2.${HERO2.ext}" alt="Collection I editorial" width="1500" height="1000" loading="lazy">
+      <img src="/assets/hero-2.${HERO2.ext}" alt="Capsule collection editorial" width="1500" height="1000" loading="lazy">
       <div class="he-copy">
         <h2 class="he-title">${T("home.hero3-title", "Back to the basics.")}</h2>
-        <p class="he-lede">${T("home.hero3-sub", "Our first collection is launching soon. Capsule I is a capsule just for you, carefully created from high quality basics.")}</p>
+        <p class="he-lede">${T("home.hero3-sub", "Our capsule collection is launching soon. A capsule just for you, carefully created to bring you back to the basics.")}</p>
         <div class="he-actions"><a class="he-btn" href="/explore/collection-1/">${T("home.hero3-button", "Explore the collection")}</a><a class="he-btn ghost" href="/waitlist/">${T("home.hero3-button2", "Join the waitlist")}</a></div>
       </div>
     </article>` : ""}
@@ -389,7 +398,7 @@ write(
   <nav class="he-rail" aria-label="Quick links">
     <a href="/shop/?audience=Women">${T("home.shop-women", "Shop women")}</a>
     <a href="/shop/?audience=Men">${T("home.shop-men", "Shop men")}</a>
-    <a href="/style-profile/">${T("home.style-profile", "Style Profile")}</a>
+    <a href="/style-compass/">${T("home.style-profile", "Style Compass")}</a>
     <a href="/brand/#calendar">${T("home.calendar", "Calendar")}</a>
   </nav>
   <div class="he-ctrl">
@@ -402,7 +411,7 @@ write(
   <div class="wrap split">
     <div data-reveal>
       <h2 class="display">${T("home.waitlist-title", "Join the waitlist.")}</h2>
-      <p class="reg-lead">${T("home.waitlist-lead", "The Ministry of Communications maintains the waitlist with great seriousness. Register your interest and the Ministry will email you when Collection I launches.")}</p>
+      <p class="reg-lead">${T("home.waitlist-lead", "The Ministry of Communications maintains the waitlist with great seriousness. Register your interest and the Ministry will email you when the capsule collection launches.")}</p>
     </div>
     <div data-reveal>${arrivalCard("h")}</div>
   </div>
@@ -412,7 +421,7 @@ write(
 <section class="section" id="products">
   <div class="wrap">
     <div class="section-head" data-reveal>
-      <h2>${T("home.collection-capsule", "Collection I, Capsule I")}</h2>
+      <h2>${T("home.collection-capsule", "The capsule collection")}</h2>
       <div class="rail-nav"><button type="button" data-rail="-1" aria-label="Previous products">&larr;</button><button type="button" data-rail="1" aria-label="Next products">&rarr;</button></div>
     </div>
   </div>
@@ -422,12 +431,12 @@ ${products.slice(0, 8).map(card).join("\n")}
   <div class="wrap" style="margin-top:36px"><a class="text-link" href="/shop/">${T("home.see-all-products", "See all products")}</a></div>
 </section>
 
-<section class="hscroll" data-hscroll aria-label="Collection I look book">
+<section class="hscroll" data-hscroll aria-label="Look book">
   <div class="hs-pin">
-    <div class="wrap hs-head"><h2>${T("home.the-look-book", "The look book")}</h2><p>${T("home.look-book-sub", "Back to the basics, in pictures.")}</p></div>
+    <div class="wrap hs-head"><h2>${T("home.the-look-book", "The look book")}</h2><p>${T("home.look-book-sub", "Back to the basics.")}</p></div>
     <div class="hs-track">
-${[TR("home.opening-frame", "Your expression, your world."), TR("home.movement", "No single category required."), TR("home.detail", "The Box was never the whole picture."), TR("home.group", "The Republic has room."), TR("home.still-life", "Personal expression has no fixed department."), TR("home.closing-frame", "A country of our own. A style of your own.")].map((c, i) => `      <figure class="hs-card${i % 2 ? " low" : ""}">${media("collection-1-" + (i + 1), c)}<figcaption>${c}</figcaption></figure>`).join("\n")}
-      <a class="hs-end" href="/explore/collection-1/"><span>${T("home.read-about-collection", "Read about Collection I")}</span></a>
+${[TR("home.opening-frame", "People are complex."), TR("home.movement", "Every way of existing deserves space."), TR("home.detail", "Expression is personal."), TR("home.group", "Identity can change."), TR("home.still-life", "Belonging does not require conformity."), TR("home.closing-frame", "Structure should serve freedom.")].map((c, i) => `      <figure class="hs-card${i % 2 ? " low" : ""}">${media("collection-1-" + (i + 1), c)}<figcaption>${c}</figcaption></figure>`).join("\n")}
+      <a class="hs-end" href="/explore/collection-1/"><span>${T("home.read-about-collection", "Read about the capsule collection")}</span></a>
     </div>
     <div class="hs-bar" aria-hidden="true"><i></i></div>
   </div>
@@ -437,7 +446,7 @@ ${[TR("home.opening-frame", "Your expression, your world."), TR("home.movement",
   <div class="wrap">
     <div class="section-head" data-reveal><h2>${T("home.shop-by-audience", "Shop by audience")}</h2></div>
     <div class="who" data-reveal>
-${AUDIENCES.map((a) => `      <a href="/shop/?audience=${a}">${media("audience-" + a.toLowerCase(), a)}<span>${a}</span><small>${countIn((p) => p.audience.includes(a))} ${countIn((p) => p.audience.includes(a)) === 1 ? "product" : "products"}</small></a>`).join("\n")}
+${AUDIENCES.map((a) => `      <a href="/shop/?audience=${a}">${media("audience-" + a.toLowerCase(), a)}<span>${a}</span></a>`).join("\n")}
     </div>
   </div>
 </section>
@@ -467,7 +476,7 @@ ${TAX.map((c) => {
 </section>
 
 <section class="wrap" data-reveal style="margin-bottom:clamp(56px,8vw,120px)">
-  ${film("collection-1-home-film", TR("home.film-caption", "Collection I, in motion."))}
+  ${film("collection-1-home-film", TR("home.film-caption", "The capsule collection, in motion."))}
 </section>
 
 <section class="section navy-band">
@@ -578,7 +587,7 @@ ${CALENDAR.map(([n, d, dt]) => `    <div><dt>${n}</dt><dd>${d}</dd><span class="
 <section class="section navy-band"><div class="wrap split">
   <h2 class="display" data-reveal>${T("brand.cta-title", "Apply for Zi Residency.")}</h2>
   <div class="prose" data-reveal>
-    <p class="big">${T("brand.cta-lead", "Anyone may apply. Join the waitlist to hear when Collection I launches.")}</p>
+    <p class="big">${T("brand.cta-lead", "Anyone may apply. Join the waitlist to hear when the capsule collection launches.")}</p>
     <p style="margin-top:28px"><a class="btn light" href="/zi-card/">${T("brand.cta-apply", "Apply for Zi Residency")}</a> <a class="btn light" href="/waitlist/">${T("brand.cta-waitlist", "Join the waitlist")}</a></p>
   </div>
 </div></section>
@@ -668,7 +677,7 @@ function storyPage(item, parent) {
       page: "story",
       body: `<main>
 <section class="story-head"><div class="wrap">
-  <nav class="crumbs" aria-label="Breadcrumb"><a href="/explore/">${T("story.collections", "The Edit")}</a> <span>/</span> ${isCap ? `<a href="/explore/${col.id}/">${col.name}</a> <span>/</span> ${item.name}` : item.name}</nav>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/explore/">${T("story.collections", "Zi Archive")}</a> <span>/</span> ${isCap ? `<a href="/explore/${col.id}/">${col.name}</a> <span>/</span> ${item.name}` : item.name}</nav>
   <p class="small">${esc(item.status)}</p>
   <h1 class="display rise">${words(item.name)}</h1>
   <p class="story-tag fade">${esc(item.tag)}</p>
@@ -734,15 +743,15 @@ CAPSULES.filter((a) => !a.soon).forEach((a) => storyPage(a, colById[a.collection
 write(
   "explore/index.html",
   layout({
-    title: TR("explore.meta-title", "The Edit | Zibura"),
+    title: TR("explore.meta-title", "Zi Archive | Zibura"),
     description: TR("explore.meta-description", "Explore Collection I and its capsules from Zibura."),
     page: "explore",
     body: `<main>
 <section class="page-head"><div class="wrap">
-  <h1 class="display rise">${words(TR("explore.title", "The Edit."))}</h1>
+  <h1 class="display rise">${words(TR("explore.title", "Zi Archive."))}</h1>
   <p class="fade">${T("explore.intro", "A collection brings together a body of work under one creative direction. A capsule is a focused group of products built around a particular idea, form, material, colour story or occasion.")}</p>
 </div></section>
-<section class="sg-stage" aria-label="The Edit">
+<section class="sg-stage" aria-label="Zi Archive">
 ${COLLECTIONS.filter((x) => !x.soon).map((x) => `  <article class="sg-scene" data-sg>
     <div class="sg-bg" data-drift>${media(x.id + "-cover", x.name + " cover image")}</div>
     <div class="sg-body">
@@ -788,7 +797,7 @@ ${[TR("explore.silhouette", "Silhouette"), TR("explore.colour", "Colour"), TR("e
   })
 );
 
-// Style Profile
+// Style Compass
 // Style is measured on eight axes. Every answer moves one or more axes. The profile with the closest pattern wins.
 const AXES = [
   ["Structure", "Relaxed", "Tailored", "You prefer relaxed shapes that move with you.", "You prefer tailored shapes with a clear structure."],
@@ -849,15 +858,15 @@ PROFILES.forEach((pr) => {
 });
 
 write(
-  "style-profile/index.html",
+  "style-compass/index.html",
   layout({
-    title: TR("quiz.meta-title", "Style Profile | Zibura"),
-    description: TR("quiz.meta-description", "Eighteen questions that read your style across eight dimensions and match you to one of ten Style Profiles."),
+    title: TR("quiz.meta-title", "Style Compass | Zibura"),
+    description: TR("quiz.meta-description", "Eighteen questions that read your style across eight dimensions and match you to one of ten style leanings."),
     page: "placement",
     body: `<main>
 <section class="page-head"><div class="wrap">
-  <h1 class="display rise">${words(TR("quiz.title", "Style Profile."))}</h1>
-  <p class="fade">${T("quiz.intro", "Style is how you choose to present yourself: the shapes, colours, fabrics and details you reach for. It changes with the day and with the person. Eighteen questions read your style across eight dimensions and match you to one of ten Style Profiles.")}</p>
+  <h1 class="display rise">${words(TR("quiz.title", "Style Compass."))}</h1>
+  <p class="fade">${T("quiz.intro", "Style is how you choose to present yourself: the shapes, colours, fabrics and details you reach for. It changes with the day and with the person. Eighteen questions read your style across eight dimensions and match you to one of ten style leanings.")}</p>
 </div></section>
 <section class="section" style="padding-top:clamp(16px,3vw,40px)"><div class="wrap">
   <div id="quiz" class="quiz" data-quiz>
@@ -877,12 +886,12 @@ write(
   "waitlist/index.html",
   layout({
     title: TR("waitlist.meta-title", "Join the waitlist | Zibura"),
-    description: TR("waitlist.meta-description", "Join the Zibura waitlist for first word on Collection I."),
+    description: TR("waitlist.meta-description", "Join the Zibura waitlist for first word on the capsule collection."),
     page: "waitlist",
     body: `<main>
 <section class="page-head"><div class="wrap">
   <h1 class="display rise">${words(TR("waitlist.title", "Join the waitlist."))}</h1>
-  <p class="fade">${T("waitlist.lead", "The Ministry of Communications maintains the waitlist with great seriousness. Register your interest and you will receive an email when Collection I launches.")}</p>
+  <p class="fade">${T("waitlist.lead", "The Ministry of Communications maintains the waitlist with great seriousness. Register your interest and you will receive an email when the capsule collection launches.")}</p>
 </div></section>
 <section class="section" style="padding-top:clamp(16px,3vw,40px)"><div class="wrap">
   <div class="register-page">${arrivalCard("p")}</div>
@@ -934,7 +943,7 @@ write(
       <li><div><b>${T("zi-card.collect-your-zi-card", "Collect your Zi Card.")}</b><span>${T("zi-card.once-your-application-is-accepted", "Once your application is accepted, your Zi Card appears in your account, ready to download. It is valid for five years from the date of issue. Republic Administration has noted the date.")}</span></div></li>
     </ol>
     <p style="margin-top:40px"><a class="btn" href="/account/">${T("zi-card.start-your-application", "Start your application")}</a></p>
-    <p class="small" style="margin-top:16px">${T("zi-card.want-first-word", "Want first word on Collection I?")} <a href="/waitlist/">${T("zi-card.join-the-waitlist", "Join the waitlist")}</a>.</p>
+    <p class="small" style="margin-top:16px">${T("zi-card.want-first-word", "Want first word on the capsule collection?")} <a href="/waitlist/">${T("zi-card.join-the-waitlist", "Join the waitlist")}</a>.</p>
   </div>
 </div></section>
 
@@ -1031,7 +1040,7 @@ write(
       <button type="button" data-sec="overview">${T("account.overview", "Overview")}</button>
       <button type="button" data-sec="card">${T("account.zi-card", "Zi Card")}</button>
       <button type="button" data-sec="orders">${T("account.orders", "Orders")}</button>
-      <button type="button" data-sec="style">${T("account.style", "Style Profile")}</button>
+      <button type="button" data-sec="style">${T("account.style", "Style Compass")}</button>
       <button type="button" data-sec="saved">${T("account.saved", "Saved")}</button>
       <button type="button" data-sec="addresses">${T("account.addresses", "Addresses")}</button>
       <button type="button" data-sec="profile">${T("account.profile", "Profile")}</button>
@@ -1168,7 +1177,7 @@ write(
     description: TR("shop.meta-description", "Every Zibura product, with filters for audience, department, type, material, colour and size."),
     page: "shop",
     body: `<main class="wrap">
-<div class="page-head" style="padding-left:0;padding-right:0"><h1 class="display rise">${words(TR("shop.title", "Shop the collection."))}</h1><p class="fade">${T("shop.subtitle", "Collection I is launching soon. Choose a colour and a size, then add the product to your cart.")}</p></div>
+<div class="page-head" style="padding-left:0;padding-right:0"><h1 class="display rise">${words(TR("shop.title", "Shop the collection."))}</h1><p class="fade">${T("shop.subtitle", "The capsule collection is launching soon. Choose a colour and a size, then add the product to your cart.")}</p></div>
 <div class="toolbar">
   <button type="button" class="btn line small-btn" id="open-filters">${T("shop.filters", "Filters")}</button>
   <p class="count" id="count" role="status"></p>
@@ -1349,8 +1358,8 @@ write("colors.json", JSON.stringify(COLORS));
 
 write("_redirects", [
   "/piece/* /product/:splat 301",
-  "/province/ /style-profile/ 301",
-  "/province /style-profile/ 301",
+  "/province/ /style-compass/ 301",
+  "/province /style-compass/ 301",
   "/explore/signal-1/arc-1/ /explore/collection-1/capsule-1/ 301",
   "/explore/signal-1/arc-2/ /explore/collection-1/ 301",
   "/explore/signal-1/ /explore/collection-1/ 301"
