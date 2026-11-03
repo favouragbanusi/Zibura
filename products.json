@@ -3,9 +3,7 @@
   "slug": "halo",
   "name": "Halo",
   "category": "Clothing",
-  "signal": "Signal I",
-  "arc": "Arc I",
-  "description": "A long wool coat with a wide collar and deep pockets. Sample Piece.",
+  "description": "Halo is a long coat made in wool. It has a wide collar and deep pockets. Available in Black, Sand and Zibura Blue.",
   "prices": {
    "CAD": 420,
    "USD": 310,
@@ -15,7 +13,7 @@
   "colors": [
    "Black",
    "Sand",
-   "Ripple Blue"
+   "Zibura Blue"
   ],
   "sizes": [
    "XS",
@@ -31,15 +29,15 @@
   "type": "Outerwear",
   "material": "Wool",
   "inStock": true,
-  "isNew": true
+  "isNew": true,
+  "collection": "Collection I",
+  "capsule": "Capsule I"
  },
  {
   "slug": "meridian",
   "name": "Meridian",
   "category": "Clothing",
-  "signal": "Signal I",
-  "arc": "Arc I",
-  "description": "High waisted trousers with a straight leg and a pressed crease. Sample Piece.",
+  "description": "Meridian is a pair of trousers made in cotton. They have a high waist, a straight leg and a pressed crease. Available in Black, Olive and Cream.",
   "prices": {
    "CAD": 190,
    "USD": 140,
@@ -65,15 +63,15 @@
   "type": "Bottomwear",
   "material": "Cotton",
   "inStock": true,
-  "isNew": true
+  "isNew": true,
+  "collection": "Collection I",
+  "capsule": "Capsule I"
  },
  {
   "slug": "tidal",
   "name": "Tidal",
   "category": "Clothing",
-  "signal": "Signal I",
-  "arc": "Arc II",
-  "description": "A flowing midi dress with a gathered waist and short sleeves. Sample Piece.",
+  "description": "Tidal is a midi dress made in silk. It has a flowing skirt, a gathered waist and short sleeves. Available in Cobalt, Red and Cream.",
   "prices": {
    "CAD": 240,
    "USD": 175,
@@ -82,7 +80,7 @@
   },
   "colors": [
    "Cobalt",
-   "Blaze Red",
+   "Red",
    "Cream"
   ],
   "sizes": [
@@ -99,15 +97,15 @@
   "type": "Fullwear",
   "material": "Silk",
   "inStock": true,
-  "isNew": false
+  "isNew": false,
+  "collection": "Collection I",
+  "capsule": "Capsule II"
  },
  {
   "slug": "ember",
   "name": "Ember",
   "category": "Clothing",
-  "signal": "Signal I",
-  "arc": "Arc II",
-  "description": "A cotton blouse with a relaxed fit and oversized cuffs. Sample Piece.",
+  "description": "Ember is a blouse made in cotton. It has a relaxed fit and oversized cuffs. Available in White, Orange and Hot Pink.",
   "prices": {
    "CAD": 130,
    "USD": 95,
@@ -116,7 +114,7 @@
   },
   "colors": [
    "White",
-   "Dash Orange",
+   "Orange",
    "Hot Pink"
   ],
   "sizes": [
@@ -134,15 +132,15 @@
   "type": "Topwear",
   "material": "Cotton",
   "inStock": false,
-  "isNew": false
+  "isNew": false,
+  "collection": "Collection I",
+  "capsule": "Capsule II"
  },
  {
   "slug": "orbit",
   "name": "Orbit",
   "category": "Accessories",
-  "signal": "Signal I",
-  "arc": "Arc I",
-  "description": "Sculpted hoop earrings in brushed metal. Sample Piece.",
+  "description": "Orbit is a pair of hoop earrings made in brass. They are sculpted and have a brushed metal finish. Available in Gold and Silver.",
   "prices": {
    "CAD": 85,
    "USD": 62,
@@ -163,15 +161,15 @@
   "type": "Jewelry",
   "material": "Brass",
   "inStock": true,
-  "isNew": true
+  "isNew": true,
+  "collection": "Collection I",
+  "capsule": "Capsule I"
  },
  {
   "slug": "kite",
   "name": "Kite",
   "category": "Accessories",
-  "signal": "Signal I",
-  "arc": "Arc II",
-  "description": "A printed silk scarf that ties at the neck, the wrist, or a bag handle. Sample Piece.",
+  "description": "Kite is a printed scarf made in silk. It ties at the neck, the wrist or a bag handle. Available in Green, Purple and Yellow.",
   "prices": {
    "CAD": 95,
    "USD": 70,
@@ -179,9 +177,9 @@
    "NGN": 105000
   },
   "colors": [
-   "Bloom Green",
-   "Swirl Purple",
-   "Glow Yellow"
+   "Green",
+   "Purple",
+   "Yellow"
   ],
   "sizes": [
    "One size"
@@ -193,15 +191,15 @@
   "type": "Scarves",
   "material": "Silk",
   "inStock": true,
-  "isNew": false
+  "isNew": false,
+  "collection": "Collection I",
+  "capsule": "Capsule II"
  },
  {
   "slug": "cove",
   "name": "Cove",
   "category": "Bags",
-  "signal": "Signal I",
-  "arc": "Arc I",
-  "description": "A structured leather tote with two top handles and room for a laptop. Sample Piece.",
+  "description": "Cove is a structured tote made in leather. It has two top handles and room for a laptop. Available in Orange, Black and Tan.",
   "prices": {
    "CAD": 280,
    "USD": 205,
@@ -209,7 +207,7 @@
    "NGN": 307000
   },
   "colors": [
-   "Dash Orange",
+   "Orange",
    "Black",
    "Tan"
   ],
@@ -222,15 +220,15 @@
   "type": "Totes",
   "material": "Leather",
   "inStock": true,
-  "isNew": false
+  "isNew": false,
+  "collection": "Collection I",
+  "capsule": "Capsule I"
  },
  {
   "slug": "stride",
   "name": "Stride",
   "category": "Footwear",
-  "signal": "Signal I",
-  "arc": "Arc II",
-  "description": "Lace-up leather shoes in a bold zebra print. Sample Piece.",
+  "description": "Stride is a pair of lace-up shoes made in leather. They have a bold zebra print. Available in Black and Oxblood.",
   "prices": {
    "CAD": 310,
    "USD": 228,
@@ -257,15 +255,15 @@
   "type": "Shoes",
   "material": "Leather",
   "inStock": true,
-  "isNew": false
+  "isNew": false,
+  "collection": "Collection I",
+  "capsule": "Capsule II"
  },
  {
   "slug": "rumour",
   "name": "Rumour",
   "category": "Fragrance",
-  "signal": "Signal I",
-  "arc": "Arc I",
-  "description": "A warm perfume by Ruova with amber, fig, and cedar. Sample Piece.",
+  "description": "Rumour is a perfume by Ruova. Its notes are amber, fig and cedar.",
   "prices": {
    "CAD": 140,
    "USD": 105,
@@ -287,15 +285,15 @@
   "type": "Perfume",
   "material": "Glass",
   "inStock": true,
-  "isNew": true
+  "isNew": true,
+  "collection": "Collection I",
+  "capsule": "Capsule I"
  },
  {
   "slug": "hearth",
   "name": "Hearth",
   "category": "Fragrance",
-  "signal": "Signal I",
-  "arc": "Arc II",
-  "description": "A hand poured candle that burns for about forty hours. Sample Piece.",
+  "description": "Hearth is a candle made in soy wax. It is hand poured and burns for about forty hours.",
   "prices": {
    "CAD": 58,
    "USD": 42,
@@ -316,15 +314,15 @@
   "type": "Candles",
   "material": "Soy wax",
   "inStock": true,
-  "isNew": false
+  "isNew": false,
+  "collection": "Collection I",
+  "capsule": "Capsule II"
  },
  {
   "slug": "margin",
   "name": "Margin",
   "category": "Lifestyle",
-  "signal": "Signal I",
-  "arc": "Arc I",
-  "description": "A hardcover journal with dotted pages and a ribbon marker. Sample Piece.",
+  "description": "Margin is a hardcover journal made with paper pages. It has dotted pages and a ribbon marker. Available in Black, Sky Blue and Red.",
   "prices": {
    "CAD": 36,
    "USD": 26,
@@ -334,7 +332,7 @@
   "colors": [
    "Black",
    "Sky Blue",
-   "Blaze Red"
+   "Red"
   ],
   "sizes": [
    "One size"
@@ -346,15 +344,15 @@
   "type": "Stationery",
   "material": "Paper",
   "inStock": true,
-  "isNew": false
+  "isNew": false,
+  "collection": "Collection I",
+  "capsule": "Capsule I"
  },
  {
   "slug": "pocket",
   "name": "Pocket",
   "category": "Lifestyle",
-  "signal": "Signal I",
-  "arc": "Arc II",
-  "description": "A soft touch phone case with a raised edge. Sample Piece.",
+  "description": "Pocket is a phone case made in silicone. It has a soft touch finish and a raised edge. Available in Black, Lilac and Cream.",
   "prices": {
    "CAD": 42,
    "USD": 31,
@@ -377,16 +375,16 @@
   "type": "Tech Accessories",
   "material": "Silicone",
   "inStock": true,
-  "isNew": false
+  "isNew": false,
+  "collection": "Collection I",
+  "capsule": "Capsule II"
  },
  {
   "slug": "zi-gift-card",
   "name": "Zi Gift Card",
   "category": "Gifts",
   "type": "Gift Cards",
-  "signal": "Signal I",
-  "arc": "Arc I",
-  "description": "A balance to spend across the republic. Sample Piece.",
+  "description": "The Zi Gift Card is a digital gift card. Its balance is spent on Zibura products. Available in Zibura Blue.",
   "prices": {
    "CAD": 50,
    "USD": 40,
@@ -394,7 +392,7 @@
    "NGN": 60000
   },
   "colors": [
-   "Ripple Blue"
+   "Zibura Blue"
   ],
   "sizes": [],
   "audience": [
@@ -403,16 +401,16 @@
   ],
   "material": "Digital",
   "inStock": true,
-  "isNew": true
+  "isNew": true,
+  "collection": "Collection I",
+  "capsule": "Capsule I"
  },
  {
-  "slug": "signal-gift-set",
-  "name": "Signal Gift Set",
+  "slug": "zi-gift-set",
+  "name": "Zi Gift Set",
   "category": "Gifts",
   "type": "Gift Sets",
-  "signal": "Signal I",
-  "arc": "Arc I",
-  "description": "A scarf and a candle, boxed and ready to give. Sample Piece.",
+  "description": "The Zi Gift Set is a silk scarf and a soy wax candle. It is boxed and ready to give. Available in Cream.",
   "prices": {
    "CAD": 120,
    "USD": 90,
@@ -429,6 +427,8 @@
   ],
   "material": "Silk and soy wax",
   "inStock": true,
-  "isNew": false
+  "isNew": false,
+  "collection": "Collection I",
+  "capsule": "Capsule I"
  }
 ]

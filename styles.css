@@ -1233,3 +1233,18 @@ html { scroll-snap-type: y proximity; }
 /* Footer: no white strip above it, calmer headline */
 .site-footer { margin-top: 0; }
 .f-big { font-size: var(--t-h2); line-height: 1.05; }
+
+.r-bar i { background: var(--navy); }
+
+/* Rights table and FAQ */
+.table-wrap { overflow-x: auto; margin-top: 32px; }
+table.rights { width: 100%; border-collapse: collapse; font-size: var(--t-sm); }
+table.rights th, table.rights td { text-align: left; padding: 16px 20px 16px 0; vertical-align: top; }
+table.rights thead th { font-family: var(--display, inherit); font-weight: 600; }
+table.rights tbody th { font-weight: 400; max-width: 46ch; }
+.faq details { padding: 14px 0; }
+.faq summary { cursor: pointer; font-weight: 600; list-style: none; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; float: right; }
+.faq details[open] summary::after { content: "\2212"; }
+.faq p { margin-top: 12px; max-width: 60ch; }

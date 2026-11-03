@@ -63,7 +63,7 @@ async function checkout(request, env) {
   const currency = CURRENCIES.includes(body.currency) ? body.currency : "USD";
   const items = Array.isArray(body.items) ? body.items.slice(0, 50) : [];
   if (items.length === 0) {
-    return json({ error: "Your cart is empty." }, 400);
+    return json({ error: "Your cart is empty. The Republic has plenty to show you." }, 400);
   }
 
   const origin = new URL(request.url).origin;
@@ -75,7 +75,7 @@ async function checkout(request, env) {
   for (const item of items) {
     const piece = bySlug.get(item.slug);
     if (!piece || !piece.colors.includes(item.color) || (piece.sizes.length ? !piece.sizes.includes(item.size) : false)) {
-      return json({ error: "A Piece in your cart is no longer available." }, 400);
+      return json({ error: "A product in your cart is no longer available." }, 400);
     }
     const qty = Math.min(Math.max(parseInt(item.qty, 10) || 1, 1), 10);
     lines.push({ piece, color: item.color, size: piece.sizes.length ? item.size : "", qty });
@@ -86,7 +86,7 @@ async function checkout(request, env) {
     result = await createSession(env, origin, lines, "USD");
   }
   if (!result.ok || !result.data.url) {
-    return json({ error: "Checkout could not start. Please try again." }, 502);
+    return json({ error: "Something went wrong on our side. Try again in a moment." }, 502);
   }
   try {
     const user = await currentUser(request, env);
@@ -225,7 +225,7 @@ async function savedPost(request, env) {
   if (!user) return json({ error: "Please sign in first." }, 401);
   let b; try { b = await request.json(); } catch (e) { return json({ error: "The request could not be read." }, 400); }
   const slug = clean(b.slug, 80);
-  if (!slug) return json({ error: "Missing Piece." }, 400);
+  if (!slug) return json({ error: "Missing product." }, 400);
   const row = await env.DB.prepare("SELECT 1 AS x FROM saved WHERE user_id = ? AND slug = ?").bind(user.id, slug).first();
   if (row) { await env.DB.prepare("DELETE FROM saved WHERE user_id = ? AND slug = ?").bind(user.id, slug).run(); return json({ ok: true, saved: false }); }
   await env.DB.prepare("INSERT INTO saved (user_id, slug, created_at) VALUES (?, ?, ?)").bind(user.id, slug, new Date().toISOString()).run();
@@ -271,7 +271,7 @@ async function forgotPassword(request, env) {
     .bind(await sha256(token), user.id, Date.now() + 3600000, Date.now()).run();
   const link = new URL(request.url).origin + "/reset/?token=" + token;
   await sendMail(env, email, "Reset your Zibura password",
-    "<p>Hello " + user.first.replace(/[<>&]/g, "") + ",</p><p>The Ministry of Zi Interior received a request to reset your password. Use the link below within one hour.</p><p><a href=\"" + link + "\">Reset my password</a></p><p>If you did not ask for this, you can ignore this email. Your password stays the same.</p>");
+    "<p>Hello " + user.first.replace(/[<>&]/g, "") + ",</p><p>Republic Administration received a request to reset your password. Use the link below within one hour.</p><p><a href=\"" + link + "\">Reset my password</a></p><p>If you did not ask for this, you can ignore this email. Your password stays the same.</p>");
   return done;
 }
 async function resetPassword(request, env) {
@@ -326,7 +326,7 @@ async function waitlist(request, env) {
   const phone = clean(body.phone, 30).replace(/[^\d+()\-\s]/g, "");
   const emailOk = body.email_consent ? 1 : 0;
   const smsOk = phone && body.sms_consent ? 1 : 0;
-  const province = ["Ripple", "Glow", "Blaze", "Bloom", "Dash", "Swirl"].includes(body.province) ? body.province : null;
+  const province = ["Ripple", "Glow", "Blaze", "Bloom", "Dash", "Swirl", "Composed", "Warm", "Bold", "Grounded", "Playful", "Layered"].includes(body.province || body.leaning) ? (body.province || body.leaning) : null;
   if (!first || !last || !country || !city || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
     return json({ error: "Please complete every field with a valid email." }, 400);
   }
@@ -347,7 +347,7 @@ async function waitlist(request, env) {
     if (String(e).includes("no such column") || String(e).includes("no such table")) {
       return json({ error: "The database needs its update. Run update.sql in the D1 Console, then try again." }, 500);
     }
-    return json({ error: "Something went wrong. Please try again." }, 500);
+    return json({ error: "Something went wrong on our side. Try again in a moment." }, 500);
   }
   return json({ ok: true });
 }
@@ -360,7 +360,7 @@ async function subscribe(request, env) {
   const clean = (v, n) => String(v || "").trim().slice(0, n);
   const first = clean(body.first, 60);
   const email = clean(body.email, 160).toLowerCase();
-  const province = ["Ripple", "Glow", "Blaze", "Bloom", "Dash", "Swirl"].includes(body.province) ? body.province : null;
+  const province = ["Ripple", "Glow", "Blaze", "Bloom", "Dash", "Swirl", "Composed", "Warm", "Bold", "Grounded", "Playful", "Layered"].includes(body.province || body.leaning) ? (body.province || body.leaning) : null;
   if (!first || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return json({ error: "Please add your name and a valid email." }, 400);
   if (!body.email_consent) return json({ error: "Please tick the box to receive news from Zi Republic." }, 400);
   try {
@@ -369,7 +369,7 @@ async function subscribe(request, env) {
   } catch (e) {
     if (String(e).includes("UNIQUE")) return json({ ok: true, again: true });
     if (String(e).includes("no such table")) return json({ error: "The database needs its update. Run update.sql in the D1 Console, then try again." }, 500);
-    return json({ error: "Something went wrong. Please try again." }, 500);
+    return json({ error: "Something went wrong on our side. Try again in a moment." }, 500);
   }
   return json({ ok: true });
 }
@@ -411,7 +411,7 @@ async function reviewPost(request, env) {
   }
   const origin = new URL(request.url).origin;
   const cat = await (await env.ASSETS.fetch(new URL("/catalog.json", origin))).json();
-  if (!cat.some((p) => p.slug === slug)) return json({ error: "That Piece could not be found." }, 400);
+  if (!cat.some((p) => p.slug === slug)) return json({ error: "That product could not be found." }, 400);
   await env.DB.prepare(
     "INSERT INTO reviews (slug, name, rating, title, body, created_at) VALUES (?, ?, ?, ?, ?, ?)"
   ).bind(slug, name, rating, title, text, new Date().toISOString()).run();
@@ -485,7 +485,7 @@ async function login(request, env) {
   let b; try { b = await request.json(); } catch (e) { return json({ error: "The form could not be read." }, 400); }
   const email = clean(b.email, 160).toLowerCase();
   const u = await env.DB.prepare("SELECT id, salt, pass_hash FROM users WHERE email = ?").bind(email).first();
-  const bad = json({ error: "That email and password do not match." }, 401);
+  const bad = json({ error: "The email or password is incorrect. Try again or reset your password." }, 401);
   if (!u) return bad;
   const hash = await hashPassword(String(b.password || ""), u.salt);
   if (hash !== u.pass_hash) return bad;
@@ -539,7 +539,7 @@ async function apply(request, env) {
     return json({ error: "Please upload a JPG, PNG, or WebP photo." }, 400);
   }
   const existing = await env.DB.prepare("SELECT status FROM applications WHERE user_id = ?").bind(user.id).first();
-  if (existing && existing.status === "approved") return json({ error: "Your application is already with the Ministry." }, 409);
+  if (existing && existing.status === "approved") return json({ error: "Your Zi Residency application is already approved." }, 409);
   const key = "photos/" + user.id;
   await env.PHOTOS.put(key, await file.arrayBuffer(), { httpMetadata: { contentType: file.type } });
   const now = new Date().toISOString();
@@ -567,7 +567,7 @@ async function ownPhoto(request, env) {
   return new Response(obj.body, { headers: { "content-type": obj.httpMetadata?.contentType || "image/jpeg", "cache-control": "private, max-age=300" } });
 }
 
-// ---------- Admin (the Ministry of Zi Interior) ----------
+// ---------- Admin (the Ministry of Republic Administration) ----------
 function isAdmin(request, env) {
   const key = request.headers.get("x-admin-key") || "";
   return !!env.ADMIN_KEY && key.length > 0 && key === env.ADMIN_KEY;

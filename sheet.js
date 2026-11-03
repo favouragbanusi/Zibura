@@ -58,6 +58,8 @@ function driveDirect(u) {
   return u;
 }
 
+const normCol = (v) => String(v || '').replace(/^Signal/, 'Collection');
+const normCap = (v) => String(v || '').replace(/^Arc/, 'Capsule');
 (async () => {
   if (SHEET_ID === "SHEET_ID_HERE") { console.log("sheet.js: no sheet configured, using project files."); return; }
   fs.rmSync(out, { recursive: true, force: true });
@@ -66,7 +68,7 @@ function driveDirect(u) {
     const pieces = await tab("Pieces");
     const list = (v) => v.split(",").map((s) => s.trim()).filter(Boolean);
     const products = pieces.filter((p) => p.slug).map((p) => ({
-      slug: p.slug, name: p.name, category: p.category, type: p.type, signal: p.signal, arc: p.arc,
+      slug: p.slug, name: p.name, category: p.category, type: p.type, collection: normCol(p.collection || p.signal), capsule: normCap(p.capsule || p.arc),
       description: p.description,
       prices: { CAD: Number(p.price_CAD), USD: Number(p.price_USD), GBP: Number(p.price_GBP), NGN: Number(p.price_NGN) },
       colors: list(p.colors), sizes: list(p.sizes), audience: list(p.audience), material: p.material,

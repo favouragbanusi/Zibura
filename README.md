@@ -4,7 +4,7 @@ A static storefront hosted on Cloudflare Pages.
 
 Files in the main folder:
 
-- products.json holds the Pieces.
+- products.json holds the products.
 - build.js turns the data into pages.
 - styles.css and app.js hold the design and the cart.
 - _worker.js reads the visitor's country and opens Stripe Checkout.

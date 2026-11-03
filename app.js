@@ -43,6 +43,7 @@
     try {
       return new Intl.NumberFormat("en", {
         style: "currency",
+        currencyDisplay: "code",
         currency: currency,
         minimumFractionDigits: amount % 1 === 0 ? 0 : 2
       }).format(amount);
@@ -104,7 +105,7 @@
   }
   function initScrollFx() {
     var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    $all(".hero-fig .hf-img, .sg-bg, .sg-img, .arc-photo, .sg-soon, .who a, .film .video-slot, .province .pimg").forEach(function (el) { el.setAttribute("data-drift", ""); });
+    $all(".hero-fig .hf-img, .sg-bg, .sg-img, .arc-photo, .sg-soon, .who a, .film .video-slot, .sg-arc img").forEach(function (el) { el.setAttribute("data-drift", ""); });
     var drift = $all("[data-drift]");
     var par = $all("[data-parallax]");
     var hs = $all("[data-hscroll]");
@@ -329,7 +330,7 @@
     $all(".d-cur button").forEach(function (b) { b.addEventListener("click", function () { var s = document.getElementById("currency"); s.value = b.getAttribute("data-cur"); s.dispatchEvent(new Event("change")); syncCur(); }); });
     var sel = document.getElementById("currency"); if (sel) sel.addEventListener("change", syncCur);
     var tt = document.getElementById("to-top"); if (tt) tt.addEventListener("click", function () { window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" }); });
-    // Scroll progress, drawn in the six province colors
+    // Scroll progress
     var bar = document.createElement("div"); bar.className = "progress"; body.appendChild(bar);
     var track = $(".ticker .track"), lastY = window.scrollY, skew = 0;
     function onScroll() {
@@ -386,7 +387,7 @@
   }
 
   function cardHtml(p) {
-    return '<a class="card" href="/piece/' + esc(p.slug) + '/">' +
+    return '<a class="card" href="/product/' + esc(p.slug) + '/">' +
       '<div class="plate">' + (p.photos && p.photos[0] ? '<img src="' + esc(p.photos[0]) + '" alt="' + esc(p.name) + '" loading="lazy">' : '') + (p.photos && p.photos[1] ? '<span class="alt"><img src="' + esc(p.photos[1]) + '" alt=""></span>' : '') + '</div>' +
       '<div class="info"><span class="nm">' + esc(p.name) + '</span>' +
       '<span class="price" data-price-for="' + esc(p.slug) + '"></span>' +
@@ -394,7 +395,7 @@
       '<span class="rate" data-rating-for="' + esc(p.slug) + '"></span></div></a>';
   }
 
-  /* Ratings shown on cards and Piece pages */
+  /* Ratings shown on cards and product pages */
   var ratings = {};
   function starsHtml(avg) {
     return '<span class="stars" style="--p:' + Math.round((avg / 5) * 100) + '%" aria-hidden="true">★★★★★</span>';
@@ -435,13 +436,13 @@
     var sortSel = $("#sort");
     var pane = $("#filters-pane");
 
-    var st = { audience: "", category: "", type: "", signal: "", arc: "", materials: [], stock: false, fresh: false, colors: [], sizes: [], min: "", max: "", sort: "new", q: "" };
+    var st = { audience: "", category: "", type: "", collection: "", capsule: "", materials: [], stock: false, fresh: false, colors: [], sizes: [], min: "", max: "", sort: "new", q: "" };
     var params = new URLSearchParams(location.search);
     st.audience = params.get("audience") || "";
     st.category = params.get("category") || "";
     st.type = params.get("type") || "";
-    st.signal = params.get("signal") || "";
-    st.arc = params.get("arc") || "";
+    st.collection = params.get("collection") || "";
+    st.capsule = params.get("capsule") || "";
     st.materials = (params.get("material") || "").split(",").filter(Boolean);
     st.stock = params.get("stock") === "1";
     st.fresh = params.get("new") === "1";
@@ -455,8 +456,8 @@
 
     var allColors = uniq([].concat.apply([], catalog.map(function (p) { return p.colors; }))).filter(function (c) { return colorMap[c]; });
     var allMaterials = uniq(catalog.map(function (p) { return p.material; }).filter(Boolean)).sort();
-    var allSignals = uniq(catalog.map(function (p) { return p.signal; }).filter(Boolean));
-    var allArcs = uniq(catalog.map(function (p) { return p.arc; }).filter(Boolean));
+    var allCollections = uniq(catalog.map(function (p) { return p.collection; }).filter(Boolean));
+    var allCapsules = uniq(catalog.map(function (p) { return p.capsule; }).filter(Boolean));
     function sizesFor(category) {
       var list = catalog.filter(function (p) { return p.category === category; });
       return uniq([].concat.apply([], list.map(function (p) { return p.sizes; }))).sort(function (a, b) { return sizeRank(a) - sizeRank(b); });
@@ -467,8 +468,8 @@
       if (st.audience) q.set("audience", st.audience);
       if (st.category) q.set("category", st.category);
       if (st.type) q.set("type", st.type);
-      if (st.signal) q.set("signal", st.signal);
-      if (st.arc) q.set("arc", st.arc);
+      if (st.collection) q.set("collection", st.collection);
+      if (st.capsule) q.set("capsule", st.capsule);
       if (st.materials.length) q.set("material", st.materials.join(","));
       if (st.stock) q.set("stock", "1");
       if (st.fresh) q.set("new", "1");
@@ -484,8 +485,8 @@
 
     function matches(p) {
       if (st.audience && p.audience.indexOf(st.audience) === -1) return false;
-      if (st.signal && p.signal !== st.signal) return false;
-      if (st.arc && p.arc !== st.arc) return false;
+      if (st.collection && p.collection !== st.collection) return false;
+      if (st.capsule && p.capsule !== st.capsule) return false;
       if (st.materials.length && st.materials.indexOf(p.material) === -1) return false;
       if (st.stock && !p.inStock) return false;
       if (st.fresh && !p.isNew) return false;
@@ -526,7 +527,7 @@
       Array.prototype.forEach.call(facets.querySelectorAll("details.facet[open]"), function (d) { openSet[d.getAttribute("data-f")] = 1; });
       openNow = openSet;
       var h = "";
-      h += '<div class="facet"><div class="search"><input type="search" id="f-q" placeholder="Search Pieces" value="' + esc(st.q) + '" aria-label="Search Pieces"></div></div>';
+      h += '<div class="facet"><div class="search"><input type="search" id="f-q" placeholder="Search products" value="' + esc(st.q) + '" aria-label="Search products"></div></div>';
       h += facetOpen("aud", "Shop for", st.audience);
       ["", "Women", "Men"].forEach(function (a) {
         h += '<button type="button" class="opt' + (st.audience === a ? " on" : "") + '" data-aud="' + a + '">' + (a || "All") + "</button>";
@@ -544,7 +545,7 @@
         h += "</div>";
       });
       h += "</details>";
-      h += facetOpen("col", "Color", st.colors.length ? st.colors.length + " chosen" : "") + '<div class="row">';
+      h += facetOpen("col", "Colour", st.colors.length ? st.colors.length + " chosen" : "") + '<div class="row">';
       allColors.forEach(function (c) {
         h += '<button type="button" class="sw' + (st.colors.indexOf(c) !== -1 ? " on" : "") + '" data-color="' + esc(c) + '" style="background:' + colorMap[c] + '" title="' + esc(c) + '" aria-label="' + esc(c) + '" aria-pressed="' + (st.colors.indexOf(c) !== -1) + '"></button>';
       });
@@ -563,11 +564,11 @@
         });
       });
       h += "</details>";
-      h += facetOpen("sig", "Signal", st.signal) + '<div class="row">';
-      allSignals.forEach(function (s) { h += '<button type="button" class="pill' + (st.signal === s ? " on" : "") + '" data-signal="' + esc(s) + '">' + esc(s) + "</button>"; });
+      h += facetOpen("sig", "Collection", st.collection) + '<div class="row">';
+      allCollections.forEach(function (s) { h += '<button type="button" class="pill' + (st.collection === s ? " on" : "") + '" data-collection="' + esc(s) + '">' + esc(s) + "</button>"; });
       h += "</div></details>";
-      h += facetOpen("arc", "Arc", st.arc) + '<div class="row">';
-      allArcs.forEach(function (s) { h += '<button type="button" class="pill' + (st.arc === s ? " on" : "") + '" data-arc="' + esc(s) + '">' + esc(s) + "</button>"; });
+      h += facetOpen("arc", "Capsule", st.capsule) + '<div class="row">';
+      allCapsules.forEach(function (s) { h += '<button type="button" class="pill' + (st.capsule === s ? " on" : "") + '" data-capsule="' + esc(s) + '">' + esc(s) + "</button>"; });
       h += "</div></details>";
       h += facetOpen("mat", "Material", st.materials.length ? st.materials.length + " chosen" : "") + '<div class="row">';
       allMaterials.forEach(function (s) { h += '<button type="button" class="pill' + (st.materials.indexOf(s) !== -1 ? " on" : "") + '" data-material="' + esc(s) + '">' + esc(s) + "</button>"; });
@@ -588,8 +589,8 @@
       if (st.type) chip(st.type, "type");
       st.colors.forEach(function (c) { chip(c, "color", c); });
       st.sizes.forEach(function (s) { chip("Size " + s, "size", s); });
-      if (st.signal) chip(st.signal, "signal");
-      if (st.arc) chip(st.arc, "arc");
+      if (st.collection) chip(st.collection, "collection");
+      if (st.capsule) chip(st.capsule, "capsule");
       st.materials.forEach(function (m) { chip(m, "material", m); });
       if (st.stock) chip("In stock", "stock");
       if (st.fresh) chip("New", "fresh");
@@ -601,8 +602,8 @@
 
     function render() {
       var list = sorted(catalog.filter(matches));
-      count.textContent = list.length + (list.length === 1 ? " Piece" : " Pieces");
-      grid.innerHTML = list.length ? list.map(cardHtml).join("") : '<p class="grid-empty">No Pieces match those filters yet. Loosen one, or repeal them all.</p>';
+      count.textContent = list.length + (list.length === 1 ? " product" : " products");
+      grid.innerHTML = list.length ? list.map(cardHtml).join("") : '<p class="grid-empty">No results for these filters. Try a different word or browse the collection at /shop/.</p>';
       applyPrices();
       paintRatings();
       renderChips();
@@ -617,8 +618,8 @@
       if (b.hasAttribute("data-aud")) st.audience = b.getAttribute("data-aud");
       else if (b.hasAttribute("data-cat")) { st.category = b.getAttribute("data-cat"); st.type = b.getAttribute("data-type") || ""; }
       else if (b.hasAttribute("data-color")) toggle(st.colors, b.getAttribute("data-color"));
-      else if (b.hasAttribute("data-signal")) st.signal = st.signal === b.getAttribute("data-signal") ? "" : b.getAttribute("data-signal");
-      else if (b.hasAttribute("data-arc")) st.arc = st.arc === b.getAttribute("data-arc") ? "" : b.getAttribute("data-arc");
+      else if (b.hasAttribute("data-collection")) st.collection = st.collection === b.getAttribute("data-collection") ? "" : b.getAttribute("data-collection");
+      else if (b.hasAttribute("data-capsule")) st.capsule = st.capsule === b.getAttribute("data-capsule") ? "" : b.getAttribute("data-capsule");
       else if (b.hasAttribute("data-material")) toggle(st.materials, b.getAttribute("data-material"));
       else if (b.hasAttribute("data-flag")) { var f = b.getAttribute("data-flag"); st[f] = !st[f]; }
       else if (b.hasAttribute("data-size")) toggle(st.sizes, b.getAttribute("data-size"));
@@ -634,9 +635,9 @@
       var b = e.target.closest("button");
       if (!b) return;
       var k = b.getAttribute("data-clear"), v = b.getAttribute("data-val");
-      if (k === "all") { st.audience = st.category = st.type = st.min = st.max = st.q = st.signal = st.arc = ""; st.colors = []; st.sizes = []; st.materials = []; st.stock = st.fresh = false; }
-      if (k === "signal") st.signal = "";
-      if (k === "arc") st.arc = "";
+      if (k === "all") { st.audience = st.category = st.type = st.min = st.max = st.q = st.collection = st.capsule = ""; st.colors = []; st.sizes = []; st.materials = []; st.stock = st.fresh = false; }
+      if (k === "collection") st.collection = "";
+      if (k === "capsule") st.capsule = "";
       if (k === "material") toggle(st.materials, v);
       if (k === "stock") st.stock = false;
       if (k === "fresh") st.fresh = false;
@@ -659,12 +660,12 @@
   }
   var shopRefresh = null;
 
-  /* Piece page */
+  /* Product page */
   function initSaveButton() {
     var btn = document.getElementById("save-btn");
     if (!btn) return;
     var slug = btn.getAttribute("data-slug"), signed = false, saved = false;
-    function paint() { btn.textContent = saved ? "Saved to your passport" : "Save to my passport"; btn.setAttribute("aria-pressed", saved); }
+    function paint() { btn.textContent = saved ? "Saved" : "Save"; btn.setAttribute("aria-pressed", saved); }
     api("/api/account").then(function (d) { if (d.user) { signed = true; saved = d.saved.indexOf(slug) !== -1; paint(); } }).catch(function () {});
     btn.addEventListener("click", function () {
       if (!signed) { location.href = "/account/"; return; }
@@ -685,7 +686,7 @@
       e.preventDefault();
       var color = form.elements.color.value;
       var size = form.elements.size ? form.elements.size.value : "";
-      if (!color || (form.elements.size && !size)) { msg.textContent = "Choose a color and a size."; return; }
+      if (!color || (form.elements.size && !size)) { msg.textContent = "Choose a colour and a size."; return; }
       var cart = getCart();
       var found = false;
       cart.forEach(function (l) {
@@ -695,7 +696,7 @@
       setCart(cart);
       msg.innerHTML = 'In your cart. <a href="/cart/">View cart</a>';
       flyToCart(document.querySelector(".gallery .ph img") || document.querySelector(".gallery img"));
-      toast('Cleared for your cart. <a href="/cart/">View cart</a>');
+      toast('Added to your cart. <a href="/cart/">View cart</a>');
     });
     initReviews(slug);
   }
@@ -752,11 +753,11 @@
       fetch("/api/reviews", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(data) })
         .then(function (r) { return r.json(); })
         .then(function (d) {
-          if (d.ok) { rform.reset(); rmsg.textContent = "Thank you. Your review is live."; load(); }
-          else { rmsg.textContent = d.error || "The Ministry hit a snag. Please try again."; }
+          if (d.ok) { rform.reset(); rmsg.textContent = "Received. Your review is live."; load(); }
+          else { rmsg.textContent = d.error || "Something went wrong on our side. Try again in a moment."; }
           btn.disabled = false;
         })
-        .catch(function () { rmsg.textContent = "The Ministry hit a snag. Please try again."; btn.disabled = false; });
+        .catch(function () { rmsg.textContent = "Something went wrong on our side. Try again in a moment."; btn.disabled = false; });
     });
   }
 
@@ -768,7 +769,7 @@
     function render() {
       var cart = getCart().filter(function (l) { return bySlug(l.slug); });
       if (!cart.length) {
-        box.innerHTML = '<p class="empty">Your declaration form is empty. <a href="/shop/">Head to the shop</a>.</p>';
+        box.innerHTML = '<p class="empty">Your cart is empty. The Republic has plenty to show you. <a href="/shop/">Explore the collection</a>.</p>';
         return;
       }
       var total = 0;
@@ -777,7 +778,7 @@
         var line = p.prices[currency] * l.qty;
         total += line;
         return '<div class="cart-line">' +
-          '<div><a class="nm" href="/piece/' + esc(p.slug) + '/">' + esc(p.name) + '</a>' +
+          '<div><a class="nm" href="/product/' + esc(p.slug) + '/">' + esc(p.name) + '</a>' +
           '<div class="opt">' + esc(l.color) + (l.size ? ', ' + esc(l.size) : '') + '</div>' +
           '<div class="qty">' +
           '<button type="button" class="step" data-act="dec" data-i="' + i + '" aria-label="Fewer">-</button>' +
@@ -787,7 +788,7 @@
           '<div class="amount">' + money(line) + '</div></div>';
       }).join("");
       html += '<div class="cart-total"><span>Subtotal</span><strong>' + money(total) + '</strong></div>' +
-        '<button type="button" class="btn" id="checkout">Clear customs and pay</button>' +
+        '<button type="button" class="btn" id="checkout">Check out</button>' +
         '<p class="fine">Payment is handled on a secure Stripe page.</p>';
       box.innerHTML = html;
     }
@@ -807,7 +808,7 @@
       }
       if (t.id === "checkout") {
         t.disabled = true;
-        msg.textContent = "Sending you to the secure payment desk.";
+        msg.textContent = "Sending you to the secure payment page.";
         fetch("/api/checkout", {
           method: "POST",
           headers: { "content-type": "application/json" },
@@ -820,7 +821,7 @@
             t.disabled = false;
           })
           .catch(function () {
-            msg.textContent = "Checkout could not start. Please try again.";
+            msg.textContent = "Something went wrong on our side. Try again in a moment.";
             t.disabled = false;
           });
       }
@@ -858,13 +859,13 @@
             if (d.ok) {
               form.reset();
               try { localStorage.setItem("zibura_joined", "1"); } catch (x) {}
-              msg.textContent = "You are on the Register. Signal I will find you first.";
+              msg.textContent = "Received. A confirmation is on its way to your inbox.";
             } else {
-              msg.textContent = d.error || "The Ministry hit a snag. Please try again.";
+              msg.textContent = d.error || "Something went wrong on our side. Try again in a moment.";
               btn.disabled = false;
             }
           })
-          .catch(function () { msg.textContent = "The Ministry hit a snag. Please try again."; btn.disabled = false; });
+          .catch(function () { msg.textContent = "Something went wrong on our side. Try again in a moment."; btn.disabled = false; });
       });
     });
   }
@@ -890,10 +891,10 @@
             if (d.ok) {
               form.reset();
               try { localStorage.setItem("zibura_joined", "1"); } catch (x) {}
-              msg.textContent = "Thank you. The next Zi Gazette is on its way to you.";
-            } else { msg.textContent = d.error || "The Ministry hit a snag. Please try again."; btn.disabled = false; }
+              msg.textContent = "Received. A confirmation is on its way to your inbox.";
+            } else { msg.textContent = d.error || "Something went wrong on our side. Try again in a moment."; btn.disabled = false; }
           })
-          .catch(function () { msg.textContent = "The Ministry hit a snag. Please try again."; btn.disabled = false; });
+          .catch(function () { msg.textContent = "Something went wrong on our side. Try again in a moment."; btn.disabled = false; });
       });
     });
   }
@@ -1090,7 +1091,7 @@
     ctx.closePath();
   }
 
-  // Draws the Zi Card front on a canvas. Positions follow the Ministry's master card (1011 x 637).
+  // Draws the Zi Card front on a canvas. Positions follow the master card (1011 x 637).
   function drawCard(canvas, card, sample) {
     var NAVY = "#111c44";
     var SANS = '"Lexend", "Public Sans", sans-serif';
@@ -1134,7 +1135,7 @@
       spaced("YOUR EXPRESSION, YOUR WORLD.", 56, 132, SANS, "400", 10, 291);
       ctx.drawImage(im[1], 616, 76, 47, 47 * im[1].height / im[1].width);
       spaced("ISSUED BY ZI REPUBLIC", 682, 95, SANS, "400", 11, 279);
-      spaced("MINISTRY OF ZI INTERIOR", 682, 121, SANS, "400", 11, 279);
+      spaced("MINISTRY OF REPUBLIC ADMINISTRATION", 682, 121, SANS, "400", 11, 279);
 
       // Portrait
       ctx.save();
@@ -1279,10 +1280,9 @@
     }
 
     var acct = null, taxCache = null;
-    var PROV_HEX = { Ripple: "#111c44", Glow: "#d9a21b", Blaze: "#960018", Bloom: "#3a5a54", Dash: "#c9561a", Swirl: "#684787" };
     var MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     function fmtMoney(cents, cur) {
-      try { return new Intl.NumberFormat("en", { style: "currency", currency: cur || "USD" }).format((cents || 0) / 100); } catch (e) { return (cur || "") + " " + ((cents || 0) / 100).toFixed(2); }
+      try { return new Intl.NumberFormat("en", { style: "currency", currencyDisplay: "code", currency: cur || "USD" }).format((cents || 0) / 100); } catch (e) { return (cur || "") + " " + ((cents || 0) / 100).toFixed(2); }
     }
     function fmtDate(s) { try { return new Date(s).toLocaleDateString("en", { year: "numeric", month: "long", day: "numeric" }); } catch (e) { return ""; } }
     function panel(name) { return document.querySelector('[data-panel="' + name + '"]'); }
@@ -1296,7 +1296,7 @@
       Promise.all([api("/api/account"), taxCache ? Promise.resolve(taxCache) : fetch("/taxonomy.json").then(function (r) { return r.json(); }).catch(function () { return []; })]).then(function (r) {
         acct = r[0]; taxCache = r[1];
         if (!acct.user) return;
-        // A quiz taken before signing in is kept and saved to the passport.
+        // A quiz taken before signing in is kept and saved to the account.
         var localStyle = null;
         try { localStyle = JSON.parse(localStorage.getItem("zibura_style") || "null"); } catch (e) {}
         if (localStyle && (!acct.profile.style || acct.profile.style.at !== localStyle.at)) {
@@ -1309,6 +1309,8 @@
     }
     function field(id, label, val, extra) { return '<div' + (extra && extra.full ? ' class="full"' : "") + '><label for="' + id + '">' + label + '</label><input id="' + id + '" value="' + esc(val || "") + '"' + (extra && extra.attrs ? " " + extra.attrs : "") + "></div>"; }
     function empty(t, href, label) { return '<div class="empty"><p>' + t + "</p>" + (href ? '<a class="btn" href="' + href + '">' + label + "</a>" : "") + "</div>"; }
+    var LEG = { Ripple: "Composed", Glow: "Warm", Blaze: "Bold", Bloom: "Grounded", Dash: "Playful", Swirl: "Layered" };
+    function legName(n) { return LEG[n] || n; }
     function piece(slug) { return bySlug(slug); }
     function drawDash(me) {
       var u = acct.user, pf = acct.profile, st = pf.style, prov = pf.province || (st && st.province) || "";
@@ -1316,12 +1318,12 @@
       av.innerHTML = pf.avatar ? '<img src="/api/avatar?v=' + Date.now() + '" alt="Your photo">' : "<span>" + esc((u.first[0] || "") + (u.last[0] || "")) + "</span>";
       document.getElementById("d-name").textContent = u.first + " " + u.last;
       var meta = [];
-      if (prov) meta.push(prov + " province");
+      if (prov) meta.push("Strongest preference: " + legName(prov));
       if (me.card) meta.push(me.card.id);
-      meta.push("Resident since " + fmtDate(u.since));
+      meta.push("Zi Resident since " + fmtDate(u.since));
       document.getElementById("d-meta").textContent = meta.join(", ");
       document.getElementById("acct-who").textContent = u.email;
-      document.getElementById("acct-sub").textContent = "Your orders, Zi Card, style report, and everything else on your file.";
+      document.getElementById("acct-sub").textContent = "Your orders, Zi Card, Style Profile and saved details.";
 
       // Overview
       var cardState = me.card ? "Issued" : (me.application ? (me.application.status === "pending" ? "In review" : me.application.status === "declined" ? "Declined" : "In review") : "Not applied");
@@ -1329,17 +1331,17 @@
       var ov = '<div class="tiles">' +
         '<button type="button" class="tile" data-go="card"><b>' + cardState + '</b><span>Zi Card</span></button>' +
         '<button type="button" class="tile" data-go="orders"><b>' + acct.orders.length + '</b><span>' + (acct.orders.length === 1 ? "Order" : "Orders") + '</span></button>' +
-        '<button type="button" class="tile" data-go="saved"><b>' + acct.saved.length + '</b><span>Saved Pieces</span></button>' +
-        '<button type="button" class="tile" data-go="style"><b>' + esc(prov || "Not set") + '</b><span>Province</span></button></div>';
+        '<button type="button" class="tile" data-go="saved"><b>' + acct.saved.length + '</b><span>Saved products</span></button>' +
+        '<button type="button" class="tile" data-go="style"><b>' + esc(prov ? legName(prov) : "Not set") + '</b><span>Style Profile</span></button></div>';
       var todo = [];
-      if (!me.card && !me.application) todo.push(['Apply for your Zi Card', "card"]);
-      if (!st) todo.push(['Take the province quiz', "style"]);
+      if (!me.card && !me.application) todo.push(['Apply for Zi Residency', "card"]);
+      if (!st) todo.push(['Take the Style Profile', "style"]);
       if (!pf.avatar) todo.push(['Add your photo', "profile"]);
       if (!acct.addresses.length) todo.push(['Add a shipping address', "addresses"]);
       if (!pf.prefs || !Object.keys(pf.prefs).length) todo.push(['Save your sizes', "prefs"]);
-      if (todo.length) ov += '<div class="box"><h3>Finish your file</h3><ul class="todo">' + todo.map(function (t) { return '<li><button type="button" class="linkbtn" data-go="' + t[1] + '">' + t[0] + "</button></li>"; }).join("") + "</ul></div>";
+      if (todo.length) ov += '<div class="box"><h3>Finish your account</h3><ul class="todo">' + todo.map(function (t) { return '<li><button type="button" class="linkbtn" data-go="' + t[1] + '">' + t[0] + "</button></li>"; }).join("") + "</ul></div>";
       if (last) ov += '<div class="box"><h3>Latest order</h3><p><b>' + last.number + "</b>, " + fmtDate(last.at) + ", " + (last.status === "paid" ? "Paid" : "Awaiting payment") + ", " + fmtMoney(last.total, last.currency) + '. <button type="button" class="linkbtn" data-go="orders">View all orders</button></p></div>';
-      if (st) ov += '<div class="box"><h3>Your style</h3><p><b>' + esc(st.style) + "</b>, " + esc(st.province) + " with a touch of " + esc(st.second) + '. <button type="button" class="linkbtn" data-go="style">See your report</button></p></div>';
+      if (st) ov += '<div class="box"><h3>Your Style Profile</h3><p><b>' + esc(st.style) + "</b>, with strongest preferences for " + esc(legName(st.province)) + " and " + esc(legName(st.second)) + '. <button type="button" class="linkbtn" data-go="style">See your Style Profile</button></p></div>';
       if (u.birth_month && u.birth_day) ov += '<div class="box"><h3>Birthday on file</h3><p>' + MONTHS[u.birth_month - 1] + " " + u.birth_day + ".</p></div>";
       panel("overview").innerHTML = '<h2 class="display h2">Welcome back, ' + esc(u.first) + ".</h2>" + ov;
 
@@ -1347,18 +1349,18 @@
       var ord = acct.orders.length ? acct.orders.map(function (o) {
         var rows = o.items.map(function (it) {
           var p = piece(it.slug);
-          return '<li><a href="/piece/' + esc(it.slug) + '/" class="thumb">' + (p && p.photos && p.photos[0] ? '<img src="' + esc(p.photos[0]) + '" alt="">' : "") + '</a><div><b>' + esc(it.name) + '</b><span>' + esc(it.color) + (it.size ? ", " + esc(it.size) : "") + ", quantity " + it.qty + '</span></div><em>' + fmtMoney(Math.round(it.unit * 100) * it.qty, o.currency) + "</em></li>";
+          return '<li><a href="/product/' + esc(it.slug) + '/" class="thumb">' + (p && p.photos && p.photos[0] ? '<img src="' + esc(p.photos[0]) + '" alt="">' : "") + '</a><div><b>' + esc(it.name) + '</b><span>' + esc(it.color) + (it.size ? ", " + esc(it.size) : "") + ", quantity " + it.qty + '</span></div><em>' + fmtMoney(Math.round(it.unit * 100) * it.qty, o.currency) + "</em></li>";
         }).join("");
         var ship = o.ship && o.ship.address ? '<p class="small">Ships to ' + esc(o.ship.name || "") + ", " + [o.ship.address.line1, o.ship.address.city, o.ship.address.postal_code, o.ship.address.country].filter(Boolean).map(esc).join(", ") + ".</p>" : "";
-        return '<details class="order"><summary><span><b>' + o.number + "</b> " + fmtDate(o.at) + '</span><span class="badge ' + o.status + '">' + (o.status === "paid" ? "Paid" : "Awaiting payment") + "</span><em>" + fmtMoney(o.total, o.currency) + "</em></summary><ul>" + rows + "</ul>" + ship + '<p class="small">' + (o.status === "paid" ? "Your Pieces are being prepared by the Bureau of Arrivals. Tracking will appear here when it is available." : "This order has not been paid. Return to your cart to complete it.") + "</p></details>";
-      }).join("") : empty("Your orders will be filed here. Nothing has crossed the border yet.", "/shop/", "Shop the republic");
+        return '<details class="order"><summary><span><b>' + o.number + "</b> " + fmtDate(o.at) + '</span><span class="badge ' + o.status + '">' + (o.status === "paid" ? "Paid" : "Awaiting payment") + "</span><em>" + fmtMoney(o.total, o.currency) + "</em></summary><ul>" + rows + "</ul>" + ship + '<p class="small">' + (o.status === "paid" ? "The Ministry of Commerce and Trade is preparing your order. Tracking appears here when it is available." : "This order has not been paid. Return to your cart to complete it.") + "</p></details>";
+      }).join("") : empty("No orders yet. Orders appear here once placed.", "/shop/", "Shop the collection");
       panel("orders").innerHTML = '<h2 class="display h2">Orders</h2>' + ord;
 
       // Style
       if (st) {
-        var bars = (st.shares || []).map(function (s) { return '<div class="r-bar"><span>' + esc(s.n) + '</span><div><i style="width:' + Math.max(s.pct, 2) + "%;background:" + (PROV_HEX[s.n] || "#111c44") + '"></i></div><b>' + s.pct + "%</b></div>"; }).join("");
-        panel("style").innerHTML = '<h2 class="display h2">Your style report</h2><div class="box"><p class="r-big">' + esc(st.style) + '.</p><p class="prose">Home province: <b>' + esc(st.province) + "</b>. Second province: <b>" + esc(st.second) + "</b>. Taken " + fmtDate(st.at) + '.</p><div class="r-bars">' + bars + '</div></div><p><a class="btn line" href="/province/">Retake the quiz</a></p>';
-      } else panel("style").innerHTML = '<h2 class="display h2">Your style report</h2>' + empty("Twelve questions tell us your province, your style, and your range.", "/province/", "Take the quiz");
+        var bars = (st.shares || []).map(function (s) { return '<div class="r-bar"><span>' + esc(legName(s.n)) + '</span><div><i style="width:' + Math.max(s.pct, 2) + '%"></i></div><b>' + s.pct + "%</b></div>"; }).join("");
+        panel("style").innerHTML = '<h2 class="display h2">Your Style Profile</h2><div class="box"><p class="r-big">' + esc(st.style) + '.</p><p class="prose">Taken ' + fmtDate(st.at) + '. A Style Profile describes your preferences. It does not affect your Zi Residency or Zitizenship.</p><div class="r-bars">' + bars + '</div></div><p><a class="btn line" href="/style-profile/">Retake the Style Profile</a></p>';
+      } else panel("style").innerHTML = '<h2 class="display h2">Your Style Profile</h2>' + empty("Twelve questions set your six preference meters.", "/style-profile/", "Take the Style Profile");
 
       // Saved
       drawSaved();
@@ -1382,22 +1384,22 @@
         (taxCache || []).forEach(function (c) { if (c.name === group[0]) (c.sizes || []).forEach(function (g) { if (!group[1] || g.label === group[1]) vals = vals.concat(g.values); }); });
         return '<div><label for="' + id + '">' + label + '</label><select id="' + id + '" name="' + id + '"><option value="">Not set</option>' + vals.map(function (v) { return '<option' + (cur === v ? " selected" : "") + ">" + esc(v) + "</option>"; }).join("") + "</select></div>";
       }
-      var colorsList = ["Ripple Blue", "Sky Blue", "Cobalt", "Aqua", "Mint", "Bloom Green", "Lime", "Glow Yellow", "Dash Orange", "Coral", "Blaze Red", "Hot Pink", "Swirl Purple", "Lilac", "Black", "White", "Cream", "Tan"];
+      var colorsList = ["Zibura Blue", "Sky Blue", "Cobalt", "Aqua", "Mint", "Green", "Lime", "Yellow", "Orange", "Coral", "Red", "Hot Pink", "Purple", "Lilac", "Black", "White", "Cream", "Tan"];
       var favs = P2.colors || [];
       panel("prefs").innerHTML = '<h2 class="display h2">Your sizes and tastes</h2><form id="f-prefs" class="box"><div class="form-grid">' +
         sel("tops", "Tops and dresses", ["Clothing", "Letter sizes"], P2.tops) + sel("bottoms", "Bottoms (numeric)", ["Clothing", "Numeric (US)"], P2.bottoms) +
         sel("shoe", "Shoe size (EU)", ["Footwear"], P2.shoe) + sel("ring", "Ring size (US)", ["Accessories", "Ring size (US)"], P2.ring) +
         sel("scent", "Fragrance size", ["Fragrance", "Volume"], P2.scent) + sel("device", "Your phone or device", ["Lifestyle", "Device"], P2.device) +
-        '<div class="full"><label>Colors you like</label><div class="row">' + colorsList.map(function (c) { return '<button type="button" class="pill' + (favs.indexOf(c) !== -1 ? " on" : "") + '" data-fav="' + esc(c) + '" aria-pressed="' + (favs.indexOf(c) !== -1) + '">' + esc(c) + "</button>"; }).join("") + "</div></div>" +
+        '<div class="full"><label>Colours you like</label><div class="row">' + colorsList.map(function (c) { return '<button type="button" class="pill' + (favs.indexOf(c) !== -1 ? " on" : "") + '" data-fav="' + esc(c) + '" aria-pressed="' + (favs.indexOf(c) !== -1) + '">' + esc(c) + "</button>"; }).join("") + "</div></div>" +
         '<div class="full"><label for="notes">Notes for the stylists</label><textarea id="notes" rows="3" maxlength="280">' + esc(P2.notes || "") + '</textarea></div></div><button class="btn" type="submit">Save sizes</button><div class="msg" role="status"></div></form>';
 
       // Security
       panel("security").innerHTML = '<h2 class="display h2">Security</h2><form id="f-pass" class="box"><h3>Change password</h3><div class="form-grid"><div class="full"><label for="pw-cur">Current password</label><input id="pw-cur" type="password" autocomplete="current-password" required></div><div class="full"><label for="pw-new">New password (8 characters or more)</label><input id="pw-new" type="password" minlength="8" autocomplete="new-password" required></div></div><button class="btn" type="submit">Update password</button><div class="msg" role="status"></div></form>' +
-        '<form id="f-del" class="box"><h3>Renounce citizenship</h3><p class="small">This deletes your account, orders list, saved Pieces, addresses, and Zi Card. It cannot be undone.</p><div class="form-grid"><div class="full"><label for="del-pw">Confirm with your password</label><input id="del-pw" type="password" autocomplete="current-password" required></div></div><button class="btn line" type="submit">Delete my account</button><div class="msg" role="status"></div></form>';
+        '<form id="f-del" class="box"><h3>Delete account</h3><p class="small">This deletes your account, order list, saved products, addresses and Zi Card. It cannot be undone.</p><div class="form-grid"><div class="full"><label for="del-pw">Confirm with your password</label><input id="del-pw" type="password" autocomplete="current-password" required></div></div><button class="btn line" type="submit">Delete account</button><div class="msg" role="status"></div></form>';
     }
     function drawSaved() {
       var list = acct.saved.map(piece).filter(Boolean);
-      panel("saved").innerHTML = '<h2 class="display h2">Saved Pieces</h2>' + (list.length ? '<div class="r-picks">' + list.map(function (p) { return '<div class="saved-it">' + cardHtml(p) + '<button type="button" class="linkbtn" data-unsave="' + esc(p.slug) + '">Remove</button></div>'; }).join("") + "</div>" : empty("Tap Save on any Piece page and it lands here.", "/shop/", "Browse Pieces"));
+      panel("saved").innerHTML = '<h2 class="display h2">Saved products</h2>' + (list.length ? '<div class="r-picks">' + list.map(function (p) { return '<div class="saved-it">' + cardHtml(p) + '<button type="button" class="linkbtn" data-unsave="' + esc(p.slug) + '">Remove</button></div>'; }).join("") + "</div>" : empty("Select Save on any product page and it appears here.", "/shop/", "Shop the collection"));
       applyPrices();
     }
     function drawAddresses(editId) {
@@ -1474,8 +1476,8 @@
         api(path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }).then(function (d) {
           btn.disabled = false;
           if (d.ok) { msg.textContent = ""; f.reset(); updateAcctLink(); render(); }
-          else msg.textContent = d.error || "The Ministry hit a snag. Please try again.";
-        }).catch(function () { btn.disabled = false; msg.textContent = "The Ministry hit a snag. Please try again."; });
+          else msg.textContent = d.error || "Something went wrong on our side. Try again in a moment.";
+        }).catch(function () { btn.disabled = false; msg.textContent = "Something went wrong on our side. Try again in a moment."; });
       });
     }
     var fLogin = document.getElementById("f-login"), fForgot = document.getElementById("f-forgot");
@@ -1487,7 +1489,7 @@
       msg.textContent = "One moment.";
       api("/api/auth/forgot", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: fForgot.elements.email.value }) }).then(function () {
         msg.textContent = "If that email is on file, a reset link is on its way. It works for one hour.";
-      }).catch(function () { msg.textContent = "The Ministry hit a snag. Please try again."; });
+      }).catch(function () { msg.textContent = "Something went wrong on our side. Try again in a moment."; });
     });
     authForm("f-signup", "/api/auth/signup");
     authForm("f-login", "/api/auth/login");
@@ -1558,8 +1560,8 @@
       api("/api/apply", { method: "POST", body: fd }).then(function (d) {
         btn.disabled = false;
         if (d.ok) { msg.textContent = ""; render(); }
-        else msg.textContent = d.error || "The Ministry hit a snag. Please try again.";
-      }).catch(function () { btn.disabled = false; msg.textContent = "The Ministry hit a snag. Please try again."; });
+        else msg.textContent = d.error || "Something went wrong on our side. Try again in a moment.";
+      }).catch(function () { btn.disabled = false; msg.textContent = "Something went wrong on our side. Try again in a moment."; });
       }, "image/jpeg", 0.92);
     });
 
@@ -1596,7 +1598,7 @@
       e.preventDefault();
       api("/api/auth/reset", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ token: token, password: f.elements[0].value }) }).then(function (d) {
         if (d.ok) { msg.innerHTML = 'Password saved. <a href="/account/">Sign in</a>.'; f.reset(); }
-        else msg.textContent = d.error || "The Ministry hit a snag. Please try again.";
+        else msg.textContent = d.error || "Something went wrong on our side. Try again in a moment.";
       });
     });
   }
@@ -1677,10 +1679,10 @@
     if (key) load();
   }
 
-  /* The Placement quiz */
+  /* The Style Profile quiz */
   function initQuiz() {
     var data = JSON.parse($("#quiz-data").textContent);
-    var Q = data.questions, P = data.provinces;
+    var Q = data.questions, P = data.leanings;
     var scores, step, last, answers;
     var box = $("#quiz"), res = $("#result"), title = $("#q-title"), opts = $("#q-opts");
     function start() {
@@ -1709,30 +1711,27 @@
       var best = order[0], second = order[1];
       var p = P[best], s = P[second], pr = p.profile;
       var share = function (i) { return Math.round(scores[i] / total * 100); };
-      var top = share(best);
-      var range = top >= 50 ? "Focused. You know your lane and you stay in it." : top >= 34 ? "Anchored with range. You have a home base and you travel well." : "Wide range. You move across the republic with a different look for each room.";
       var profile = { province: p.n, second: s.n, style: pr.style, shares: order.map(function (i) { return { n: P[i].n, pct: share(i) }; }), answers: answers.slice(), at: new Date().toISOString().slice(0, 10) };
       try { localStorage.setItem("zibura_province", p.n); localStorage.setItem("zibura_style", JSON.stringify(profile)); } catch (x) {}
       fetch("/api/profile", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ province: p.n, style: profile }) }).catch(function () {});
       var noticeIdx = [1, 2, 8, 9];
       var notices = noticeIdx.map(function (q, k) { return P[answers[q]].profile.notice[k]; });
       var swatches = pr.palette.map(function (c) { return '<span class="r-sw" data-c="' + esc(c) + '"><i></i>' + esc(c) + "</span>"; }).join("");
-      var bars = order.map(function (i) { return '<div class="r-bar"><span>' + esc(P[i].n) + '</span><div><i style="width:' + Math.max(share(i), 2) + "%;background:" + P[i].hex + '"></i></div><b>' + share(i) + "%</b></div>"; }).join("");
+      var meters = P.map(function (x, i) { return '<div class="r-bar"><span>' + esc(x.n) + '</span><div><i style="width:' + Math.max(share(i), 2) + '%"></i></div><b>' + share(i) + "%</b></div>"; }).join("");
       var picks = pr.picks.map(function (slug) { return catalog.filter(function (c) { return c.slug === slug; })[0]; }).filter(Boolean);
       var sPick = catalog.filter(function (c) { return c.slug === s.profile.picks[0] && pr.picks.indexOf(c.slug) === -1; })[0] || catalog.filter(function (c) { return c.slug === s.profile.picks[1]; })[0];
       box.hidden = true; res.hidden = false;
-      confetti([p.hex, s.hex, "#ffffff", "#d2eaff"]);
       res.innerHTML =
-        '<div class="r-head"><div class="r-dot" style="background:' + p.hex + '"></div><p class="small">Your official Zi Republic style report</p><h2 class="display">' + esc(p.n) + " province</h2><p class=\"r-line\">" + esc(p.line) + '</p></div>' +
-        '<div class="r-cols"><section><h3>Your style, in one line</h3><p class="r-big">' + esc(pr.style) + ".</p><p class=\"prose\">" + esc(p.note) + '</p></section>' +
-        '<section><h3>Your range</h3><p class="prose">' + esc(range) + " You are " + top + "% " + esc(p.n) + ", with a " + share(second) + "% " + esc(s.n) + " streak that shows up in your " + esc(s.traits[0].toLowerCase()) + " side.</p>" + '<div class="r-bars">' + bars + '</div></section></div>' +
-        '<div class="r-cols"><section><h3>What we noticed</h3><ul class="r-list">' + notices.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + '</ul></section>' +
-        '<section><h3>How you wear it</h3><p class="prose"><b>Silhouette.</b> ' + esc(pr.silhouette) + '</p><p class="prose"><b>Fabrics.</b> ' + esc(pr.fabrics) + '</p><p class="prose"><b>Where you shine.</b> ' + esc(pr.moments) + '</p><p class="prose"><b>How you shop.</b> ' + esc(pr.shopper) + "</p></section></div>" +
+        '<div class="r-head"><p class="small">Your Style Profile</p><h2 class="display">' + esc(pr.style) + '.</h2><p class="r-line">Strongest preferences: ' + esc(p.n) + " (" + share(best) + "%) and " + esc(s.n) + " (" + share(second) + "%).</p></div>" +
+        '<div class="r-cols"><section><h3>Your preference meters</h3><div class="r-bars">' + meters + '</div></section>' +
+        '<section><h3>What we noticed</h3><ul class="r-list">' + notices.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + '</ul></section></div>' +
+        '<div class="r-cols"><section><h3>Your strongest preference</h3><p class="prose">' + esc(p.note) + '</p><p class="prose"><b>Silhouette.</b> ' + esc(pr.silhouette) + '</p><p class="prose"><b>Fabrics.</b> ' + esc(pr.fabrics) + '</p></section>' +
+        '<section><h3>Where and how</h3><p class="prose"><b>Moments.</b> ' + esc(pr.moments) + '</p><p class="prose"><b>Shopping.</b> ' + esc(pr.shopper) + "</p></section></div>" +
         '<div class="r-cols"><section><h3>Your palette</h3><div class="r-sws">' + swatches + '</div></section><section><h3>You probably love</h3><ul class="r-list">' + pr.loves.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + '</ul></section></div>' +
-        '<section class="r-stretch"><h3>Your stretch</h3><p class="prose">' + esc(pr.stretch) + "</p></section>" +
-        '<section><h3>Pieces cleared for your province</h3><div class="r-picks" id="r-picks">' + picks.concat(sPick ? [sPick] : []).map(cardHtml).join("") + '</div><p class="small">The last Piece comes from your second province, ' + esc(s.n) + ".</p></section>" +
-        '<div class="r-actions"><a class="btn" href="/waitlist/">Join the Register as ' + esc(p.n) + '</a><a class="btn line" href="/account/">Save to my passport</a><button type="button" class="btn line" id="retake">Take it again</button></div>';
-      var colorsMap = window.__colors || null;
+        '<section class="r-stretch"><h3>Try something different</h3><p class="prose">' + esc(pr.stretch) + "</p></section>" +
+        '<section><h3>Matching products</h3><div class="r-picks" id="r-picks">' + picks.concat(sPick ? [sPick] : []).map(cardHtml).join("") + '</div></section>' +
+        '<p class="small">A Style Profile describes your preferences. It does not affect your Zi Residency or Zitizenship, and you can retake it at any time.</p>' +
+        '<div class="r-actions"><a class="btn" href="/shop/">Shop the collection</a><a class="btn line" href="/account/">Save to my account</a><button type="button" class="btn line" id="retake">Retake the Style Profile</button></div>';
       function paint() { Array.prototype.forEach.call(res.querySelectorAll(".r-sw"), function (el) { var c = window.__colors && window.__colors[el.getAttribute("data-c")]; if (c) el.firstChild.style.background = c; }); }
       if (window.__colors) paint(); else fetch("/colors.json").then(function (r) { return r.json(); }).then(function (m) { window.__colors = m; paint(); });
       $("#retake").addEventListener("click", start);

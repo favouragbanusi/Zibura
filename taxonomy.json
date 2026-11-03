@@ -22,6 +22,14 @@
    {
     "name": "Setwear",
     "blurb": "Matching Pieces made to be worn together."
+   },
+   {
+    "name": "Sleepwear",
+    "blurb": "Pajamas, robes, and loungewear for slow mornings."
+   },
+   {
+    "name": "Swimwear",
+    "blurb": "Swimsuits, trunks, and cover-ups."
    }
   ],
   "sizes": [
@@ -87,6 +95,22 @@
    {
     "name": "Heels",
     "blurb": "Shoes with height."
+   },
+   {
+    "name": "Flats",
+    "blurb": "Low, easy shoes with no heel."
+   },
+   {
+    "name": "Slides",
+    "blurb": "Slides, flip-flops, and mules."
+   },
+   {
+    "name": "Platforms",
+    "blurb": "Wedges and platforms with lift."
+   },
+   {
+    "name": "Slippers",
+    "blurb": "Soft shoes for indoors."
    }
   ],
   "sizes": [
@@ -128,7 +152,35 @@
    },
    {
     "name": "Travel",
-    "blurb": "Bags made for the journey."
+    "blurb": "Bags and garment bags made for the journey."
+   },
+   {
+    "name": "Shoulder",
+    "blurb": "Bags worn on the shoulder, day to night."
+   },
+   {
+    "name": "Clutches",
+    "blurb": "Hand-held bags for the evening."
+   },
+   {
+    "name": "Backpacks",
+    "blurb": "Bags worn on the back, built for the day."
+   },
+   {
+    "name": "Belt Bags",
+    "blurb": "Small bags worn at the waist."
+   },
+   {
+    "name": "Luggage",
+    "blurb": "Suitcases, hard-shell cases, and travel boxes."
+   },
+   {
+    "name": "Pouches",
+    "blurb": "Makeup bags, organisers, and zip cases."
+   },
+   {
+    "name": "Wallets",
+    "blurb": "Wallets and card holders."
    }
   ],
   "sizes": [
@@ -163,6 +215,30 @@
    {
     "name": "Belts",
     "blurb": "Belts that define a waist or a line."
+   },
+   {
+    "name": "Watches",
+    "blurb": "Timepieces for the wrist."
+   },
+   {
+    "name": "Hair Accessories",
+    "blurb": "Clips, bands, and pins for the hair."
+   },
+   {
+    "name": "Gloves",
+    "blurb": "Gloves for cold days and finishing touches."
+   },
+   {
+    "name": "Socks",
+    "blurb": "Socks and hosiery."
+   },
+   {
+    "name": "Neckwear",
+    "blurb": "Ties and bow ties."
+   },
+   {
+    "name": "Pins",
+    "blurb": "Pins, brooches, and cufflinks."
    }
   ],
   "sizes": [
@@ -218,6 +294,22 @@
    {
     "name": "Candles",
     "blurb": "Scent for the room."
+   },
+   {
+    "name": "Body Oil",
+    "blurb": "Scented oils for the skin."
+   },
+   {
+    "name": "Room Spray",
+    "blurb": "Quick scent for any room."
+   },
+   {
+    "name": "Diffusers",
+    "blurb": "Reed diffusers and scent for a space."
+   },
+   {
+    "name": "Incense",
+    "blurb": "Sticks and cones for slow evenings."
    }
   ],
   "sizes": [
@@ -254,6 +346,26 @@
    {
     "name": "Homeware",
     "blurb": "Pieces for the rooms you live in."
+   },
+   {
+    "name": "Drinkware",
+    "blurb": "Water bottles, tumblers, and mugs."
+   },
+   {
+    "name": "Keychains",
+    "blurb": "Small charms for keys and bags."
+   },
+   {
+    "name": "Stickers",
+    "blurb": "Stickers for laptops, bottles, and notebooks."
+   },
+   {
+    "name": "Umbrellas",
+    "blurb": "Umbrellas for rainy days."
+   },
+   {
+    "name": "Towels",
+    "blurb": "Towels for the beach, the gym, and home."
    }
   ],
   "sizes": [
@@ -286,6 +398,18 @@
    {
     "name": "Gift Sets",
     "blurb": "Pieces chosen to be given together."
+   },
+   {
+    "name": "Gift Boxes",
+    "blurb": "Boxes made to be given."
+   },
+   {
+    "name": "Gift Wrap",
+    "blurb": "Wrap, ribbon, and tags."
+   },
+   {
+    "name": "Greeting Cards",
+    "blurb": "Cards to write in."
    }
   ],
   "sizes": []
