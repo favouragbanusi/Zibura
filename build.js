@@ -186,7 +186,6 @@ const MODAL = `<dialog id="wl-modal" class="memo" aria-labelledby="wl-title">
     <div class="memo-head">
       <p class="memo-tag">${T("forms.memo-tag", "Official memo")}</p>
       <h2 class="display" id="wl-title">${T("forms.newsletter-title", "Get the Zi Memo.")}</h2>
-      <p class="sub">${T("forms.newsletter-sub", "The Zi Memo is the Zibura newsletter, with news from Zibura and Zi Republic.")}</p>
     </div>
   </div>
   <div class="memo-body">
@@ -249,7 +248,7 @@ function layout({ title, description, page, body }) {
     <button type="button" class="burger" id="burger" data-tip="Menu" aria-label="Open menu" aria-expanded="false" aria-controls="drawer"><span></span><span></span><span></span></button>
     <nav class="nav" aria-label="Main">
       <div class="has-mega"><a href="/shop/">${T("site.shop", "Shop")}</a>${MEGA}</div>
-      <a class="has-sub" href="/explore/">${T("site.collections", "Zi Archive")}<small class="nav-sub">${T("site.collections-sub", "collections and capsules")}</small></a>
+      <a href="/explore/">${T("site.collections", "Zi Archive")}</a>
       <a href="/brand/">${T("site.zi-republic", "Zi Republic")}</a>
       <a href="/style-compass/">${T("site.style-profile", "Style Compass")}</a>
       <a href="/note/">${T("site.from-the-zi-in-chief", "From the Zi-in-Chief")}</a>
@@ -277,7 +276,7 @@ function layout({ title, description, page, body }) {
   <div class="drawer-in">
     <a class="d-link big" href="/shop/">${T("site.shop", "Shop")}</a>
     <div class="d-sub">${TAX.map((c) => `<a href="/shop/?category=${encodeURIComponent(c.name)}">${esc(c.name)}</a>`).join("")}</div>
-    <a class="d-link big has-sub" href="/explore/">${T("site.collections", "Zi Archive")}<small class="nav-sub">${T("site.collections-sub", "collections and capsules")}</small></a>
+    <a class="d-link big" href="/explore/">${T("site.collections", "Zi Archive")}</a>
     <a class="d-link big" href="/brand/">${T("site.zi-republic", "Zi Republic")}</a>
     <a class="d-link big" href="/style-compass/">${T("site.style-profile", "Style Compass")}</a>
     <a class="d-link big" href="/note/">${T("site.from-the-zi-in-chief", "From the Zi-in-Chief")}</a>
@@ -557,7 +556,7 @@ write(
   <div class="hs-bar" aria-hidden="true"><i></i></div>
 </div></section>
 
-<section class="section" id="ministries" style="padding-top:0"><div class="wrap">
+<section class="section" id="ministries"><div class="wrap">
   <div class="mini-head" data-reveal>
     <h2 class="display">${T("brand.ministries-title", "The Ministries.")}</h2>
     <p class="province-intro">${T("brand.ministries-intro", "The Ministries oversee the Republic's public functions, from creative direction and community programs to communications, commerce and administration.")}</p>
