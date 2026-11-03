@@ -354,10 +354,10 @@ write(
     </article>` : ""}
   </div>
   <nav class="he-rail" aria-label="Quick links">
-    <a href="/brand/">The republic</a>
-    <a href="/explore/">Signals</a>
-    <a href="/zi-card/">Zi Card</a>
-    <a href="/note/">From the Zi-in-Chief</a>
+    <a href="/shop/?audience=Women">Shop women</a>
+    <a href="/shop/?audience=Men">Shop men</a>
+    <a href="/province/">Find your province</a>
+    <a href="/brand/#calendar">National calendar</a>
   </nav>
   <div class="he-ctrl">
     ${HERO2 ? `<button type="button" class="he-prev" aria-label="Previous slide"><svg viewBox="0 0 40 12" width="40" height="12" aria-hidden="true"><path d="M40 6H2M7 1L2 6l5 5" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></button><span class="he-count"><b>1</b> / 2</span><button type="button" class="he-next" aria-label="Next slide"><svg viewBox="0 0 40 12" width="40" height="12" aria-hidden="true"><path d="M0 6h38M33 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></button>` : ""}
