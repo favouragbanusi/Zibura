@@ -1,5 +1,5 @@
 (function () {
-  var CURRENCIES = ["CAD", "USD", "GBP", "NGN"];
+  var CURRENCIES = ["CAD", "USD", "GBP", "EUR", "AUD", "AED", "ZAR", "NGN"];
   var CART_KEY = "zibura_cart";
   var CUR_KEY = "zibura_currency";
 
@@ -230,6 +230,14 @@
     tick.forEach(function (tr) { tr.style.animation = "none"; });
     requestAnimationFrame(frame);
   }
+  function initMinistries() {
+    $all(".mini").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var open = b.classList.toggle("on");
+        b.setAttribute("aria-expanded", open ? "true" : "false");
+      });
+    });
+  }
   function initHeroSlides() {
     var root = document.querySelector("[data-hero-ed]");
     if (!root) return;
@@ -242,14 +250,15 @@
       slides[i].classList.add("on");
       if (count) count.textContent = i + 1;
     }
-    function play() { stop(); timer = setInterval(function () { go(i + 1); }, 7000); }
+    function play() { stop(); timer = setInterval(function () { go(i + 1); }, 4000); }
     function stop() { if (timer) clearInterval(timer); timer = null; }
     var prev = root.querySelector(".he-prev"), next = root.querySelector(".he-next");
     if (prev) prev.addEventListener("click", function () { go(i - 1); play(); });
     if (next) next.addEventListener("click", function () { go(i + 1); play(); });
-    root.addEventListener("mouseenter", stop);
-    root.addEventListener("mouseleave", play);
-    if (!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) play();
+    root.addEventListener("focusin", stop);
+    root.addEventListener("focusout", play);
+    document.addEventListener("visibilitychange", function () { if (document.hidden) stop(); else play(); });
+    play();
   }
   function initCursor() {
     var fine = window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
@@ -777,9 +786,14 @@
         var p = bySlug(l.slug);
         var line = p.prices[currency] * l.qty;
         total += line;
+        var img = p.photos && p.photos[0] ? '<img src="' + esc(p.photos[0]) + '" alt="' + esc(p.name) + '">' : "";
+        var meta = [p.type, p.material].filter(Boolean).map(esc).join(", ");
         return '<div class="cart-line">' +
-          '<div><a class="nm" href="/product/' + esc(p.slug) + '/">' + esc(p.name) + '</a>' +
-          '<div class="opt">' + esc(l.color) + (l.size ? ', ' + esc(l.size) : '') + '</div>' +
+          '<a class="thumb" href="/product/' + esc(p.slug) + '/">' + img + '</a>' +
+          '<div class="info"><a class="nm" href="/product/' + esc(p.slug) + '/">' + esc(p.name) + '</a>' +
+          (meta ? '<div class="meta">' + meta + '</div>' : "") +
+          '<div class="opt">' + esc(l.color) + (l.size ? ', Size ' + esc(l.size) : '') + '</div>' +
+          '<div class="opt">' + money(p.prices[currency]) + ' each</div>' +
           '<div class="qty">' +
           '<button type="button" class="step" data-act="dec" data-i="' + i + '" aria-label="Fewer">-</button>' +
           '<span class="num">' + l.qty + '</span>' +
@@ -834,8 +848,36 @@
   function initWaitlist() {
     $all(".waitlist-form").forEach(function (form) {
       var msg = $(".wl-msg", form);
+      var steps = $all(".wl-step", form), cur = 0;
+      var back = $(".wl-back", form), next = $(".wl-next", form), sub = $(".wl-submit", form);
+      var label = $(".wl-count", form), fill = $(".wl-track i", form);
+      function showStep(n) {
+        cur = n;
+        steps.forEach(function (st, k) { st.classList.toggle("on", k === n); });
+        back.hidden = n === 0;
+        next.hidden = n === steps.length - 1;
+        sub.hidden = n !== steps.length - 1;
+        label.textContent = "Step " + (n + 1) + " of " + steps.length;
+        fill.style.width = ((n + 1) / steps.length * 100) + "%";
+        msg.textContent = "";
+      }
+      function stepOk() {
+        var bad = null;
+        $all("input[required], select[required]", steps[cur]).forEach(function (el) {
+          var ok = el.type === "checkbox" ? el.checked : !!el.value.trim() && (el.type !== "email" || /^\S+@\S+\.\S+$/.test(el.value.trim()));
+          el.classList.toggle("bad", !ok);
+          if (!ok && !bad) bad = el;
+        });
+        if (bad) { msg.textContent = bad.type === "email" ? "Enter a valid email address." : "This field is required."; bad.focus(); return false; }
+        return true;
+      }
+      next.addEventListener("click", function () { if (stepOk()) showStep(cur + 1); });
+      back.addEventListener("click", function () { showStep(cur - 1); });
+      showStep(0);
       form.addEventListener("submit", function (e) {
         e.preventDefault();
+        if (cur < steps.length - 1) { if (stepOk()) showStep(cur + 1); return; }
+        if (!stepOk()) return;
         var data = {
           first: form.elements.first.value,
           last: form.elements.last.value,
@@ -858,8 +900,10 @@
           .then(function (d) {
             if (d.ok) {
               form.reset();
+              showStep(0);
               try { localStorage.setItem("zibura_joined", "1"); } catch (x) {}
               msg.textContent = "Received. A confirmation is on its way to your inbox.";
+              btn.disabled = false;
             } else {
               msg.textContent = d.error || "Something went wrong on our side. Try again in a moment.";
               btn.disabled = false;
@@ -1318,7 +1362,7 @@
       av.innerHTML = pf.avatar ? '<img src="/api/avatar?v=' + Date.now() + '" alt="Your photo">' : "<span>" + esc((u.first[0] || "") + (u.last[0] || "")) + "</span>";
       document.getElementById("d-name").textContent = u.first + " " + u.last;
       var meta = [];
-      if (prov) meta.push("Strongest preference: " + legName(prov));
+      if (prov) meta.push("Style Profile: " + legName(prov));
       if (me.card) meta.push(me.card.id);
       meta.push("Zi Resident since " + fmtDate(u.since));
       document.getElementById("d-meta").textContent = meta.join(", ");
@@ -1341,7 +1385,7 @@
       if (!pf.prefs || !Object.keys(pf.prefs).length) todo.push(['Save your sizes', "prefs"]);
       if (todo.length) ov += '<div class="box"><h3>Finish your account</h3><ul class="todo">' + todo.map(function (t) { return '<li><button type="button" class="linkbtn" data-go="' + t[1] + '">' + t[0] + "</button></li>"; }).join("") + "</ul></div>";
       if (last) ov += '<div class="box"><h3>Latest order</h3><p><b>' + last.number + "</b>, " + fmtDate(last.at) + ", " + (last.status === "paid" ? "Paid" : "Awaiting payment") + ", " + fmtMoney(last.total, last.currency) + '. <button type="button" class="linkbtn" data-go="orders">View all orders</button></p></div>';
-      if (st) ov += '<div class="box"><h3>Your Style Profile</h3><p><b>' + esc(st.style) + "</b>, with strongest preferences for " + esc(legName(st.province)) + " and " + esc(legName(st.second)) + '. <button type="button" class="linkbtn" data-go="style">See your Style Profile</button></p></div>';
+      if (st) ov += '<div class="box"><h3>Your Style Profile</h3><p><b>' + esc(st.style) + "</b>, close to " + esc(legName(st.second)) + '. <button type="button" class="linkbtn" data-go="style">See your Style Profile</button></p></div>';
       if (u.birth_month && u.birth_day) ov += '<div class="box"><h3>Birthday on file</h3><p>' + MONTHS[u.birth_month - 1] + " " + u.birth_day + ".</p></div>";
       panel("overview").innerHTML = '<h2 class="display h2">Welcome back, ' + esc(u.first) + ".</h2>" + ov;
 
@@ -1357,10 +1401,13 @@
       panel("orders").innerHTML = '<h2 class="display h2">Orders</h2>' + ord;
 
       // Style
+      var quizHtml = '<div id="quiz" class="quiz" data-quiz hidden><div class="q-bar"><span id="q-step"></span><div class="q-track"><i id="q-fill"></i></div></div><h2 class="display q-title" id="q-title" tabindex="-1"></h2><div class="q-opts" id="q-opts"></div></div><div id="result" class="result" hidden></div>';
       if (st) {
         var bars = (st.shares || []).map(function (s) { return '<div class="r-bar"><span>' + esc(legName(s.n)) + '</span><div><i style="width:' + Math.max(s.pct, 2) + '%"></i></div><b>' + s.pct + "%</b></div>"; }).join("");
-        panel("style").innerHTML = '<h2 class="display h2">Your Style Profile</h2><div class="box"><p class="r-big">' + esc(st.style) + '.</p><p class="prose">Taken ' + fmtDate(st.at) + '. A Style Profile describes your preferences. It does not affect your Zi Residency or Zitizenship.</p><div class="r-bars">' + bars + '</div></div><p><a class="btn line" href="/style-profile/">Retake the Style Profile</a></p>';
-      } else panel("style").innerHTML = '<h2 class="display h2">Your Style Profile</h2>' + empty("Twelve questions set your six preference meters.", "/style-profile/", "Take the Style Profile");
+        panel("style").innerHTML = '<h2 class="display h2">Your Style Profile</h2><div id="sty-sum"><div class="box"><p class="r-big">' + esc(st.style) + '.</p><p class="prose">Taken ' + fmtDate(st.at) + '. A Style Profile describes your preferences. It does not affect your Zi Residency or Zitizenship.</p><div class="r-bars">' + bars + '</div></div><p><button type="button" class="btn line" id="start-quiz">Retake the Style Profile</button></p></div>' + quizHtml;
+      } else panel("style").innerHTML = '<h2 class="display h2">Your Style Profile</h2><div id="sty-sum">' + empty("Eighteen questions match you to one of ten Style Profiles.", "", "") + '<p><button type="button" class="btn" id="start-quiz">Take the Style Profile</button></p></div>' + quizHtml;
+      var sq = document.getElementById("start-quiz");
+      if (sq) sq.addEventListener("click", function () { document.getElementById("sty-sum").hidden = true; initQuiz(); });
 
       // Saved
       drawSaved();
@@ -1682,11 +1729,13 @@
   /* The Style Profile quiz */
   function initQuiz() {
     var data = JSON.parse($("#quiz-data").textContent);
-    var Q = data.questions, P = data.leanings;
-    var scores, step, last, answers;
+    var AX = data.axes, Q = data.questions, P = data.profiles;
+    var axMax = AX.map(function () { return 0; });
+    Q.forEach(function (q) { for (var a = 0; a < AX.length; a++) axMax[a] += Math.max.apply(null, q[1].map(function (x) { return Math.abs(x[1][a]); })); });
+    var sums, step, answers;
     var box = $("#quiz"), res = $("#result"), title = $("#q-title"), opts = $("#q-opts");
     function start() {
-      scores = [0, 0, 0, 0, 0, 0]; answers = []; step = 0; last = 0;
+      sums = AX.map(function () { return 0; }); answers = []; step = 0;
       res.hidden = true; box.hidden = false;
       show();
     }
@@ -1695,43 +1744,55 @@
       $("#q-fill").style.width = (step / Q.length * 100) + "%";
       title.textContent = Q[step][0];
       opts.innerHTML = "";
-      Q[step][1].forEach(function (t, i) {
+      Q[step][1].forEach(function (ans, i) {
         var b = document.createElement("button");
-        b.type = "button"; b.textContent = t;
+        b.type = "button"; b.textContent = ans[0];
         b.addEventListener("click", function () {
-          scores[i] += 1; answers.push(i); last = i; step += 1;
+          ans[1].forEach(function (v, a) { sums[a] += v; });
+          answers.push(i); step += 1;
           if (step < Q.length) { show(); title.focus(); } else finish();
         });
         opts.appendChild(b);
       });
     }
     function finish() {
-      var total = Q.length, order = [0, 1, 2, 3, 4, 5];
-      order.sort(function (x, y) { return scores[y] - scores[x] || (x === last ? -1 : y === last ? 1 : x - y); });
-      var best = order[0], second = order[1];
-      var p = P[best], s = P[second], pr = p.profile;
-      var share = function (i) { return Math.round(scores[i] / total * 100); };
-      var profile = { province: p.n, second: s.n, style: pr.style, shares: order.map(function (i) { return { n: P[i].n, pct: share(i) }; }), answers: answers.slice(), at: new Date().toISOString().slice(0, 10) };
-      try { localStorage.setItem("zibura_province", p.n); localStorage.setItem("zibura_style", JSON.stringify(profile)); } catch (x) {}
-      fetch("/api/profile", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ province: p.n, style: profile }) }).catch(function () {});
-      var noticeIdx = [1, 2, 8, 9];
-      var notices = noticeIdx.map(function (q, k) { return P[answers[q]].profile.notice[k]; });
-      var swatches = pr.palette.map(function (c) { return '<span class="r-sw" data-c="' + esc(c) + '"><i></i>' + esc(c) + "</span>"; }).join("");
-      var meters = P.map(function (x, i) { return '<div class="r-bar"><span>' + esc(x.n) + '</span><div><i style="width:' + Math.max(share(i), 2) + '%"></i></div><b>' + share(i) + "%</b></div>"; }).join("");
-      var picks = pr.picks.map(function (slug) { return catalog.filter(function (c) { return c.slug === slug; })[0]; }).filter(Boolean);
-      var sPick = catalog.filter(function (c) { return c.slug === s.profile.picks[0] && pr.picks.indexOf(c.slug) === -1; })[0] || catalog.filter(function (c) { return c.slug === s.profile.picks[1]; })[0];
+      var z = sums.map(function (v, a) { return Math.max(-1, Math.min(1, v / (0.5 * axMax[a]))); });
+      var ranked = P.map(function (p, i) {
+        var d = Math.sqrt(p.v.reduce(function (t, x, a) { return t + Math.pow(x - z[a], 2); }, 0));
+        return { i: i, d: d, pct: Math.max(1, Math.min(99, Math.round(100 * (1 - d / 3.0)))) };
+      }).sort(function (x, y) { return x.d - y.d; });
+      var best = P[ranked[0].i], second = P[ranked[1].i];
+      var profile = {
+        province: best.n, second: second.n, style: best.n,
+        shares: ranked.slice(0, 3).map(function (r) { return { n: P[r.i].n, pct: r.pct }; }),
+        axes: z.map(function (x) { return Math.round(x * 100) / 100; }),
+        answers: answers.slice(), at: new Date().toISOString().slice(0, 10)
+      };
+      try { localStorage.setItem("zibura_province", best.n); localStorage.setItem("zibura_style", JSON.stringify(profile)); } catch (x) {}
+      fetch("/api/profile", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ province: best.n, style: profile }) }).catch(function () {});
+      var swatches = best.palette.map(function (c) { return '<span class="r-sw" data-c="' + esc(c) + '"><i></i>' + esc(c) + "</span>"; }).join("");
+      var meters = AX.map(function (a, i) {
+        var pos = Math.round((z[i] + 1) / 2 * 100);
+        return '<div class="r-bi"><span class="l">' + esc(a[1]) + '</span><div class="t"><i style="left:' + pos + '%"></i></div><span class="r">' + esc(a[2]) + "</span></div>";
+      }).join("");
+      var notes = [];
+      AX.forEach(function (a, i) { if (Math.abs(z[i]) >= 0.3) notes.push({ w: Math.abs(z[i]), t: z[i] < 0 ? a[3] : a[4] }); });
+      notes.sort(function (x, y) { return y.w - x.w; });
+      notes = notes.slice(0, 4).map(function (n) { return n.t; });
+      var picks = best.picks.map(function (slug) { return catalog.filter(function (c) { return c.slug === slug; })[0]; }).filter(Boolean);
+      var sPick = catalog.filter(function (c) { return c.slug === second.picks[0] && best.picks.indexOf(c.slug) === -1; })[0] || catalog.filter(function (c) { return c.slug === second.picks[1]; })[0];
       box.hidden = true; res.hidden = false;
       res.innerHTML =
-        '<div class="r-head"><p class="small">Your Style Profile</p><h2 class="display">' + esc(pr.style) + '.</h2><p class="r-line">Strongest preferences: ' + esc(p.n) + " (" + share(best) + "%) and " + esc(s.n) + " (" + share(second) + "%).</p></div>" +
-        '<div class="r-cols"><section><h3>Your preference meters</h3><div class="r-bars">' + meters + '</div></section>' +
-        '<section><h3>What we noticed</h3><ul class="r-list">' + notices.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + '</ul></section></div>' +
-        '<div class="r-cols"><section><h3>Your strongest preference</h3><p class="prose">' + esc(p.note) + '</p><p class="prose"><b>Silhouette.</b> ' + esc(pr.silhouette) + '</p><p class="prose"><b>Fabrics.</b> ' + esc(pr.fabrics) + '</p></section>' +
-        '<section><h3>Where and how</h3><p class="prose"><b>Moments.</b> ' + esc(pr.moments) + '</p><p class="prose"><b>Shopping.</b> ' + esc(pr.shopper) + "</p></section></div>" +
-        '<div class="r-cols"><section><h3>Your palette</h3><div class="r-sws">' + swatches + '</div></section><section><h3>You probably love</h3><ul class="r-list">' + pr.loves.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + '</ul></section></div>' +
-        '<section class="r-stretch"><h3>Try something different</h3><p class="prose">' + esc(pr.stretch) + "</p></section>" +
+        '<div class="r-head"><p class="small">Your Style Profile</p><h2 class="display">' + esc(best.n) + '.</h2><p class="r-line">' + esc(best.line) + " " + esc(best.define) + '</p><p class="small">Match: ' + ranked[0].pct + "%. Also close to " + esc(second.n) + " (" + ranked[1].pct + "%).</p></div>" +
+        '<div class="r-cols"><section><h3>Your eight dimensions</h3><div class="r-bis">' + meters + '</div></section>' +
+        '<section><h3>What we noticed</h3><ul class="r-list">' + (notes.length ? notes : ["Your answers sit near the middle on every dimension, so your style moves easily between profiles."]).map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + '</ul></section></div>' +
+        '<div class="r-cols"><section><h3>Silhouette and fabric</h3><p class="prose"><b>Silhouette.</b> ' + esc(best.silhouette) + '</p><p class="prose"><b>Fabrics.</b> ' + esc(best.fabrics) + '</p></section>' +
+        '<section><h3>Where and how</h3><p class="prose"><b>Moments.</b> ' + esc(best.moments) + '</p><p class="prose"><b>Shopping.</b> ' + esc(best.shopper) + "</p></section></div>" +
+        '<div class="r-cols"><section><h3>Your palette</h3><div class="r-sws">' + swatches + '</div></section><section><h3>You probably love</h3><ul class="r-list">' + best.loves.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + '</ul></section></div>' +
+        '<section class="r-stretch"><h3>Try something different</h3><p class="prose">' + esc(best.stretch) + "</p></section>" +
         '<section><h3>Matching products</h3><div class="r-picks" id="r-picks">' + picks.concat(sPick ? [sPick] : []).map(cardHtml).join("") + '</div></section>' +
         '<p class="small">A Style Profile describes your preferences. It does not affect your Zi Residency or Zitizenship, and you can retake it at any time.</p>' +
-        '<div class="r-actions"><a class="btn" href="/shop/">Shop the collection</a><a class="btn line" href="/account/">Save to my account</a><button type="button" class="btn line" id="retake">Retake the Style Profile</button></div>';
+        '<div class="r-actions"><a class="btn" href="/shop/">Shop the collection</a><a class="btn line" href="/account/#style">Save to my account</a><button type="button" class="btn line" id="retake">Retake the Style Profile</button></div>';
       function paint() { Array.prototype.forEach.call(res.querySelectorAll(".r-sw"), function (el) { var c = window.__colors && window.__colors[el.getAttribute("data-c")]; if (c) el.firstChild.style.background = c; }); }
       if (window.__colors) paint(); else fetch("/colors.json").then(function (r) { return r.json(); }).then(function (m) { window.__colors = m; paint(); });
       $("#retake").addEventListener("click", start);
@@ -1746,7 +1807,7 @@
     var page = document.body.getAttribute("data-page");
     initModal();
     initFx();
-    initUx(); initHeroSlides(); initScrollFx(); initSignalScenes(); initFounderReel();
+    initUx(); initMinistries(); initHeroSlides(); initScrollFx(); initSignalScenes(); initFounderReel();
     initSampleCards();
     var select = $("#currency");
 

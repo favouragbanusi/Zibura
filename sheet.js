@@ -70,7 +70,7 @@ const normCap = (v) => String(v || '').replace(/^Arc/, 'Capsule');
     const products = pieces.filter((p) => p.slug).map((p) => ({
       slug: p.slug, name: p.name, category: p.category, type: p.type, collection: normCol(p.collection || p.signal), capsule: normCap(p.capsule || p.arc),
       description: p.description,
-      prices: { CAD: Number(p.price_CAD), USD: Number(p.price_USD), GBP: Number(p.price_GBP), NGN: Number(p.price_NGN) },
+      prices: { CAD: Number(p.price_CAD), USD: Number(p.price_USD), GBP: Number(p.price_GBP), EUR: Number(p.price_EUR), AUD: Number(p.price_AUD), AED: Number(p.price_AED), ZAR: Number(p.price_ZAR), NGN: Number(p.price_NGN) },
       colors: list(p.colors), sizes: list(p.sizes), audience: list(p.audience), material: p.material,
       inStock: /^(true|yes|1)$/i.test(p.inStock), isNew: /^(true|yes|1)$/i.test(p.isNew)
     }));

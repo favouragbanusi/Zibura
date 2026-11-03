@@ -25,6 +25,9 @@ const reg = (key, text) => { if (!REG.some((r) => r.key === key)) REG.push({ key
 const T = (key, fallback) => { reg(key, fallback); return COPY[key] ? esc(COPY[key]) : fallback; };
 const TR = (key, raw) => { reg(key, raw); return COPY[key] ? COPY[key] : raw; };
 const products = fromSheet("pieces.json") || JSON.parse(fs.readFileSync(find("products.json", "data/products.json"), "utf8"));
+// Currencies without a price column use an indicative rate from the USD price. Set exact prices in the sheet with price_EUR, price_AUD, price_AED and price_ZAR.
+const EXTRA_RATES = { EUR: 0.92, AUD: 1.52, AED: 3.67, ZAR: 18.5 };
+products.forEach((p) => { Object.keys(EXTRA_RATES).forEach((c) => { if (!(p.prices[c] > 0)) p.prices[c] = Math.round(p.prices.USD * EXTRA_RATES[c]); }); });
 
 function esc(s) {
   return String(s)
@@ -109,24 +112,39 @@ const COUNTRIES = ["Canada", "United States", "United Kingdom", "Nigeria", "Qata
 
 function waitlistForm(id) {
   return `<form class="waitlist-form" novalidate>
-      <div class="form-grid">
-        <div><label for="${id}-first">${T("forms.first-name", "First name")}</label><input id="${id}-first" name="first" autocomplete="given-name" required></div>
-        <div><label for="${id}-last">${T("forms.last-name", "Last name")}</label><input id="${id}-last" name="last" autocomplete="family-name" required></div>
-        <div class="full"><label for="${id}-email">${T("forms.email", "Email")}</label><input id="${id}-email" name="email" type="email" autocomplete="email" required></div>
-        <div><label for="${id}-country">${T("forms.country-of-origin", "Country of origin")}</label>
-          <select id="${id}-country" name="country" autocomplete="country-name" required><option value="">${T("forms.choose", "Choose")}</option>${COUNTRIES.map((c) => `<option>${c}</option>`).join("")}</select></div>
-        <div><label for="${id}-city">${T("forms.city-of-residence", "City of residence")}</label><input id="${id}-city" name="city" autocomplete="address-level2" required></div>
-        <div><label for="${id}-bm">${T("forms.birthday-month", "Birthday month")} <span class="opt-tag">${T("forms.optional", "optional")}</span></label><select id="${id}-bm" name="birth_month">${monthOptions}</select></div>
-        <div><label for="${id}-bd">${T("forms.birthday-day", "Birthday day")} <span class="opt-tag">${T("forms.optional", "optional")}</span></label><select id="${id}-bd" name="birth_day">${dayOptions}</select></div>
-        <div class="full"><label for="${id}-phone">${T("forms.phone", "Phone")} <span class="opt-tag">${T("forms.optional", "optional")}</span></label><input id="${id}-phone" name="phone" type="tel" autocomplete="tel"></div>
-        <div class="full checks">
-          <label class="check"><input type="checkbox" name="email_consent" required><span>${T("forms.email-consent", "Send me the Zi Memo and news from Zibura and Zi Republic by email. I can unsubscribe at any time.")}</span></label>
-          <label class="check"><input type="checkbox" name="sms_consent"><span>${T("forms.sms-consent", "Text me the Collection I announcements. Message and data rates may apply. Reply STOP to opt out.")}</span></label>
+      <div class="wl-prog" aria-hidden="true"><span class="wl-count">Step 1 of 3</span><div class="wl-track"><i></i></div></div>
+      <div class="wl-step on" data-step="1">
+        <div class="form-grid">
+          <div><label for="${id}-first">${T("forms.first-name", "First name")}</label><input id="${id}-first" name="first" autocomplete="given-name" required></div>
+          <div><label for="${id}-last">${T("forms.last-name", "Last name")}</label><input id="${id}-last" name="last" autocomplete="family-name" required></div>
+          <div class="full"><label for="${id}-email">${T("forms.email", "Email")}</label><input id="${id}-email" name="email" type="email" autocomplete="email" required></div>
         </div>
-        <input type="hidden" name="leaning">
-        <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
       </div>
-      <button class="btn" type="submit">${T("forms.join-the-waitlist", "Join the waitlist")}</button>
+      <div class="wl-step" data-step="2">
+        <div class="form-grid">
+          <div><label for="${id}-country">${T("forms.country-of-origin", "Country of origin")}</label>
+            <select id="${id}-country" name="country" autocomplete="country-name" required><option value="">${T("forms.choose", "Choose")}</option>${COUNTRIES.map((c) => `<option>${c}</option>`).join("")}</select></div>
+          <div><label for="${id}-city">${T("forms.city-of-residence", "City of residence")}</label><input id="${id}-city" name="city" autocomplete="address-level2" required></div>
+          <div><label for="${id}-bm">${T("forms.birthday-month", "Birthday month")} <span class="opt-tag">${T("forms.optional", "optional")}</span></label><select id="${id}-bm" name="birth_month">${monthOptions}</select></div>
+          <div><label for="${id}-bd">${T("forms.birthday-day", "Birthday day")} <span class="opt-tag">${T("forms.optional", "optional")}</span></label><select id="${id}-bd" name="birth_day">${dayOptions}</select></div>
+        </div>
+      </div>
+      <div class="wl-step" data-step="3">
+        <div class="form-grid">
+          <div class="full"><label for="${id}-phone">${T("forms.phone", "Phone")} <span class="opt-tag">${T("forms.optional", "optional")}</span></label><input id="${id}-phone" name="phone" type="tel" autocomplete="tel"></div>
+          <div class="full checks">
+            <label class="check"><input type="checkbox" name="email_consent" required><span>${T("forms.email-consent", "Send me the Zi Memo and news from Zibura and Zi Republic by email. I can unsubscribe at any time.")}</span></label>
+            <label class="check"><input type="checkbox" name="sms_consent"><span>${T("forms.sms-consent", "Text me the Collection I announcements. Message and data rates may apply. Reply STOP to opt out.")}</span></label>
+          </div>
+        </div>
+      </div>
+      <input type="hidden" name="leaning">
+      <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <div class="wl-nav">
+        <button class="btn line wl-back" type="button" hidden>${T("forms.back", "Back")}</button>
+        <button class="btn wl-next" type="button">${T("forms.next", "Next")}</button>
+        <button class="btn wl-submit" type="submit">${T("forms.join-the-waitlist", "Join the waitlist")}</button>
+      </div>
       <div class="msg wl-msg" role="status"></div>
     </form>`;
 }
@@ -216,14 +234,15 @@ function layout({ title, description, page, body }) {
 <script>document.documentElement.className = "js";</script>
 </head>
 <body data-page="${page}">
-<div class="notice">${T("notice_text", "Official notice: Collection I is launching soon.")} <a href="/waitlist/" data-open-waitlist>${T("notice_link", "Join the waitlist")}</a></div>
+<div class="notice">${T("notice_text", "Official notice: Collection I is launching soon.")} <a href="/waitlist/">${T("notice_link", "Join the waitlist")}</a></div>
 <header class="site-header" id="top">
   <div class="wrap">
     <button type="button" class="burger" id="burger" data-tip="Menu" aria-label="Open menu" aria-expanded="false" aria-controls="drawer"><span></span><span></span><span></span></button>
     <nav class="nav" aria-label="Main">
       <div class="has-mega"><a href="/shop/">${T("site.shop", "Shop")}</a>${MEGA}</div>
-      <a href="/explore/">${T("site.collections", "Collections")}</a>
+      <a href="/explore/">${T("site.collections", "The Edit")}</a>
       <a href="/brand/">${T("site.zi-republic", "Zi Republic")}</a>
+      <a href="/style-profile/">${T("site.style-profile", "Style Profile")}</a>
       <a href="/note/">${T("site.from-the-zi-in-chief", "From the Zi-in-Chief")}</a>
     </nav>
     <a class="brand" href="/" aria-label="Zibura home"><img src="/assets/logo-wordmark-navy.png" alt="Zibura" width="636" height="120"></a>
@@ -233,6 +252,10 @@ function layout({ title, description, page, body }) {
           <option value="CAD">CAD</option>
           <option value="USD">USD</option>
           <option value="GBP">GBP</option>
+          <option value="EUR">EUR</option>
+          <option value="AUD">AUD</option>
+          <option value="AED">AED</option>
+          <option value="ZAR">ZAR</option>
           <option value="NGN">NGN</option>
         </select></label>
       <a class="icon-btn" href="/account/" id="acct-link" aria-label="Sign in" data-tip="Sign in"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.2-4 4.2-6 8-6s6.8 2 8 6"/></svg></a>
@@ -245,13 +268,13 @@ function layout({ title, description, page, body }) {
   <div class="drawer-in">
     <a class="d-link big" href="/shop/">${T("site.shop", "Shop")}</a>
     <div class="d-sub">${TAX.map((c) => `<a href="/shop/?category=${encodeURIComponent(c.name)}">${esc(c.name)}</a>`).join("")}</div>
-    <a class="d-link big" href="/explore/">${T("site.collections", "Collections")}</a>
+    <a class="d-link big" href="/explore/">${T("site.collections", "The Edit")}</a>
     <a class="d-link big" href="/brand/">${T("site.zi-republic", "Zi Republic")}</a>
     <a class="d-link big" href="/style-profile/">${T("site.style-profile", "Style Profile")}</a>
     <a class="d-link big" href="/note/">${T("site.from-the-zi-in-chief", "From the Zi-in-Chief")}</a>
     <a class="d-link" href="/account/" id="acct-link-m">${T("site.my-account", "My account")}</a>
     <a class="d-link" href="/cart/">${T("site.cart", "Cart")}</a>
-    <div class="d-cur" role="group" aria-label="Currency">${["CAD", "USD", "GBP", "NGN"].map((c) => `<button type="button" data-cur="${c}">${c}</button>`).join("")}</div>
+    <div class="d-cur" role="group" aria-label="Currency">${["CAD", "USD", "GBP", "EUR", "AUD", "AED", "ZAR", "NGN"].map((c) => `<button type="button" data-cur="${c}">${c}</button>`).join("")}</div>
     <div class="socs d-socs">${SOCIAL}</div>
     <a class="btn wide" href="/zi-card/">${T("site.apply-for-zi-residency", "Apply for Zi Residency")}</a>
   </div>
@@ -261,7 +284,7 @@ ${body}
   <div class="wrap">
     <div class="f-hero">
       <p class="f-big">${T("site.your-expression", "Your expression,")}<br>${T("site.your-world", "your world.")}</p>
-      <div class="f-cta"><p>${T("footer_cta", "Join the waitlist to hear when Collection I launches.")}</p><a class="btn light" href="/waitlist/">${T("site.join-the-waitlist", "Join the waitlist")}</a></div>
+      <div class="f-cta"><p>${T("footer_cta", "Join the waitlist to hear when Collection I launches.")}</p><div class="cta-pair"><a class="btn light" href="/waitlist/">${T("site.join-the-waitlist", "Join the waitlist")}</a><a class="btn ghost-light" href="/waitlist/" data-open-waitlist>${T("site.get-the-zi-memo", "Get the Zi Memo")}</a></div></div>
     </div>
     <div class="top">
       <div class="f-brand">
@@ -285,11 +308,11 @@ ${categories.map((c) => `        <a href="/shop/?category=${encodeURIComponent(c
         <a href="/zi-card/">${T("site.zi-residency", "Zi Residency")}</a>
         <a href="/zi-card/#zitizenship">${T("site.zitizenship", "Zitizenship")}</a>
         <a href="/brand/#calendar">${T("site.zi-day-and-ziesta", "Zi Day and Ziesta")}</a>
-        <a href="/style-profile/">${T("site.style-profile", "Style Profile")}</a>
       </div>
       <div>
         <h3>${T("site.explore-heading", "Explore")}</h3>
-        <a href="/explore/">${T("site.collections", "Collections")}</a>
+        <a href="/explore/">${T("site.collections", "The Edit")}</a>
+        <a href="/style-profile/">${T("site.style-profile", "Style Profile")}</a>
         <a href="/note/">${T("site.from-the-zi-in-chief", "From the Zi-in-Chief")}</a>
         <a href="/waitlist/">${T("site.join-the-waitlist", "Join the waitlist")}</a>
         <a href="/account/">${T("site.your-account", "Your account")}</a>
@@ -342,6 +365,7 @@ write(
         <h1 class="he-title">${T("home.hero1-title", "Your expression, your world.")}</h1>
         <div class="he-actions">
           <a class="he-btn" href="/explore/">${T("home.hero1-button", "Explore Zibura")}</a>
+          <a class="he-btn ghost" href="/shop/">${T("home.hero1-button2", "Shop now")}</a>
         </div>
       </div>
     </article>
@@ -350,14 +374,14 @@ write(
       <div class="he-copy">
         <h2 class="he-title">${T("home.hero2-title", "A country of our own. A style of your own.")}</h2>
         <p class="he-lede">${T("home.hero2-sub", "Welcome to Zibura and Zi Republic.")}</p>
-        <div class="he-actions"><a class="he-btn" href="/brand/">${T("home.hero2-button", "Enter the Republic")}</a></div>
+        <div class="he-actions"><a class="he-btn" href="/brand/">${T("home.hero2-button", "Enter the Republic")}</a><a class="he-btn ghost" href="/zi-card/">${T("home.hero2-button2", "Apply for Zi Residency")}</a></div>
       </div>
     </article>` : ""}
     ${HERO2 ? `<article class="he-slide">
       <img src="/assets/hero-2.${HERO2.ext}" alt="Collection I editorial" width="1500" height="1000" loading="lazy">
       <div class="he-copy">
-        <h2 class="he-title">${T("home.hero3-title", "Collection I is launching soon.")}</h2>
-        <p class="he-lede">${T("home.hero3-sub", "Capsule I is back to the basics.")}</p>
+        <h2 class="he-title">${T("home.hero3-title", "Back to the basics.")}</h2>
+        <p class="he-lede">${T("home.hero3-sub", "Our first collection is launching soon. Capsule I is a capsule just for you, carefully created from high quality basics.")}</p>
         <div class="he-actions"><a class="he-btn" href="/explore/collection-1/">${T("home.hero3-button", "Explore the collection")}</a><a class="he-btn ghost" href="/waitlist/">${T("home.hero3-button2", "Join the waitlist")}</a></div>
       </div>
     </article>` : ""}
@@ -379,11 +403,6 @@ write(
     <div data-reveal>
       <h2 class="display">${T("home.waitlist-title", "Join the waitlist.")}</h2>
       <p class="reg-lead">${T("home.waitlist-lead", "The Ministry of Communications maintains the waitlist with great seriousness. Register your interest and the Ministry will email you when Collection I launches.")}</p>
-      <ul class="reg-points">
-        <li>${T("home.waitlist-point1", "Your name on the waitlist before Collection I launches")}</li>
-        <li>${T("home.waitlist-point2", "First word on Collection I")}</li>
-        <li>${T("home.waitlist-point3", "The Zi Memo, straight to your inbox")}</li>
-      </ul>
     </div>
     <div data-reveal>${arrivalCard("h")}</div>
   </div>
@@ -405,9 +424,9 @@ ${products.slice(0, 8).map(card).join("\n")}
 
 <section class="hscroll" data-hscroll aria-label="Collection I look book">
   <div class="hs-pin">
-    <div class="wrap hs-head"><h2>${T("home.the-look-book", "The look book")}</h2><p>${T("home.look-book-sub", "Collection I, Capsule I, frame by frame.")}</p></div>
+    <div class="wrap hs-head"><h2>${T("home.the-look-book", "The look book")}</h2><p>${T("home.look-book-sub", "Back to the basics, in pictures.")}</p></div>
     <div class="hs-track">
-${[TR("home.opening-frame", "Opening frame"), TR("home.movement", "Movement"), TR("home.detail", "Detail"), TR("home.group", "Group"), TR("home.still-life", "Still life"), TR("home.closing-frame", "Closing frame")].map((c, i) => `      <figure class="hs-card${i % 2 ? " low" : ""}">${media("collection-1-" + (i + 1), c)}<figcaption>${c}</figcaption></figure>`).join("\n")}
+${[TR("home.opening-frame", "Your expression, your world."), TR("home.movement", "No single category required."), TR("home.detail", "The Box was never the whole picture."), TR("home.group", "The Republic has room."), TR("home.still-life", "Personal expression has no fixed department."), TR("home.closing-frame", "A country of our own. A style of your own.")].map((c, i) => `      <figure class="hs-card${i % 2 ? " low" : ""}">${media("collection-1-" + (i + 1), c)}<figcaption>${c}</figcaption></figure>`).join("\n")}
       <a class="hs-end" href="/explore/collection-1/"><span>${T("home.read-about-collection", "Read about Collection I")}</span></a>
     </div>
     <div class="hs-bar" aria-hidden="true"><i></i></div>
@@ -442,7 +461,7 @@ ${TAX.map((c) => {
       <figure class="cl b" data-parallax="-0.1">${media("collection-1-4", "Editorial frame")}</figure>
       <figure class="cl c" data-parallax="0.2">${media("collection-1-6", "Editorial frame")}</figure>
     </div>
-    <p class="scrollwords" data-scrollwords>${T("home.supporting", "A brand built around personal expression. A world with its own identity. Design, individual style and a point of view that leaves room for more than one thing.")}</p>
+    <p class="scrollwords" data-scrollwords>${T("home.supporting", "A brand built around personal expression. A world with its own identity. Design, individual style and a point of view that leaves room for you to exist in all your dimensions.")}</p>
     <p style="margin-top:40px" data-reveal><a class="btn line" href="/brand/">${T("home.read-republic-story", "Read the Republic story")}</a></p>
   </div>
 </section>
@@ -456,8 +475,8 @@ ${TAX.map((c) => {
     <div data-reveal>${flipCard()}</div>
     <div data-reveal>
       <h2 class="display">${T("home.residency-title", "Apply for Zi Residency.")}</h2>
-      <p class="lead">${T("home.residency-lead", "Zi Residency is the Republic's membership. Anyone may apply. Republic Administration processes each completed application. Applicants become Zi Residents and receive a Zi Card, the everyday credential of membership.")}</p>
-      <p style="margin-top:32px"><a class="btn light" href="/zi-card/">${T("home.residency-button", "Apply for Zi Residency")}</a></p>
+      <p class="lead">${T("home.residency-lead", "Anyone may apply. Apply and receive your Zi Card.")}</p>
+      <p class="cta-pair" style="margin-top:32px"><a class="btn light" href="/zi-card/">${T("home.residency-button", "Apply for Zi Residency")}</a><a class="btn ghost-light" href="/zi-card/#rights">${T("home.residency-button2", "How residency works")}</a></p>
     </div>
   </div>
 </section>
@@ -474,7 +493,7 @@ const MINISTRIES = [
   ["Ministry of Republic Administration", "Responsible for Zi Cards, passports, residency applications, Zitizenship Calls and official records."]
 ].map(([n, d], i) => [TR(`brand.ministry-${i + 1}-name`, n), TR(`brand.ministry-${i + 1}-role`, d)]);
 const CALENDAR = [
-  ["Zi Day", "Zi Day is the Republic's founding day. Zi Residents and Zitizens mark it each year.", "December 1, 2026"],
+  ["Zi Day", "Zi Day is the Republic's founding day. Zi Residents and Zitizens mark it each year.", ""],
   ["Ziesta", "Ziesta is the Republic's festival of rest, a time to slow down and gather.", ""]
 ];
 CALENDAR.forEach((c) => {
@@ -529,20 +548,20 @@ write(
   <div class="hs-bar" aria-hidden="true"><i></i></div>
 </div></section>
 
-<section class="section" id="ministries" style="padding-top:0"><div class="wrap split">
-  <div data-reveal>
+<section class="section" id="ministries" style="padding-top:0"><div class="wrap">
+  <div class="mini-head" data-reveal>
     <h2 class="display">${T("brand.ministries-title", "The Ministries.")}</h2>
     <p class="province-intro">${T("brand.ministries-intro", "The Ministries oversee the Republic's public functions, from creative direction and community programs to communications, commerce and administration.")}</p>
   </div>
-  <dl class="plain-list" data-reveal>
-${MINISTRIES.map(([n, d]) => `    <div><dt>${n}</dt><dd>${d}</dd></div>`).join("\n")}
-  </dl>
+  <div class="mini-grid" data-reveal>
+${MINISTRIES.map(([n, d]) => `    <button type="button" class="mini" aria-expanded="false"><span class="mn">${n}</span><span class="mx" aria-hidden="true"></span><span class="md"><span>${d}</span></span></button>`).join("\n")}
+  </div>
 </div></section>
 
 <section class="section" id="calendar" style="padding-top:0"><div class="wrap split">
   <h2 class="display" data-reveal>${T("brand.calendar-title", "The calendar.")}</h2>
   <dl class="plain-list" data-reveal>
-${CALENDAR.map(([n, d, dt]) => `    <div><dt>${n}</dt><dd>${d}</dd><span class="tag-soon">${dt || T("brand.date-soon", "Date announced soon")}</span></div>`).join("\n")}
+${CALENDAR.map(([n, d, dt]) => `    <div><dt>${n}</dt><dd>${d}</dd><span class="tag-soon">${dt || T("brand.date-soon", "Coming soon")}</span></div>`).join("\n")}
   </dl>
 </div></section>
 
@@ -571,18 +590,18 @@ ${CALENDAR.map(([n, d, dt]) => `    <div><dt>${n}</dt><dd>${d}</dd><span class="
 const COLLECTIONS = [
   {
     id: "collection-1", name: "Collection I", tag: "The first collection", status: "Launching soon",
-    lead: "Introducing Collection I. A collection brings together a body of work under one creative direction. It may include different product categories, united by a shared idea.",
+    lead: "Collection I is the first collection from Zibura. It opens with Capsule I, high quality basics to build a wardrobe on.",
     idea: [],
     film: "Collection I, in motion.",
     capsules: ["capsule-1", "capsule-2"]
   },
   {
-    id: "collection-2", soon: true, name: "Collection II", tag: "Date announced soon", status: "Date announced soon",
-    lead: "Collection II is announced soon.", idea: [], film: "", capsules: []
+    id: "collection-2", soon: true, name: "Collection II", tag: "Coming soon", status: "Coming soon",
+    lead: "Coming soon.", idea: [], film: "", capsules: []
   },
   {
-    id: "collection-3", soon: true, name: "Collection III", tag: "Date announced soon", status: "Date announced soon",
-    lead: "Collection III is announced soon.", idea: [], film: "", capsules: []
+    id: "collection-3", soon: true, name: "Collection III", tag: "Coming soon", status: "Coming soon",
+    lead: "Coming soon.", idea: [], film: "", capsules: []
   }
 ];
 const CAPSULES = [
@@ -649,7 +668,7 @@ function storyPage(item, parent) {
       page: "story",
       body: `<main>
 <section class="story-head"><div class="wrap">
-  <nav class="crumbs" aria-label="Breadcrumb"><a href="/explore/">${T("story.collections", "Collections")}</a> <span>/</span> ${isCap ? `<a href="/explore/${col.id}/">${col.name}</a> <span>/</span> ${item.name}` : item.name}</nav>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/explore/">${T("story.collections", "The Edit")}</a> <span>/</span> ${isCap ? `<a href="/explore/${col.id}/">${col.name}</a> <span>/</span> ${item.name}` : item.name}</nav>
   <p class="small">${esc(item.status)}</p>
   <h1 class="display rise">${words(item.name)}</h1>
   <p class="story-tag fade">${esc(item.tag)}</p>
@@ -715,15 +734,15 @@ CAPSULES.filter((a) => !a.soon).forEach((a) => storyPage(a, colById[a.collection
 write(
   "explore/index.html",
   layout({
-    title: TR("explore.meta-title", "Collections | Zibura"),
+    title: TR("explore.meta-title", "The Edit | Zibura"),
     description: TR("explore.meta-description", "Explore Collection I and its capsules from Zibura."),
     page: "explore",
     body: `<main>
 <section class="page-head"><div class="wrap">
-  <h1 class="display rise">${words(TR("explore.title", "Collections."))}</h1>
+  <h1 class="display rise">${words(TR("explore.title", "The Edit."))}</h1>
   <p class="fade">${T("explore.intro", "A collection brings together a body of work under one creative direction. A capsule is a focused group of products built around a particular idea, form, material, colour story or occasion.")}</p>
 </div></section>
-<section class="sg-stage" aria-label="Collections">
+<section class="sg-stage" aria-label="The Edit">
 ${COLLECTIONS.filter((x) => !x.soon).map((x) => `  <article class="sg-scene" data-sg>
     <div class="sg-bg" data-drift>${media(x.id + "-cover", x.name + " cover image")}</div>
     <div class="sg-body">
@@ -750,7 +769,7 @@ ${CAPSULES.filter((a) => a.collection === x.id).map((a) => a.soon ? `           
 ${COLLECTIONS.filter((x) => x.soon).map((x) => `  <div class="sg-sealed" aria-disabled="true">
     <div class="sg-bg" data-drift>${media(x.id + "-cover", x.name + " cover image")}</div>
     <div class="sg-body">
-      <span class="tag-soon">${T("explore.date-soon", "Date announced soon")}</span>
+      <span class="tag-soon">${T("explore.date-soon", "Coming soon")}</span>
       <h2 class="sg-title">${x.name}</h2>
       <p class="sg-lead">${esc(x.lead)}</p>
     </div>
@@ -770,61 +789,75 @@ ${[TR("explore.silhouette", "Silhouette"), TR("explore.colour", "Colour"), TR("e
 );
 
 // Style Profile
-const LEANINGS = [
-  ["Composed", "Calm, precise and considered.", "Composed preferences favour clean lines, fine fabrics and decisions made once, with care.", ["Calm", "Precise", "Considered"]],
-  ["Warm", "Generous, bright and social.", "Warm preferences favour saturated colour, soft shapes and clothes made for gathering.", ["Generous", "Bright", "Social"]],
-  ["Bold", "Direct, strong and certain.", "Bold preferences favour sharp structure, high contrast and one loud focal point.", ["Direct", "Strong", "Certain"]],
-  ["Grounded", "Patient, natural and lasting.", "Grounded preferences favour natural fabrics, earth tones and products that age well.", ["Patient", "Natural", "Lasting"]],
-  ["Playful", "Quick, bright and in motion.", "Playful preferences favour easy movement, bright colour and combinations that change by the hour.", ["Quick", "Bright", "Mobile"]],
-  ["Layered", "Soft, dreamy and detailed.", "Layered preferences favour draped shapes, sheer layers and details that reveal themselves slowly.", ["Soft", "Dreamy", "Detailed"]]
-];
-LEANINGS.forEach((p) => {
-  p[1] = TR(`quiz.${p[0]}-line`, p[1]);
-  p[2] = TR(`quiz.${p[0]}-note`, p[2]);
-  p[3] = p[3].map((t, k) => TR(`quiz.${p[0]}-trait-${k + 1}`, t));
-});
+// Style is measured on eight axes. Every answer moves one or more axes. The profile with the closest pattern wins.
+const AXES = [
+  ["Structure", "Relaxed", "Tailored", "You prefer relaxed shapes that move with you.", "You prefer tailored shapes with a clear structure."],
+  ["Colour", "Neutral", "Vivid", "You build outfits from neutral tones.", "You build outfits around colour."],
+  ["Attention", "Understated", "Statement", "You let quality speak quietly.", "You dress to be noticed."],
+  ["Detail", "Clean", "Layered", "You keep outfits clean and simple.", "You add layers, texture and detail."],
+  ["Pace", "Classic", "Experimental", "You favour pieces that last across seasons.", "You favour new shapes and new ideas."],
+  ["Movement", "Refined", "Active", "You dress for polish and occasion.", "You dress for movement and ease."],
+  ["Fit", "Fitted", "Oversized", "You like clothes close to the body.", "You like room, volume and an oversized fit."],
+  ["Heritage", "Contemporary", "Cultural", "You dress from current style and global basics.", "You wear textiles, prints and craft with a cultural story."]
+].map((a, i) => a.map((t, k) => (k === 0 ? TR(`quiz.axis-${i + 1}`, t) : TR(`quiz.axis-${i + 1}-${["low", "high", "low-note", "high-note"][k - 1]}`, t))));
+// Axis order for every answer vector: Structure, Colour, Attention, Detail, Pace, Movement, Fit, Heritage.
 const PLACEMENT = [
-  ["It is Saturday and nothing is planned. What happens?", ["I read, think, and let the day find its shape.", "I text everyone and turn it into a gathering.", "I pick the boldest plan on the table and commit.", "I cook something slow and reset.", "I am already out the door chasing three things.", "I lose hours inside a daydream and a playlist."]],
-  ["Your outfit says:", ["Quiet confidence. Every detail was chosen.", "Look at me, I am happy to be here.", "Rules were for other people.", "Comfortable, natural, made to last.", "Whatever I grabbed on the way out, and it works.", "A layered story with a twist you notice later."]],
-  ["How do you make a big decision?", ["I wait until it is clear, then move.", "I ask the people I love.", "I decide fast and never look back.", "I give it time and let it grow on me.", "I try it and adjust as I go.", "I follow the feeling I cannot explain."]],
-  ["Pick a place.", ["A lake at dawn.", "A rooftop at sunset.", "A stage with the lights on.", "A garden after rain.", "A city street at full speed.", "A foggy hillside at midnight."]],
-  ["What do your friends thank you for?", ["Staying calm and seeing clearly.", "Making every moment feel special.", "Saying what everyone was thinking.", "Showing up, every time.", "Getting things moving.", "Seeing something in them nobody else saw."]],
-  ["Choose your soundtrack.", ["Slow, spacious, and intelligent.", "Everything you can sing along to.", "Loud, with a point to make.", "Warm, acoustic, and unhurried.", "Fast, with surprises.", "Dreamy, layered, hard to place."]],
-  ["Which word belongs next to your name?", ["Magnetic.", "Radiant.", "Fearless.", "Grounded.", "Unstoppable.", "Enigmatic."]],
-  ["Pick a fabric.", ["Crisp cotton and fine wool.", "Satin with a little shine.", "Leather and sharp structure.", "Linen, knit, and natural weaves.", "Technical nylon and stretch mesh.", "Silk, lace, and sheer layers."]],
-  ["How do you shop?", ["I buy once and wear it for years.", "I buy for the occasion and the photo.", "I know in five seconds and pay at once.", "I wait for the product that grows on me.", "I take several home and see what sticks.", "I follow a feeling, then find the reasons."]],
-  ["Your closet is mostly:", ["Navy, white, and clean neutrals.", "Sunny, happy, saturated colours.", "Black, red, and one loud product.", "Earth tones and soft greens.", "Bright colours that mix and match.", "Purples, smoke, and the shades between."]],
-  ["A last minute invite arrives. You:", ["Arrive on time and observe first.", "Bring the snacks and the playlist.", "Walk in as the main character.", "Bring a host gift and stay until the end.", "Stop by four parties in one night.", "Arrive late with a good story."]],
-  ["Pick the accessory you would never leave without.", ["A fine watch or a simple chain.", "Statement earrings.", "A heavy ring or a sharp belt.", "A woven bag or a soft scarf.", "Sneakers made for moving.", "Layered chains and dark sunglasses."]]
+  ["Which outfit do you reach for first?", [["Tailored blazer, straight trousers, clean shoes.", [2, -1, 0, -1, -1, -1]], ["Oversized knit, easy trousers, sneakers.", [-2, -1, -1, -1, 0, 1]], ["Flowing dress with soft layers and delicate jewellery.", [-1, 0, 0, 2, -1, -1]], ["Bright set in a print nobody else has.", [0, 2, 2, 1, 1, 1]], ["Black leather, sharp lines and one strange detail.", [1, -1, 2, 1, 2, 0]]]],
+  ["Pick a colour story.", [["Navy, white and stone.", [1, -2, -1, -1, -1, 0]], ["Earth tones: olive, sand and rust.", [-1, -1, -1, 0, -1, 0]], ["Soft pastels and cream.", [-1, 0, -1, 1, -1, -1]], ["Saturated reds, yellows and pinks.", [0, 2, 1, 0, 0, 1]], ["Black with one unexpected shade.", [1, -1, 1, 0, 1, 0]]]],
+  ["How loud should an outfit be?", [["Quiet. People notice the fit, then the outfit.", [1, -1, -2, -1, -1, 0]], ["Calm, with one detail worth a second look.", [0, 0, -1, 0, 0, 0]], ["Clear. People can see I made a choice.", [0, 1, 1, 0, 1, 0]], ["Loud. I dress to be seen from across the room.", [0, 1, 2, 1, 1, 0]]]],
+  ["What do you look at first on a rack?", [["The cut and the proportions.", [2, 0, 0, -1, 0, 0]], ["The fabric and how it feels.", [-1, -1, -1, 0, -1, 1]], ["The embellishment, the trim and the print.", [0, 1, 1, 2, 0, 0]], ["The silhouette nobody else would try.", [0, 0, 1, 1, 2, 0]], ["Whether I can move in it.", [-1, 0, 0, -1, 0, 2]]]],
+  ["Pick a fabric.", [["Crisp cotton and fine wool.", [2, -1, -1, -1, -1, -1]], ["Linen, jersey and soft knit.", [-2, -1, -1, -1, -1, 1]], ["Silk, lace and chiffon.", [-1, 0, 0, 2, -1, -2]], ["Leather, vinyl and heavy satin.", [1, 0, 2, 0, 1, -1]], ["Technical nylon and stretch.", [-1, 1, 1, -1, 1, 2]]]],
+  ["Describe your closet in one sentence.", [["A few excellent pieces that go with each other.", [1, -1, -1, -1, -1, 0]], ["Many pieces, and every one has a story.", [0, 1, 1, 2, 1, 0]], ["Comfortable pieces I can wear any day.", [-1, -1, -1, -1, -1, 1]], ["Pieces that only make sense on me.", [0, 0, 1, 1, 2, -1]], ["A rotating set of bright things that all mix.", [-1, 2, 1, 0, 1, 1]]]],
+  ["How do you feel about trends?", [["I wear what lasts, trends or no trends.", [1, -1, -1, -1, -2, 0]], ["I borrow one idea each season.", [0, 0, 0, 0, 0, 0]], ["I like to be early.", [0, 1, 1, 1, 1, 0]], ["I try to be the reason something trends.", [0, 1, 2, 1, 2, 0]]]],
+  ["A long day on foot. What is on your feet?", [["Polished loafers or leather boots.", [2, -1, 0, -1, -1, -2]], ["Clean white sneakers.", [-1, -1, -1, -1, 0, 1]], ["Bright trainers made for moving.", [-1, 1, 1, 0, 1, 2]], ["Ballet flats or soft sandals.", [-1, 0, 0, 1, -1, -1]], ["Chunky boots with a point to make.", [1, -1, 2, 0, 1, 0]]]],
+  ["Choose an accessory.", [["A fine watch or a thin chain.", [1, -1, -1, -1, -1, 0]], ["A woven bag.", [-1, -1, -1, 0, -1, 0]], ["Layered necklaces and rings.", [0, 0, 1, 2, 0, -1]], ["Statement earrings in colour.", [0, 2, 2, 1, 0, 0]], ["Sharp sunglasses and a heavy belt.", [1, -1, 2, 0, 1, 0]], ["A bag that carries everything.", [-1, 0, 0, -1, 0, 2]]]],
+  ["Choose a setting.", [["A gallery on a quiet weekday.", [1, -1, -1, 0, 0, -1]], ["A weekend market.", [-1, 0, 0, 0, -1, 1]], ["A garden party.", [-1, 1, 0, 2, -1, -1]], ["A rooftop with a good playlist.", [0, 1, 2, 1, 1, 1]], ["A basement venue after midnight.", [1, -1, 1, 1, 2, 0]]]],
+  ["How do you decide what to buy?", [["Once, carefully, and I keep it for years.", [1, -1, -1, -1, -2, 0]], ["On feel. It has to be comfortable.", [-1, -1, -1, -1, -1, 1]], ["On impulse, when something calls to me.", [0, 1, 1, 1, 1, 0]], ["On whether it surprises me.", [0, 0, 1, 1, 2, 0]]]],
+  ["What do people say about how you dress?", [["Always polished.", [2, -1, 0, -1, -1, -1]], ["So effortless.", [-1, -1, -1, -1, -1, 1]], ["So pretty and soft.", [-1, 0, -1, 1, -1, -1]], ["Where did you find that?", [0, 1, 1, 1, 2, 0]], ["You never miss.", [1, 0, 2, 0, 1, 0]]]],
+  ["Which layering is closest to yours?", [["One strong layer and nothing extra.", [1, -1, -1, -2, 0, 0]], ["A coat over a knit over a shirt.", [1, -1, 0, 1, -1, -1]], ["Drapes, scarves and sheer on sheer.", [-1, 0, 0, 2, 0, -1]], ["A hoodie and a shell.", [-1, 0, 0, -1, 0, 2]], ["Pattern on pattern.", [0, 2, 1, 2, 1, 0]]]],
+  ["Which trousers do you pick?", [["Straight and sharp creased.", [2, -1, -1, -1, -1, -1]], ["Wide and relaxed.", [-2, 0, 0, 0, 0, 1]], ["Cargo and technical.", [-1, 0, 1, -1, 1, 2]], ["Printed or colourful.", [0, 2, 2, 1, 1, 0]], ["Cut in a way you look at twice.", [0, 0, 1, 1, 2, 0]]]]
 ];
+// The first fourteen questions carry Fit from Structure, with a few direct overrides, and Heritage from a few direct answers.
+const FIT_OVERRIDE = { "Oversized knit, easy trousers, sneakers.": 2, "Wide and relaxed.": 2, "Straight and sharp creased.": -1 };
+const HER_OVERRIDE = { "Earth tones: olive, sand and rust.": 1, "A woven bag.": 1, "A weekend market.": 1 };
+PLACEMENT.forEach((q) => q[1].forEach((a) => {
+  const st = a[1][0];
+  const fit = a[0] in FIT_OVERRIDE ? FIT_OVERRIDE[a[0]] : (Math.abs(st) === 2 ? (st > 0 ? -1 : 1) : 0);
+  a[1].push(fit, a[0] in HER_OVERRIDE ? HER_OVERRIDE[a[0]] : 0);
+}));
+PLACEMENT.push(
+  ["Which fit feels most like you?", [["Close to the body, with every line defined.", [1, 0, 0, -1, 0, -1, -2, 0]], ["True to size and neat.", [1, -1, -1, -1, -1, 0, -1, 0]], ["A little room, so I can move.", [-1, 0, 0, 0, 0, 1, 1, 0]], ["Oversized and roomy, with plenty of volume.", [-1, 0, 1, 0, 1, 0, 2, 0]]]],
+  ["Pick a textile.", [["Plain and smooth, with no pattern.", [1, -1, -1, -1, -1, 0, 0, -2]], ["A fine stripe or a quiet check.", [1, -1, -1, 0, -1, 0, 0, -1]], ["Hand dyed or woven cloth with a story behind it.", [0, 0, 0, 1, 0, 0, 0, 2]], ["A bold wax print in saturated colour.", [0, 2, 2, 1, 0, 0, 0, 2]]]],
+  ["Where do your style ideas come from?", [["Runways and fashion magazines.", [1, 0, 1, 0, 1, -1, 0, -1]], ["Streetwear and global brands.", [-1, 0, 1, 0, 1, 1, 1, -2]], ["Family, elders and the places I come from.", [0, 0, 0, 1, -1, 0, 0, 2]], ["Vintage shops and secondhand finds.", [0, 0, 0, 1, 0, 0, 0, 1]]]],
+  ["How should a jacket fit?", [["Close, with the shoulders exact.", [2, -1, 0, -1, -1, -1, -2, 0]], ["True to size.", [1, 0, 0, 0, 0, 0, -1, 0]], ["One size up, for layering.", [-1, 0, 0, 1, 0, 0, 1, 0]], ["Big and boxy.", [-1, 0, 1, 0, 1, 0, 2, 0]]]]
+);
+// Each profile has a target pattern on the eight axes, from -1 (left label) to +1 (right label).
 const PROFILES = [
-  { style: "Quiet tailoring", silhouette: "Clean lines, long coats, straight trousers, and precise proportions.", palette: ["Zibura Blue", "White", "Sky Blue", "Silver"], fabrics: "Wool, cotton poplin, fine knit", loves: ["Outerwear with a strong shoulder", "Neutral base layers", "One refined jewellery item"], moments: "Early meetings, gallery openings, long train rides, and any room where listening matters.", shopper: "You buy fewer products and wear them for years. Fit comes first and trends come second.", stretch: "Add a single bright accent, like a Sky Blue scarf, and the whole look gains a second voice.", picks: ["halo", "margin", "orbit"], notice: ["You dress with intention, and every detail has a reason.", "You decide when the picture is clear, and then you move without second guessing.", "You buy once and wear it for years.", "Your closet is organized around navy, white, and clean neutrals."] },
-  { style: "Joyful colour", silhouette: "Fitted waists, flowing skirts, soft shoulders, and anything that moves when you do.", palette: ["Yellow", "Peach", "Coral", "Cream"], fabrics: "Satin, silk blends, cotton with a bright hand", loves: ["Warm saturated colours", "Statement earrings", "Dresses made for gathering"], moments: "Birthdays, brunches, weddings, and every dinner where you arrive with the playlist.", shopper: "You shop for the occasion and the photograph. A product earns its place when it makes the room smile.", stretch: "Try one deep navy product and watch your bright colours glow even more against it.", picks: ["ember", "kite", "hearth"], notice: ["You dress to be happy in the room, and the room notices.", "You ask the people you love, and their joy becomes part of the decision.", "You shop for the moment and the photo.", "Your closet is full of sunny, saturated colour."] },
-  { style: "Sharp and certain", silhouette: "Structured shoulders, high contrast, strong lines, and one loud focal point.", palette: ["Red", "Black", "White", "Gold"], fabrics: "Leather, crepe, heavy satin", loves: ["A red product you can see from across the street", "Sharp belts and heavy rings", "Black as a base"], moments: "Stages, openings, negotiations, and any room that needs someone to go first.", shopper: "You know in five seconds and pay at once. Hesitation is for other people.", stretch: "Try one soft, warm product in Sand or Tan and discover how much louder the red gets.", picks: ["tidal", "stride", "rumour"], notice: ["You treat the rules as suggestions, and your outfit proves it.", "You decide fast and keep moving.", "You buy in five seconds and never look back.", "Your closet runs on black, red, and one loud product."] },
-  { style: "Natural and lasting", silhouette: "Relaxed shapes, easy trousers, soft layers, and products built to age well.", palette: ["Green", "Sand", "Olive", "Tan"], fabrics: "Linen, wool knit, soft leather, washed cotton", loves: ["Earth tones and soft greens", "Totes and woven textures", "Candles and slow mornings"], moments: "Weekend markets, long dinners, garden days, and any plan that gets better with time.", shopper: "You wait for the product that grows on you. The ones you keep for ten years are the ones you thought about for ten days.", stretch: "Try one bright, saturated product and let your earth tones frame it.", picks: ["meridian", "cove", "hearth"], notice: ["You choose comfort and durability, and your wardrobe shows it.", "You give a decision time and let it grow on you.", "You wait for the product that earns its place.", "Your closet is built from earth tones and soft greens."] },
-  { style: "Fast and playful", silhouette: "Easy movement, athletic ease, bright layers, and combinations that change by the hour.", palette: ["Orange", "Sky Blue", "Lime", "Hot Pink"], fabrics: "Technical nylon, jersey, stretch mesh, canvas", loves: ["Bright colours that mix and match", "Sneakers and shoes made for moving", "Bags that carry everything"], moments: "City days, travel, side projects, and nights that change plans three times.", shopper: "You take several products home and see what sticks. Your wardrobe is a working lab.", stretch: "Pick one slower, more tailored product and see how it calms the whole outfit.", picks: ["ember", "pocket", "cove"], notice: ["You dress in motion, and it works.", "You try it and adjust as you go.", "You take several products home and keep the winners.", "Your closet is bright and everything mixes."] },
-  { style: "Dreamy and layered", silhouette: "Draped shapes, sheer layers, long scarves, and details that reveal themselves slowly.", palette: ["Purple", "Lilac", "Silver", "Black"], fabrics: "Silk, lace, chiffon, soft velvet", loves: ["Purples, smoke, and shades in between", "Layered chains and scarves", "Perfume with a second note"], moments: "Late dinners, night walks, quiet exhibitions, and any evening that deserves a story.", shopper: "You follow a feeling and find the reasons afterward. The best products feel like they already knew you.", stretch: "Try a crisp white shirt as your base and watch the layers get louder.", picks: ["kite", "orbit", "rumour"], notice: ["You dress in layers with a twist people notice later.", "You follow the feeling you cannot explain, and it is usually right.", "You follow a feeling, then find the reasons.", "Your closet lives between purple, smoke, and shadow."] }
+  { n: "Minimalist", v: [1, -1, -0.86, -0.99, -1, -0.66, -0.98, -0.62], line: "Clean, quiet and exact.", define: "Minimalist style removes what is unnecessary. The outfit relies on fit, fabric and a tight palette.", silhouette: "Straight lines, simple shapes and exact proportions.", palette: ["White", "Black", "Sand", "Silver"], fabrics: "Cotton poplin, fine wool, smooth knit", loves: ["A perfect white shirt", "One coat that goes with everything", "Plain leather bags"], moments: "Quiet offices, gallery visits, early flights and any room that rewards calm.", shopper: "You buy few pieces and keep them for years. Fit decides every purchase.", stretch: "Add one saturated accent, such as a scarf in Sky Blue, and the outfit gains a second voice.", picks: ["halo", "margin", "orbit"] },
+  { n: "Classicist", v: [1, -1, -0.75, -0.92, -0.99, -0.83, -1, -0.26], line: "Polished, lasting and sure.", define: "Classic style favours well made shapes that stay in season. Tailoring and tradition lead.", silhouette: "Tailored jackets, straight trousers, crisp collars and defined waists.", palette: ["Zibura Blue", "White", "Tan", "Gold"], fabrics: "Wool, cotton, leather, fine knit", loves: ["A blazer that fits at the shoulder", "Loafers and leather belts", "A trench coat"], moments: "Meetings, dinners, weddings and any occasion with a dress code.", shopper: "You choose quality over quantity and replace very little.", stretch: "Try one relaxed knit under the tailoring and watch the whole look soften.", picks: ["margin", "halo", "meridian"] },
+  { n: "Maximalist", v: [-0.17, 0.98, 1, 0.98, 0.99, 0.34, 0.55, 0.63], line: "Rich, layered and generous.", define: "Maximalist style adds more: more colour, more pattern, more detail. Every piece has something to say.", silhouette: "Volume, print on print, embellishment and rich layers.", palette: ["Purple", "Gold", "Coral", "Hot Pink"], fabrics: "Velvet, brocade, satin, embroidered cotton", loves: ["Pattern on pattern", "Collected jewellery", "Statement coats"], moments: "Parties, openings, travel days and anywhere the room needs colour.", shopper: "You buy what makes you stop. Every piece has a story.", stretch: "Try one plain base layer and see how each detail sharpens.", picks: ["ember", "kite", "rumour"] },
+  { n: "Romantic", v: [-0.3, 0.64, 0.81, 0.97, 0.4, -0.3, 0.13, 0.7], line: "Soft, detailed and graceful.", define: "Romantic style favours softness: drape, texture and delicate detail.", silhouette: "Flowing skirts, soft sleeves, gentle waists and sheer layers.", palette: ["Lilac", "Peach", "Cream", "Silver"], fabrics: "Silk, lace, chiffon, soft cotton", loves: ["A dress that moves", "Delicate jewellery", "Soft scarves"], moments: "Dinners, weddings, gardens and evenings that deserve a story.", shopper: "You follow a feeling, then find the reasons. The best pieces feel like they already knew you.", stretch: "Add one structured jacket and the softness gets sharper.", picks: ["kite", "orbit", "hearth"] },
+  { n: "Provocateur", v: [0.38, 0.49, 1, 0.87, 0.99, -0.11, 0.06, 0.15], line: "Sharp, dark and deliberate.", define: "Provocateur style uses structure and contrast to make a point. The outfit has an edge.", silhouette: "Sharp shoulders, leather, heavy hardware and an asymmetrical line.", palette: ["Black", "Red", "Silver", "White"], fabrics: "Leather, crepe, heavy satin, denim", loves: ["A leather jacket", "Heavy boots", "A single red piece"], moments: "Stages, nights out, openings and any room that needs someone to go first.", shopper: "You know in five seconds. Hesitation costs the outfit its edge.", stretch: "Try one soft warm tone, such as Sand, and the red gets louder.", picks: ["tidal", "stride", "rumour"] },
+  { n: "Naturalist", v: [-0.57, -0.93, -0.81, -0.7, -0.85, 0.78, 0.62, 0.52], line: "Easy, natural and lasting.", define: "Naturalist style chooses comfort, honest fabrics and earth tones. Clothes age well.", silhouette: "Relaxed shapes, easy trousers and soft layers.", palette: ["Green", "Sand", "Olive", "Tan"], fabrics: "Linen, wool knit, washed cotton, soft leather", loves: ["Earth tones and soft greens", "Totes and woven textures", "Boots that age well"], moments: "Weekend markets, long lunches, garden days and slow mornings.", shopper: "You wait for what grows on you. The pieces you keep for ten years are the ones you thought about for ten days.", stretch: "Try one bright, saturated piece and let the earth tones frame it.", picks: ["meridian", "cove", "hearth"] },
+  { n: "Mover", v: [-0.74, 0.52, 0.77, 0.05, 0.68, 0.97, 0.82, -0.26], line: "Fast, comfortable and ready.", define: "Mover style starts with motion. Clothes work hard and look good doing it.", silhouette: "Athletic ease, technical fabrics, layers that zip and bags that carry everything.", palette: ["Orange", "Sky Blue", "Lime", "Black"], fabrics: "Technical nylon, jersey, stretch mesh, canvas", loves: ["Trainers made for the day", "A shell jacket", "A bag that holds everything"], moments: "City days, travel, studios and plans that change three times.", shopper: "You take several pieces home and keep the winners.", stretch: "Try one tailored piece and see how it sharpens the whole outfit.", picks: ["ember", "pocket", "cove"] },
+  { n: "Colourist", v: [-0.24, 0.99, 1, 0.92, 0.99, 0.58, 0.41, 0.44], line: "Bright, generous and social.", define: "Colourist style leads with colour. The palette is the outfit.", silhouette: "Fitted waists, flowing skirts, soft shoulders and anything that moves with you.", palette: ["Yellow", "Coral", "Hot Pink", "Peach"], fabrics: "Satin, silk blends, bright cotton", loves: ["Saturated colour", "Statement earrings", "Dresses made for gathering"], moments: "Birthdays, brunches, weddings and every dinner where you arrive with the playlist.", shopper: "You shop for the occasion and the photograph.", stretch: "Try deep navy and watch the bright colours glow against it.", picks: ["ember", "kite", "hearth"] },
+  { n: "Avant-gardist", v: [0.09, 0.67, 1, 0.95, 1, 0.02, 0.59, 0.21], line: "Inventive, unexpected and ahead.", define: "Avant-garde style treats clothing as an experiment: new cuts and new proportions.", silhouette: "Unusual cuts, asymmetry, oversized volume and sculpted lines.", palette: ["Black", "Silver", "Purple", "White"], fabrics: "Technical cotton, wool crepe, coated and structured fabrics", loves: ["A cut nobody has seen before", "Sculptural accessories", "Mixed proportions"], moments: "Exhibitions, studios, late nights and rooms full of curious people.", shopper: "You buy what surprises you and wear it before the trend arrives.", stretch: "Try a plain white shirt as a base and watch the shapes read clearer.", picks: ["rumour", "orbit", "tidal"] },
+  { n: "Easy Dresser", v: [-0.81, -0.86, -0.66, -0.75, -0.65, 0.95, 0.89, -0.18], line: "Relaxed, effortless and ready.", define: "Easy style puts comfort first, with clothes that take no effort to wear.", silhouette: "Relaxed fits, soft knits, simple layers and flat shoes.", palette: ["Cream", "Sand", "Sky Blue", "Olive"], fabrics: "Jersey, soft cotton, knit, denim", loves: ["The perfect t-shirt", "Wide trousers", "Clean sneakers"], moments: "Weekends, errands, long flights and days with no fixed plan.", shopper: "You choose comfort first, then check how it looks.", stretch: "Add one sharp piece, such as a structured coat, and the ease becomes deliberate.", picks: ["pocket", "cove", "margin"] }
 ];
-PLACEMENT.forEach((q, qi) => {
-  q[0] = TR(`quiz.question-${qi + 1}`, q[0]);
-  q[1] = q[1].map((t, k) => TR(`quiz.question-${qi + 1}-answer-${k + 1}`, t));
-});
-PROFILES.forEach((pr, pi) => {
-  const n = LEANINGS[pi][0];
-  ["style", "silhouette", "fabrics", "moments", "shopper", "stretch"].forEach((f) => { pr[f] = TR(`quiz.${n}-${f}`, pr[f]); });
-  ["loves", "notice"].forEach((f) => { pr[f] = pr[f].map((t, k) => TR(`quiz.${n}-${f}-${k + 1}`, t)); });
+PROFILES.forEach((pr) => {
+  ["line", "define"].forEach((f) => { pr[f] = TR(`quiz.${pr.n}-${f}`, pr[f]); });
 });
 
 write(
   "style-profile/index.html",
   layout({
     title: TR("quiz.meta-title", "Style Profile | Zibura"),
-    description: TR("quiz.meta-description", "Answer twelve questions to see your style preferences as six meters."),
+    description: TR("quiz.meta-description", "Eighteen questions that read your style across eight dimensions and match you to one of ten Style Profiles."),
     page: "placement",
     body: `<main>
 <section class="page-head"><div class="wrap">
   <h1 class="display rise">${words(TR("quiz.title", "Style Profile."))}</h1>
-  <p class="fade">${T("quiz.intro", "Twelve questions. Your answers set six preference meters and match you with products from Collection I.")}</p>
+  <p class="fade">${T("quiz.intro", "Style is how you choose to present yourself: the shapes, colours, fabrics and details you reach for. It changes with the day and with the person. Eighteen questions read your style across eight dimensions and match you to one of ten Style Profiles.")}</p>
 </div></section>
 <section class="section" style="padding-top:clamp(16px,3vw,40px)"><div class="wrap">
   <div id="quiz" class="quiz" data-quiz>
@@ -833,7 +866,7 @@ write(
     <div class="q-opts" id="q-opts"></div>
   </div>
   <div id="result" class="result" hidden></div>
-  <script type="application/json" id="quiz-data">${JSON.stringify({ questions: PLACEMENT, leanings: LEANINGS.map(([n, line, note, traits], i) => ({ n, line, note, traits, profile: PROFILES[i] })) })}</script>
+  <script type="application/json" id="quiz-data">${JSON.stringify({ axes: AXES, questions: PLACEMENT.map((q, qi) => [q[0], q[1]]), profiles: PROFILES })}</script>
 </div></section>
 </main>`
   })
@@ -874,10 +907,11 @@ const FAQS = [
   ["What is Zi Residency?", "Zi Residency is the Republic's membership. Anyone may apply. Applicants become Zi Residents and receive a Zi Card."],
   ["Does a Zi Card make someone a Zitizen?", "No. A Zi Card confirms Zi Residency. Zitizenship is an additional recognition based on meaningful participation over time."],
   ["Do Zitizens keep their Zi Cards?", "Yes. Every Zitizen keeps their Zi Card and receives a Zi Republic passport as an additional credential."],
-  ["Does a Zi Card expire?", "A Zi Card is valid for five years from the date of issue. The date through which it is valid shows on the card. Renew from your account before that date."],
+  ["Does a Zi Card expire?", "A Zi Card is valid for five years from the date of issue. The date through which it is valid shows on the card. Renew from your account before that date. A change of favourite colour does not affect it."],
   ["Can Zillar buy Zi Residency or Zitizenship?", "No. Zillar cannot be used to purchase Zi Residency or Zitizenship."],
   ["What is Zi Day?", "Zi Day is the Republic's founding day. Zi Residents and Zitizens mark it each year."],
-  ["What is Ziesta?", "Ziesta is the Republic's festival of rest, a time to slow down and gather."]
+  ["What is Ziesta?", "Ziesta is the Republic's festival of rest, a time to slow down and gather."],
+  ["Does a change in style affect residency?", "No. A change in personal style does not affect residency status, and no new application is required. The Republic recognizes that wardrobes may change."]
 ].map((r, i) => [TR(`zi-card.faq-${i + 1}-q`, r[0]), TR(`zi-card.faq-${i + 1}-a`, r[1])]);
 write(
   "zi-card/index.html",
@@ -895,16 +929,16 @@ write(
   <div data-reveal>${flipCard()}</div>
   <div data-reveal>
     <ol class="steps">
-      <li><div><b>${T("zi-card.create-your-account", "Create your account.")}</b><span>${T("zi-card.create-your-account-text", "Your Zi Residency application begins in your account.")}</span></div></li>
-      <li><div><b>${T("zi-card.upload-your-portrait-and-apply", "Upload your portrait and apply.")}</b><span>${T("zi-card.your-portrait-appears-on-your", "Your portrait appears on your Zi Card, so choose one that looks like you.")}</span></div></li>
-      <li><div><b>${T("zi-card.collect-your-zi-card", "Collect your Zi Card.")}</b><span>${T("zi-card.once-your-application-is-accepted", "Once your application is accepted, your Zi Card appears in your account, ready to download. It is valid for five years from the date of issue.")}</span></div></li>
+      <li><div><b>${T("zi-card.create-your-account", "Create your account.")}</b><span>${T("zi-card.create-your-account-text", "Your Zi Residency application begins in your account. The Republic has enough paperwork already.")}</span></div></li>
+      <li><div><b>${T("zi-card.upload-your-portrait-and-apply", "Upload your portrait and apply.")}</b><span>${T("zi-card.your-portrait-appears-on-your", "Your portrait appears on your Zi Card, so choose one that looks like you. The Republic recommends a good photo.")}</span></div></li>
+      <li><div><b>${T("zi-card.collect-your-zi-card", "Collect your Zi Card.")}</b><span>${T("zi-card.once-your-application-is-accepted", "Once your application is accepted, your Zi Card appears in your account, ready to download. It is valid for five years from the date of issue. Republic Administration has noted the date.")}</span></div></li>
     </ol>
     <p style="margin-top:40px"><a class="btn" href="/account/">${T("zi-card.start-your-application", "Start your application")}</a></p>
     <p class="small" style="margin-top:16px">${T("zi-card.want-first-word", "Want first word on Collection I?")} <a href="/waitlist/">${T("zi-card.join-the-waitlist", "Join the waitlist")}</a>.</p>
   </div>
 </div></section>
 
-<section class="section" style="padding-top:0"><div class="wrap">
+<section class="section" id="rights" style="padding-top:0"><div class="wrap">
   <h2 class="display" data-reveal>${T("zi-card.rights-title", "Rights of Zi Residents and Zitizens.")}</h2>
   <div class="table-wrap" data-reveal>
     <table class="rights">
@@ -951,6 +985,7 @@ write(
 <section class="section" style="padding-top:clamp(16px,3vw,40px)"><div class="wrap">
   <div id="acct-loading" class="small">${T("account.checking-your-papers", "Loading.")}</div>
 
+  <script type="application/json" id="quiz-data">${JSON.stringify({ axes: AXES, questions: PLACEMENT.map((q) => [q[0], q[1]]), profiles: PROFILES })}</script>
   <div id="v-auth" class="form-card" hidden>
     <div class="tabs" role="tablist">
       <button type="button" class="tab on" data-tab="signup">${T("account.create-account", "Create account")}</button>

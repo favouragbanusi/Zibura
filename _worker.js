@@ -1,6 +1,6 @@
 // Handles the two store functions and serves every other page as a static file.
-const CURRENCIES = ["CAD", "USD", "GBP", "NGN"];
-const CURRENCY_BY_COUNTRY = { CA: "CAD", US: "USD", GB: "GBP", NG: "NGN" };
+const CURRENCIES = ["CAD", "USD", "GBP", "EUR", "AUD", "AED", "ZAR", "NGN"];
+const CURRENCY_BY_COUNTRY = { CA: "CAD", US: "USD", GB: "GBP", NG: "NGN", AU: "AUD", AE: "AED", ZA: "ZAR", DE: "EUR", FR: "EUR", IE: "EUR", ES: "EUR", IT: "EUR", NL: "EUR", BE: "EUR", PT: "EUR", AT: "EUR", FI: "EUR", GR: "EUR" };
 const SHIP_TO = ["CA", "US", "GB", "NG"];
 
 function json(data, status = 200, extra = {}) {
@@ -326,7 +326,7 @@ async function waitlist(request, env) {
   const phone = clean(body.phone, 30).replace(/[^\d+()\-\s]/g, "");
   const emailOk = body.email_consent ? 1 : 0;
   const smsOk = phone && body.sms_consent ? 1 : 0;
-  const province = ["Ripple", "Glow", "Blaze", "Bloom", "Dash", "Swirl", "Composed", "Warm", "Bold", "Grounded", "Playful", "Layered"].includes(body.province || body.leaning) ? (body.province || body.leaning) : null;
+  const province = ["Minimalist", "Classicist", "Maximalist", "Romantic", "Provocateur", "Naturalist", "Mover", "Colourist", "Avant-gardist", "Easy Dresser", "Ripple", "Glow", "Blaze", "Bloom", "Dash", "Swirl", "Composed", "Warm", "Bold", "Grounded", "Playful", "Layered"].includes(body.province || body.leaning) ? (body.province || body.leaning) : null;
   if (!first || !last || !country || !city || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
     return json({ error: "Please complete every field with a valid email." }, 400);
   }
@@ -360,7 +360,7 @@ async function subscribe(request, env) {
   const clean = (v, n) => String(v || "").trim().slice(0, n);
   const first = clean(body.first, 60);
   const email = clean(body.email, 160).toLowerCase();
-  const province = ["Ripple", "Glow", "Blaze", "Bloom", "Dash", "Swirl", "Composed", "Warm", "Bold", "Grounded", "Playful", "Layered"].includes(body.province || body.leaning) ? (body.province || body.leaning) : null;
+  const province = ["Minimalist", "Classicist", "Maximalist", "Romantic", "Provocateur", "Naturalist", "Mover", "Colourist", "Avant-gardist", "Easy Dresser", "Ripple", "Glow", "Blaze", "Bloom", "Dash", "Swirl", "Composed", "Warm", "Bold", "Grounded", "Playful", "Layered"].includes(body.province || body.leaning) ? (body.province || body.leaning) : null;
   if (!first || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return json({ error: "Please add your name and a valid email." }, 400);
   if (!body.email_consent) return json({ error: "Please tick the box to receive news from Zi Republic." }, 400);
   try {
