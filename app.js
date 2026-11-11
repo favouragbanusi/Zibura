@@ -899,9 +899,11 @@
           .then(function (r) { return r.json(); })
           .then(function (d) {
             if (d.ok) {
+              var joinedName = form.elements.first.value;
               form.reset();
               showStep(0);
               try { localStorage.setItem("zibura_joined", "1"); } catch (x) {}
+              document.dispatchEvent(new CustomEvent("zibura:joined", { detail: { first: joinedName } }));
               msg.textContent = "Received. A confirmation is on its way to your inbox.";
               btn.disabled = false;
             } else {
@@ -1803,9 +1805,39 @@
     start();
   }
 
+  // The waitlist landing page swaps the form for the next steps once someone joins.
+  function initJoin() {
+    var cd = $("[data-jn-count]");
+    if (cd) {
+      var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(cd.getAttribute("data-date") || ""), end = m ? new Date(+m[1], +m[2] - 1, +m[3], 0, 0, 0).getTime() : 0;
+      var row = cd.querySelector(".jn-count-row"), dn = cd.querySelector(".jn-count-done"), lab = cd.querySelector(".jn-count-label");
+      var pad = function (n) { return n < 10 ? "0" + n : String(n); };
+      var tick = function () {
+        var s = Math.max(0, Math.floor((end - Date.now()) / 1000));
+        if (!end) { cd.hidden = true; return; }
+        if (s <= 0) { row.hidden = true; if (lab) lab.hidden = true; dn.hidden = false; return; }
+        var u = { d: Math.floor(s / 86400), h: Math.floor(s % 86400 / 3600), m: Math.floor(s % 3600 / 60), s: s % 60 };
+        for (var k in u) { var el = cd.querySelector('[data-u="' + k + '"]'); if (el) el.textContent = pad(u[k]); }
+        setTimeout(tick, 1000 - (Date.now() % 1000));
+      };
+      tick();
+    }
+    var shell = $(".jn-wl-in"), done = $("[data-jn-done]"), nm = $("[data-jn-name]");
+    if (!shell || !done) return;
+    var base = nm ? nm.textContent : "";
+    document.addEventListener("zibura:joined", function (e) {
+      var first = e.detail && e.detail.first ? String(e.detail.first).trim() : "";
+      if (nm && first) nm.textContent = first + ", " + base.charAt(0).toLowerCase() + base.slice(1);
+      shell.classList.add("is-done"); done.hidden = false;
+      done.scrollIntoView({ behavior: "smooth", block: "center" });
+      done.focus({ preventScroll: true });
+    });
+  }
+
   function init() {
     var page = document.body.getAttribute("data-page");
     initModal();
+    initJoin();
     initFx();
     initUx(); initMinistries(); initHeroSlides(); initScrollFx(); initSignalScenes(); initFounderReel();
     initSampleCards();

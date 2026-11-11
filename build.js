@@ -212,6 +212,7 @@ const MEGA = `<div class="mega" id="mega">
   <div class="mega-grid">
     <div class="mega-col">
       <a class="mega-h" href="/shop/">${T("forms.all-products", "All products")}</a>
+      <a href="/looks/">${T("looks.switch-looks", "Zi Looks")}</a>
       ${AUDIENCES.map((a) => `<a href="/shop/?audience=${a}">${a}</a>`).join("")}
     </div>
 ${TAX.map(
@@ -303,6 +304,7 @@ ${body}
         <h3>${T("site.shop-heading", "Shop")}</h3>
         <a href="/shop/">${T("site.all-products", "All products")}</a>
 ${AUDIENCES.map((a) => `        <a href="/shop/?audience=${a}">${a}</a>`).join("\n")}
+        <a href="/looks/">${T("looks.switch-looks", "Zi Looks")}</a>
         <a href="/cart/">${T("site.your-cart", "Your cart")}</a>
       </div>
       <div>
@@ -1177,6 +1179,7 @@ write(
     page: "shop",
     body: `<main class="wrap">
 <div class="page-head" style="padding-left:0;padding-right:0"><h1 class="display rise">${words(TR("shop.title", "Shop the collection."))}</h1><p class="fade">${T("shop.subtitle", "The capsule collection is launching soon. Choose a colour and a size, then add the product to your cart.")}</p></div>
+<div class="lk-switch shop-switch"><a href="/shop/" class="on" aria-current="page">${T("looks.switch-all", "All pieces")}</a><a href="/looks/">${T("looks.switch-looks", "Zi Looks")}</a></div>
 <div class="toolbar">
   <button type="button" class="btn line small-btn" id="open-filters">${T("shop.filters", "Filters")}</button>
   <p class="count" id="count" role="status"></p>
@@ -1330,9 +1333,193 @@ write(
   })
 );
 
+// ---------- Zi Looks: the outfit shop ----------
+const LOOK_POS = { Outerwear: [50, 36], Topwear: [50, 32], Fullwear: [56, 52], Bottomwear: [50, 64], Shoes: [50, 91], Totes: [22, 62], Jewelry: [60, 20], Scarves: [42, 25], Perfume: [80, 76], "Tech Accessories": [78, 70], Stationery: [78, 70], Candles: [80, 76] };
+const DEFAULT_LOOKS = [
+  ["Women", "halo,tidal,cove,orbit"], ["Men", "ember,meridian,stride,pocket"], ["Women", "tidal,kite,cove"], ["Men", "ember,meridian,stride,orbit"],
+  ["Women", "halo,tidal,kite,rumour"], ["Men", "meridian,ember,kite,stride"], ["Women", "halo,cove,orbit"], ["Men", "ember,meridian,stride,kite"],
+  ["Women", "tidal,orbit,rumour"], ["Men", "ember,meridian,stride,rumour"], ["Women", "halo,tidal,kite,orbit"], ["Men", "ember,meridian,pocket,kite"]
+].map((r, i) => ({ id: i + 1, name: "Look " + (i + 1), audience: r[0], pieces: r[1] }));
+const LOOKS = (fromSheet("looks.json") || DEFAULT_LOOKS).map((l, i) => {
+  const pieces = String(l.pieces || "").split(",").map((s) => s.trim()).filter(Boolean).map((s) => {
+    const [slug, x, y] = s.split(":");
+    const p = products.find((q) => q.slug === slug);
+    if (!p) return null;
+    const d = LOOK_POS[p.type] || [50, 50];
+    return { p, x: x ? Number(x) : d[0], y: y ? Number(y) : d[1] };
+  }).filter(Boolean);
+  return { n: i + 1, name: l.name || "Look " + (i + 1), audience: l.audience || "", blurb: l.blurb || "", pieces };
+}).filter((l) => l.pieces.length);
+const lookImg = (l) => media("look-" + l.n, l.name);
+const lookBlurb = (l) => l.blurb || (l.pieces.length + " pieces: " + l.pieces.map((q) => q.p.name).join(", ") + ".");
+// Four depth rows. Far rows are small, faint and blurred. The near row is large and soft.
+const LOOK_ROWS = [
+  { id: "far", step: 5, every: 1, rev: 1 },
+  { id: "back", step: 3, every: 1, rev: 0 },
+  { id: "mid", step: 0, every: 1, rev: 0 },
+  { id: "near", step: 7, every: 3, rev: 0 }
+];
+function lookRow(r) {
+  const n = LOOKS.length;
+  let order = LOOKS.map((_, i) => (i + r.step) % n);
+  if (r.rev) order = order.reverse();
+  order = order.filter((_, i) => i % r.every === 0);
+  return `<div class="lk-row lk-${r.id}" data-lk-row="${r.id}">${order.map((i) => `<button type="button" class="lk-f" data-look="${i}" aria-label="${esc(LOOKS[i].name + ", " + LOOKS[i].audience)}"${r.id === "mid" ? "" : ' tabindex="-1"'}>${lookImg(LOOKS[i])}</button>`).join("")}</div>`;
+}
+
+function lookDetail(l) {
+  return `<section class="lk-detail" data-detail="${l.n - 1}" hidden aria-label="${esc(l.name)}">
+    <div class="lk-info">
+      <p class="lk-aud">${esc(l.audience)}</p>
+      <h2 class="lk-name">${esc(l.name)}</h2>
+      <p class="lk-blurb">${esc(lookBlurb(l))}</p>
+    </div>
+    <div class="lk-fig">${lookImg(l)}</div>
+    <aside class="lk-panel">
+      <p class="lk-kicker">${l.pieces.length} ${T("looks.pieces", "pieces")}</p>
+      <div class="lk-big">${l.pieces.map((q, k) => `<span class="lk-bigimg${k === 0 ? " on" : ""}" data-piece="${esc(q.p.slug)}">${photo(q.p.slug + "-1", q.p.name) || '<i class="ph-empty"></i>'}</span>`).join("")}</div>
+      <ul class="lk-pieces">
+        ${l.pieces.map((q, k) => `<li data-piece="${esc(q.p.slug)}"${k === 0 ? ' class="on"' : ""}><a href="/product/${esc(q.p.slug)}/"><span class="lk-th">${photo(q.p.slug + "-1", q.p.name) || '<i class="ph-empty"></i>'}</span><span class="lk-meta"><b>${esc(q.p.name)}</b><em>${esc(q.p.type)}</em></span><span class="price" data-price-for="${esc(q.p.slug)}"></span></a></li>`).join("")}
+      </ul>
+    </aside>
+  </section>`;
+}
+
+write("looks/index.html", layout({
+  title: TR("looks.meta-title", "Zi Looks | Zibura"),
+  description: TR("looks.meta-description", "Shop complete outfits. Wander the wall of looks, step closer to one and see every piece in it."),
+  page: "looks",
+  body: `<main class="looks" data-looks>
+  <div class="lk-bar">
+    <div class="lk-switch" role="tablist" aria-label="Ways to shop">
+      <a href="/shop/">${T("looks.switch-all", "All pieces")}</a>
+      <a href="/looks/" class="on" aria-current="page">${T("looks.switch-looks", "Zi Looks")}</a>
+    </div>
+    <p class="lk-count" aria-live="polite"><span data-lk-label>${T("looks.label-idle", "Zi Looks")}</span></p>
+  </div>
+  <div class="lk-stage" data-lk-stage tabindex="0" aria-label="${esc(TR("looks.wall-label", "Wall of looks. Drag or use the arrow keys to move."))}">
+    <div class="lk-mark" data-lk-mark aria-hidden="true">${T("looks.wordmark", "Zi Looks")}</div>
+    <div class="lk-rows" data-lk-rows>
+${LOOK_ROWS.map(lookRow).join("\n")}
+    </div>
+    <p class="lk-hint">${T("looks.hint", "Drag to wander. Select a look to step closer.")}</p>
+    <span class="lk-cursor" data-lk-cursor aria-hidden="true"></span>
+  </div>
+  <div class="lk-view" data-lk-view hidden role="dialog" aria-modal="true" aria-label="${esc(TR("looks.view-label", "Look detail"))}">
+    <div class="lk-tools">
+      <span class="lk-pos" data-lk-pos></span>
+      <button type="button" class="lk-btn lk-x" data-lk-close>${T("looks.close", "Back to the wall")}</button>
+    </div>
+${LOOKS.map(lookDetail).join("\n")}
+    <nav class="lk-nav" aria-label="Looks">
+      <button type="button" data-lk-prev><svg viewBox="0 0 40 12" width="30" height="12" aria-hidden="true"><path d="M40 6H2M7 1L2 6l5 5" fill="none" stroke="currentColor" stroke-width="1.2"/></svg><span data-lk-prev-name></span></button>
+      <button type="button" data-lk-next><span data-lk-next-name></span><svg viewBox="0 0 40 12" width="30" height="12" aria-hidden="true"><path d="M0 6h38M33 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></button>
+    </nav>
+  </div>
+</main>
+<script>window.LOOK_NAMES=${JSON.stringify(LOOKS.map((l) => l.name))};</script>
+<script src="/assets/looks.js?v=${BUILD_V}" defer></script>`
+}));
+
+// ---------- Waitlist landing page (stands alone, for Instagram and other links) ----------
+function bare({ title, description, page, body }) {
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${esc(title)}</title>
+<meta name="description" content="${esc(description)}">
+<meta property="og:title" content="${esc(title)}">
+<meta property="og:description" content="${esc(description)}">
+<meta name="theme-color" content="#111c44">
+<link rel="icon" href="/assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..700&family=Public+Sans:wght@400;500;600&family=Lexend:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/assets/styles.css?v=${BUILD_V}">
+<script>document.documentElement.className = "js";</script>
+</head>
+<body data-page="${page}">
+${body}
+<script src="/assets/app.js?v=${BUILD_V}" defer></script>
+</body>
+</html>
+`;
+}
+const CHARTER = [TR("home.opening-frame", "People are complex."), TR("home.movement", "Every way of existing deserves space."), TR("home.detail", "Expression is personal."), TR("home.group", "Identity can change."), TR("home.still-life", "Belonging does not require conformity."), TR("home.closing-frame", "Structure should serve freedom.")];
+const JOIN_HERO = findImage("hero-3") ? "hero-3" : "hero";
+const joinHero = findImage(JOIN_HERO);
+if (joinHero) write(`assets/join-hero.${joinHero.ext}`, fs.readFileSync(joinHero.file));
+const JOIN_STEPS = [
+  [T("join.step1-title", "Register"), T("join.step1-text", "Add your name and email.")],
+  [T("join.step2-title", "Settle in"), T("join.step2-text", "Tell the Republic where you live and when your birthday falls.")],
+  [T("join.step3-title", "Receive word"), T("join.step3-text", "The Ministry of Communications emails you when the capsule collection launches.")]
+];
+write("join/index.html", bare({
+  title: TR("join.meta-title", "Join the Zibura waitlist"),
+  description: TR("join.meta-description", "Zi Republic is a country with a style of its own. Join the waitlist for first word on the capsule collection."),
+  page: "join",
+  body: `<header class="jn-top"><a class="jn-brand" href="/" aria-label="Zibura home"><img src="/assets/logo-wordmark-sky.png" alt="Zibura" width="636" height="120"></a><a class="jn-enter" href="/">${T("join.enter", "Enter Zibura")}</a></header>
+<main class="join">
+<section class="jn-hero">
+  <div class="jn-bg">${joinHero ? `<img src="/assets/join-hero.${joinHero.ext}" alt="" fetchpriority="high">` : ""}</div>
+  <div class="jn-copy">
+    <p class="jn-tag">${T("join.tag", "Official notice from the Ministry of Communications")}</p>
+    <h1 class="jn-title">${T("join.title", "A country of our own. A style of your own.").replace(". ", ".<br>")}</h1>
+    <p class="jn-lede">${T("join.lede", "Zi Republic is opening its doors with the capsule collection. Join the waitlist to hear first.")}</p>
+    <div class="jn-count" data-jn-count data-date="${TR("join.count-date", "2027-04-18")}" role="timer" aria-label="${esc(TR("join.count-label", "Countdown to 18 April 2027"))}">
+      <p class="jn-count-label">${T("join.count-label", "Countdown to 18 April 2027")}</p>
+      <div class="jn-count-row">
+        <div><b data-u="d">00</b><span>${T("join.count-days", "Days")}</span></div>
+        <div><b data-u="h">00</b><span>${T("join.count-hours", "Hours")}</span></div>
+        <div><b data-u="m">00</b><span>${T("join.count-minutes", "Minutes")}</span></div>
+        <div><b data-u="s">00</b><span>${T("join.count-seconds", "Seconds")}</span></div>
+      </div>
+      <p class="jn-count-done" hidden>${T("join.count-done", "The doors are open.")}</p>
+    </div>
+    <a class="jn-btn" href="#waitlist">${T("join.button", "Join the waitlist")}</a>
+  </div>
+  <a class="jn-down" href="#charter" aria-label="${esc(TR("join.scroll-label", "Scroll down"))}"><i></i></a>
+</section>
+<div class="jn-ticker" aria-hidden="true"><div class="jn-run">${[0, 1].map(() => `<div>${CHARTER.map((c) => `<span>${c}</span>`).join("")}</div>`).join("")}</div></div>
+<section class="jn-charter" id="charter">
+  <div class="jn-head"><h2 class="display">${T("join.charter-title", "The Charter")}</h2><p>${T("join.charter-sub", "Six lines every Zitizen lives by.")}</p></div>
+  <div class="jn-grid">
+${CHARTER.map((c, i) => `    <figure class="jn-tile">${media("collection-1-" + (i + 1), c)}<figcaption>${c}</figcaption></figure>`).join("\n")}
+  </div>
+</section>
+<section class="jn-wl" id="waitlist">
+  <div class="jn-wl-in">
+    <div class="jn-wl-copy">
+      <h2 class="display">${T("join.form-title", "Be the first through the door.")}</h2>
+      <p>${T("join.form-lead", "The capsule collection is launching soon. Waitlist members hear first.")}</p>
+      <ol class="jn-steps">${JOIN_STEPS.map((s, i) => `<li><span>${i + 1}</span><div><b>${s[0]}</b><em>${s[1]}</em></div></li>`).join("")}</ol>
+    </div>
+    <div class="jn-wl-form" data-jn-form>${arrivalCard("j")}</div>
+    <div class="jn-done" data-jn-done hidden tabindex="-1">
+      <img src="/assets/zi-card-seal.png" alt="" width="304" height="300">
+      <h2 class="display"><span data-jn-name>${T("join.done-title", "You are on the list.")}</span></h2>
+      <p>${T("join.done-text", "A confirmation is on its way to your inbox. While you wait, three things to do.")}</p>
+      <div class="jn-next">
+        <a href="/style-compass/"><b>${T("join.next1-title", "Take the Style Compass")}</b><span>${T("join.next1-text", "Eighteen questions to find your style leaning.")}</span></a>
+        <a href="/zi-card/"><b>${T("join.next2-title", "Apply for Zi Residency")}</b><span>${T("join.next2-text", "Anyone may apply. Residents receive a Zi Card.")}</span></a>
+        <a href="/looks/"><b>${T("join.next3-title", "Wander Zi Looks")}</b><span>${T("join.next3-text", "See complete outfits and every piece in them.")}</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+<footer class="jn-foot">
+  <div class="socs">${SOCIAL}</div>
+  <p>${T("legal_line", "&copy; 2026 Zibura. Official business. Unofficial personalities.")}</p>
+</footer>
+</main>`
+}));
+
 // Assets and data
 write("assets/styles.css", fs.readFileSync(find("styles.css")));
 write("assets/app.js", fs.readFileSync(find("app.js")));
+write("assets/looks.js", fs.readFileSync(find("looks.js")));
 for (const f of [
   "logo-wordmark-sky.png",
   "logo-wordmark-navy.png",

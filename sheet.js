@@ -90,6 +90,11 @@ const normCap = (v) => String(v || '').replace(/^Arc/, 'Capsule');
     console.log("sheet.js: Links", Object.keys(links).length);
   } catch (e) { console.log("sheet.js: Links skipped,", e.message); }
   try {
+    const looks = (await tab("Looks")).filter((r) => r.pieces).map((r) => ({ name: r.name, audience: r.audience, pieces: r.pieces, blurb: r.blurb }));
+    if (looks.length) fs.writeFileSync(path.join(out, "looks.json"), JSON.stringify(looks));
+    console.log("sheet.js: Looks", looks.length);
+  } catch (e) { console.log("sheet.js: Looks skipped,", e.message); }
+  try {
     let n = 0;
     for (const r of await tab("Images")) {
       if (!r.name || !r.url) continue;
