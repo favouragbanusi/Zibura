@@ -84,6 +84,23 @@
     var anim = f.animate([{ transform: "translate(0,0) scale(1) rotate(0)", opacity: 1 }, { transform: "translate(" + dx * 0.5 + "px," + (dy * 0.5 - 80) + "px) scale(.7) rotate(8deg)", opacity: 1, offset: .55 }, { transform: "translate(" + dx + "px," + dy + "px) scale(.12) rotate(20deg)", opacity: .2 }], { duration: 750, easing: "cubic-bezier(.5,0,.3,1)" });
     anim.onfinish = function () { f.remove(); };
   }
+  // A small cart interface for pages that add several lines at once, such as Zi Looks.
+  window.ZiCart = {
+    add: function (items) {
+      var cart = getCart();
+      items.forEach(function (it) {
+        var found = false;
+        cart.forEach(function (l) { if (l.slug === it.slug && l.color === it.color && l.size === it.size) { l.qty = Math.min(l.qty + (it.qty || 1), 10); found = true; } });
+        if (!found) cart.push({ slug: it.slug, color: it.color, size: it.size, qty: it.qty || 1 });
+      });
+      setCart(cart);
+    },
+    price: function (slug) { var p = catalog && bySlug(slug); return p && p.prices ? p.prices[currency] : 0; },
+    money: function (n) { return money(n); },
+    ready: function () { return !!catalog; },
+    toast: function (h) { toast(h); },
+    fly: function (img) { flyToCart(img); }
+  };
   function confetti(colors) {
     if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     var c = document.createElement("canvas"); c.className = "confetti"; c.width = innerWidth; c.height = innerHeight; document.body.appendChild(c);
@@ -393,6 +410,7 @@
       var p = bySlug(el.getAttribute("data-price-for"));
       if (p) el.textContent = money(p.prices[currency]);
     });
+    document.dispatchEvent(new CustomEvent("zibura:prices"));
   }
 
   function cardHtml(p) {
@@ -666,6 +684,13 @@
 
     shopRefresh = refresh;
     refresh();
+    // Coming back from a product puts the shop at the same spot.
+    var yKey = "zibura_shop_y" + location.search;
+    try {
+      var y = parseInt(sessionStorage.getItem(yKey) || "0", 10);
+      if (y > 0) requestAnimationFrame(function () { window.scrollTo(0, y); });
+    } catch (x) {}
+    window.addEventListener("pagehide", function () { try { sessionStorage.setItem("zibura_shop_y" + location.search, String(window.pageYOffset)); } catch (x) {} });
   }
   var shopRefresh = null;
 
@@ -803,7 +828,7 @@
       }).join("");
       html += '<div class="cart-total"><span>Subtotal</span><strong>' + money(total) + '</strong></div>' +
         '<button type="button" class="btn" id="checkout">Check out</button>' +
-        '<p class="fine">Payment is handled on a secure Stripe page.</p>';
+        '<p class="fine">Payment is handled on a secure Stripe page. By checking out you agree to our <a href="/terms/">Terms</a>. See <a href="/shipping-returns/">Shipping and returns</a> and our <a href="/privacy/">Privacy policy</a>.</p>';
       box.innerHTML = html;
     }
 
@@ -1632,7 +1657,14 @@
 
   function confirmThanks() {
     var id = new URLSearchParams(location.search).get("session_id");
-    if (!id) return;
+    if (!id) {
+      // Opened without a payment: say so, and leave the cart as it is.
+      var h = document.querySelector(".thanks h1"), p = document.querySelector(".thanks p.fade");
+      if (h) h.textContent = "No payment to confirm.";
+      if (p) p.innerHTML = 'This page opens after a payment. Your orders are in <a href="/account/">your account</a>.';
+      return;
+    }
+    setCart([]);
     fetch("/api/orders/confirm", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ session_id: id }) }).then(function (r) { return r.json(); }).then(function (d) {
       var el = document.getElementById("order-no");
       if (el && d.ok && d.number) { el.textContent = "Your order number is " + d.number + ". It is filed in your account."; el.hidden = false; }
@@ -1810,7 +1842,7 @@
     var cd = $("[data-jn-count]");
     if (cd) {
       var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(cd.getAttribute("data-date") || ""), end = m ? new Date(+m[1], +m[2] - 1, +m[3], 0, 0, 0).getTime() : 0;
-      var row = cd.querySelector(".jn-count-row"), dn = cd.querySelector(".jn-count-done"), lab = cd.querySelector(".jn-count-label");
+      var row = cd.querySelector(".mu-count-row"), dn = cd.querySelector(".mu-count-done"), lab = null;
       var pad = function (n) { return n < 10 ? "0" + n : String(n); };
       var tick = function () {
         var s = Math.max(0, Math.floor((end - Date.now()) / 1000));
@@ -1863,7 +1895,7 @@
       if (page === "placement") initQuiz();
       if (page !== "shop") loadRatings();
       if (page === "cart") rerender = initCart();
-      if (page === "thanks") { setCart([]); confirmThanks(); }
+      if (page === "thanks") { confirmThanks(); }
       initWaitlist();
       initSubscribe();
       applyPrices();

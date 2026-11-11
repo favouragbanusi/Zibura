@@ -6,9 +6,13 @@
   "description": "Halo is a long coat made in wool. It has a wide collar and deep pockets. Available in Black, Sand and Zibura Blue.",
   "prices": {
    "CAD": 420,
-   "USD": 310,
-   "GBP": 245,
-   "NGN": 465000
+   "USD": 296,
+   "GBP": 222,
+   "NGN": 398000,
+   "EUR": 265,
+   "AUD": 430,
+   "AED": 1086,
+   "ZAR": 4880
   },
   "colors": [
    "Black",
@@ -40,9 +44,13 @@
   "description": "Meridian is a pair of trousers made in cotton. They have a high waist, a straight leg and a pressed crease. Available in Black, Olive and Cream.",
   "prices": {
    "CAD": 190,
-   "USD": 140,
-   "GBP": 110,
-   "NGN": 210000
+   "USD": 134,
+   "GBP": 100,
+   "NGN": 180000,
+   "EUR": 120,
+   "AUD": 195,
+   "AED": 491,
+   "ZAR": 2210
   },
   "colors": [
    "Black",
@@ -74,9 +82,13 @@
   "description": "Tidal is a midi dress made in silk. It has a flowing skirt, a gathered waist and short sleeves. Available in Cobalt, Red and Cream.",
   "prices": {
    "CAD": 240,
-   "USD": 175,
-   "GBP": 140,
-   "NGN": 262000
+   "USD": 169,
+   "GBP": 127,
+   "NGN": 228000,
+   "EUR": 151,
+   "AUD": 246,
+   "AED": 621,
+   "ZAR": 2790
   },
   "colors": [
    "Cobalt",
@@ -108,9 +120,13 @@
   "description": "Ember is a blouse made in cotton. It has a relaxed fit and oversized cuffs. Available in White, Orange and Hot Pink.",
   "prices": {
    "CAD": 130,
-   "USD": 95,
-   "GBP": 75,
-   "NGN": 142000
+   "USD": 92,
+   "GBP": 69,
+   "NGN": 123000,
+   "EUR": 82,
+   "AUD": 133,
+   "AED": 336,
+   "ZAR": 1510
   },
   "colors": [
    "White",
@@ -143,9 +159,13 @@
   "description": "Orbit is a pair of hoop earrings made in brass. They are sculpted and have a brushed metal finish. Available in Gold and Silver.",
   "prices": {
    "CAD": 85,
-   "USD": 62,
-   "GBP": 49,
-   "NGN": 93000
+   "USD": 60,
+   "GBP": 45,
+   "NGN": 81000,
+   "EUR": 54,
+   "AUD": 87,
+   "AED": 220,
+   "ZAR": 990
   },
   "colors": [
    "Gold",
@@ -172,9 +192,13 @@
   "description": "Kite is a printed scarf made in silk. It ties at the neck, the wrist or a bag handle. Available in Green, Purple and Yellow.",
   "prices": {
    "CAD": 95,
-   "USD": 70,
-   "GBP": 55,
-   "NGN": 105000
+   "USD": 67,
+   "GBP": 50,
+   "NGN": 90000,
+   "EUR": 60,
+   "AUD": 97,
+   "AED": 246,
+   "ZAR": 1100
   },
   "colors": [
    "Green",
@@ -202,9 +226,13 @@
   "description": "Cove is a structured tote made in leather. It has two top handles and room for a laptop. Available in Orange, Black and Tan.",
   "prices": {
    "CAD": 280,
-   "USD": 205,
-   "GBP": 160,
-   "NGN": 307000
+   "USD": 197,
+   "GBP": 148,
+   "NGN": 266000,
+   "EUR": 177,
+   "AUD": 287,
+   "AED": 724,
+   "ZAR": 3260
   },
   "colors": [
    "Orange",
@@ -231,9 +259,13 @@
   "description": "Stride is a pair of lace-up shoes made in leather. They have a bold zebra print. Available in Black and Oxblood.",
   "prices": {
    "CAD": 310,
-   "USD": 228,
-   "GBP": 180,
-   "NGN": 342000
+   "USD": 218,
+   "GBP": 164,
+   "NGN": 294000,
+   "EUR": 196,
+   "AUD": 317,
+   "AED": 802,
+   "ZAR": 3610
   },
   "colors": [
    "Black",
@@ -266,9 +298,13 @@
   "description": "Rumour is a perfume by Ruova. Its notes are amber, fig and cedar.",
   "prices": {
    "CAD": 140,
-   "USD": 105,
-   "GBP": 82,
-   "NGN": 157000
+   "USD": 99,
+   "GBP": 74,
+   "NGN": 133000,
+   "EUR": 88,
+   "AUD": 143,
+   "AED": 362,
+   "ZAR": 1630
   },
   "colors": [
    "Original"
@@ -296,9 +332,13 @@
   "description": "Hearth is a candle made in soy wax. It is hand poured and burns for about forty hours.",
   "prices": {
    "CAD": 58,
-   "USD": 42,
-   "GBP": 33,
-   "NGN": 63000
+   "USD": 41,
+   "GBP": 31,
+   "NGN": 55000,
+   "EUR": 37,
+   "AUD": 59,
+   "AED": 150,
+   "ZAR": 670
   },
   "colors": [
    "Original"
@@ -325,9 +365,13 @@
   "description": "Margin is a hardcover journal made with paper pages. It has dotted pages and a ribbon marker. Available in Black, Sky Blue and Red.",
   "prices": {
    "CAD": 36,
-   "USD": 26,
-   "GBP": 21,
-   "NGN": 39000
+   "USD": 25,
+   "GBP": 19,
+   "NGN": 34000,
+   "EUR": 23,
+   "AUD": 37,
+   "AED": 93,
+   "ZAR": 420
   },
   "colors": [
    "Black",
@@ -355,9 +399,13 @@
   "description": "Pocket is a phone case made in silicone. It has a soft touch finish and a raised edge. Available in Black, Lilac and Cream.",
   "prices": {
    "CAD": 42,
-   "USD": 31,
-   "GBP": 24,
-   "NGN": 46000
+   "USD": 30,
+   "GBP": 22,
+   "NGN": 40000,
+   "EUR": 26,
+   "AUD": 43,
+   "AED": 109,
+   "ZAR": 490
   },
   "colors": [
    "Black",
@@ -387,9 +435,13 @@
   "description": "The Zi Gift Card is a digital gift card. Its balance is spent on Zibura products. Available in Zibura Blue.",
   "prices": {
    "CAD": 50,
-   "USD": 40,
-   "GBP": 30,
-   "NGN": 60000
+   "USD": 35,
+   "GBP": 26,
+   "NGN": 47000,
+   "EUR": 32,
+   "AUD": 51,
+   "AED": 129,
+   "ZAR": 580
   },
   "colors": [
    "Zibura Blue"
@@ -413,9 +465,13 @@
   "description": "The Zi Gift Set is a silk scarf and a soy wax candle. It is boxed and ready to give. Available in Cream.",
   "prices": {
    "CAD": 120,
-   "USD": 90,
-   "GBP": 70,
-   "NGN": 140000
+   "USD": 85,
+   "GBP": 63,
+   "NGN": 114000,
+   "EUR": 76,
+   "AUD": 123,
+   "AED": 310,
+   "ZAR": 1400
   },
   "colors": [
    "Cream"

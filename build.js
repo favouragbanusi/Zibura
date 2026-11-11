@@ -26,8 +26,8 @@ const T = (key, fallback) => { reg(key, fallback); return COPY[key] ? esc(COPY[k
 const TR = (key, raw) => { reg(key, raw); return COPY[key] ? COPY[key] : raw; };
 const products = fromSheet("pieces.json") || JSON.parse(fs.readFileSync(find("products.json", "data/products.json"), "utf8"));
 // Currencies without a price column use an indicative rate from the USD price. Set exact prices in the sheet with price_EUR, price_AUD, price_AED and price_ZAR.
-const EXTRA_RATES = { EUR: 0.92, AUD: 1.52, AED: 3.67, ZAR: 18.5 };
-products.forEach((p) => { Object.keys(EXTRA_RATES).forEach((c) => { if (!(p.prices[c] > 0)) p.prices[c] = Math.round(p.prices.USD * EXTRA_RATES[c]); }); });
+const EXTRA_RATES = { EUR: 0.63, AUD: 1.02, AED: 2.59, ZAR: 11.63 }; // per 1 CAD, only used when the sheet has no price
+products.forEach((p) => { Object.keys(EXTRA_RATES).forEach((c) => { if (!(p.prices[c] > 0)) p.prices[c] = Math.round(p.prices.CAD * EXTRA_RATES[c]); }); });
 
 function esc(s) {
   return String(s)
@@ -37,7 +37,22 @@ function esc(s) {
     .replace(/"/g, "&quot;");
 }
 
+function seoHead(rel, html) {
+  if (!/\.html$/.test(rel) || !html.includes("<head>")) return html;
+  let url = "/" + rel.replace(/index\.html$/, "").replace(/\.html$/, "");
+  if (rel === "404.html") url = "/404";
+  const priv = /^(admin|reset|thanks|join)\//.test(rel) || rel === "404.html";
+  const t = (html.match(/<title>([^<]*)<\/title>/) || [])[1] || "Zibura";
+  const d = (html.match(/<meta name="description" content="([^"]*)"/) || [])[1] || "";
+  let add = "";
+  if (!priv && !html.includes('rel="canonical"')) add += `<link rel="canonical" href="https://zibura.com${url}">\n`;
+  if (!html.includes("og:title")) add += `<meta property="og:title" content="${t}">\n<meta property="og:description" content="${d}">\n`;
+  if (!html.includes("og:image")) add += `<meta property="og:type" content="website">\n<meta property="og:site_name" content="Zibura">\n<meta property="og:url" content="https://zibura.com${url}">\n<meta property="og:image" content="https://zibura.com/assets/share.png">\n<meta name="twitter:card" content="summary_large_image">\n`;
+  if (priv && !html.includes("noindex")) add += `<meta name="robots" content="noindex,nofollow">\n`;
+  return html.replace("<head>", "<head>\n" + add);
+}
 function write(rel, content) {
+  if (typeof content === "string") content = seoHead(rel, content);
   const file = path.join(dist, rel);
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, content);
@@ -157,6 +172,7 @@ function subscribeForm(id) {
         <div class="full checks"><label class="check"><input type="checkbox" name="email_consent" required><span>${T("forms.email-consent", "Send me the Zi Memo and news from Zibura and Zi Republic by email. I can unsubscribe at any time.")}</span></label></div>
         <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
       </div>
+      <p class="form-legal">${T("policy.agree-prefix", "By continuing you agree to the")} <a href="/terms/">${T("policy.terms-link", "Terms")}</a> ${T("policy.and", "and")} <a href="/privacy/">${T("policy.privacy-link", "Privacy")}</a>.</p>
       <button class="btn" type="submit">${T("forms.subscribe", "Subscribe")}</button>
       <div class="msg sub-msg" role="status"></div>
     </form>`;
@@ -170,6 +186,7 @@ function arrivalCard(id) {
       <span class="arr-tag">${T("forms.waitlist-tag", "Waitlist")}</span>
     </div>
     ${waitlistForm(id)}
+    <p class="form-legal">${T("policy.agree-prefix", "By continuing you agree to the")} <a href="/terms/">${T("policy.terms-link", "Terms")}</a> ${T("policy.and", "and")} <a href="/privacy/">${T("policy.privacy-link", "Privacy")}</a>.</p>
     <div class="arr-foot">
       <img src="/assets/zi-card-seal.png" alt="" width="304" height="300">
       <span>${T("forms.collection-launch", "The capsule collection is launching soon")}</span>
@@ -301,7 +318,7 @@ ${body}
         <p class="s">${T("footer_about", "Zibura is a lifestyle brand built around personal expression. Zi Republic is its country, and anyone may apply to join.")}</p>
       </div>
       <div>
-        <h3>${T("site.shop-heading", "Shop")}</h3>
+        <h2 class="foot-h">${T("site.shop-heading", "Shop")}</h2>
         <a href="/shop/">${T("site.all-products", "All products")}</a>
 ${AUDIENCES.map((a) => `        <a href="/shop/?audience=${a}">${a}</a>`).join("\n")}
         <a href="/looks/">${T("looks.switch-looks", "Zi Looks")}</a>
@@ -332,6 +349,7 @@ ${categories.map((c) => `        <a href="/shop/?category=${encodeURIComponent(c
     </div>
     <div class="legal-row">
       <p class="legal">${T("legal_line", "&copy; 2026 Zibura. Official business. Unofficial personalities.")}</p>
+      <nav class="legal-links" aria-label="${esc(TR("policy.nav-label", "Policies"))}"><a href="/privacy/">${T("policy.privacy-link", "Privacy")}</a><a href="/terms/">${T("policy.terms-link", "Terms")}</a><a href="/shipping-returns/">${T("policy.shipping-link", "Shipping and returns")}</a><a href="/contact/">${T("contact.link", "Contact")}</a></nav>
       <button type="button" class="to-top" id="to-top">${T("site.back-to-top", "Back to top")}</button>
     </div>
   </div>
@@ -518,6 +536,7 @@ write(
     page: "brand",
     body: `<main>
 <section class="page-head"><div class="wrap">
+  ${crumbs([[T("site.home", "Home"), "/"], [T("site.zi-republic", "Zi Republic")]])}
   <h1 class="display rise">${words(TR("brand.title", "A country of our own. A style of your own."))}</h1>
   <p class="fade">${T("brand.about", "Zi Republic is Zibura's country. It has its own identity, membership, public institutions, calendar and rewards system. The Republic gives the brand's central idea a public identity and gives people a way to take part.")}</p>
 </div></section>
@@ -678,7 +697,7 @@ function storyPage(item, parent) {
       page: "story",
       body: `<main>
 <section class="story-head"><div class="wrap">
-  <nav class="crumbs" aria-label="Breadcrumb"><a href="/explore/">${T("story.collections", "Zi Archive")}</a> <span>/</span> ${isCap ? `<a href="/explore/${col.id}/">${col.name}</a> <span>/</span> ${item.name}` : item.name}</nav>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/">${T("site.home", "Home")}</a> <span aria-hidden="true">/</span> <a href="/explore/">${T("story.collections", "Zi Archive")}</a> <span aria-hidden="true">/</span> ${isCap ? `<a href="/explore/${col.id}/">${col.name}</a> <span>/</span> ${item.name}` : item.name}</nav>
   <p class="small">${esc(item.status)}</p>
   <h1 class="display rise">${words(item.name)}</h1>
   <p class="story-tag fade">${esc(item.tag)}</p>
@@ -749,6 +768,7 @@ write(
     page: "explore",
     body: `<main>
 <section class="page-head"><div class="wrap">
+  ${crumbs([[T("site.home", "Home"), "/"], [T("site.explore-heading", "Zi Archive")]])}
   <h1 class="display rise">${words(TR("explore.title", "Zi Archive."))}</h1>
   <p class="fade">${T("explore.intro", "A collection brings together a body of work under one creative direction. A capsule is a focused group of products built around a particular idea, form, material, colour story or occasion.")}</p>
 </div></section>
@@ -866,6 +886,7 @@ write(
     page: "placement",
     body: `<main>
 <section class="page-head"><div class="wrap">
+  ${crumbs([[T("site.home", "Home"), "/"], [T("site.style-profile", "Style Compass")]])}
   <h1 class="display rise">${words(TR("quiz.title", "Style Compass."))}</h1>
   <p class="fade">${T("quiz.intro", "Style is how you choose to present yourself: the shapes, colours, fabrics and details you reach for. It changes with the day and with the person. Eighteen questions read your style across eight dimensions and match you to one of ten style leanings.")}</p>
 </div></section>
@@ -882,24 +903,197 @@ write(
   })
 );
 
-// Waitlist
-write(
-  "waitlist/index.html",
-  layout({
-    title: TR("waitlist.meta-title", "Join the waitlist | Zibura"),
-    description: TR("waitlist.meta-description", "Join the Zibura waitlist for first word on the capsule collection."),
+// Waitlist (stands alone, no site header or footer, for Instagram and other links)
+const WL_TILES = ["collection-1-1", "collection-1-2", "collection-1-3", "collection-1-4", "collection-1-5", "collection-1-6", "explore-5", "explore-2"];
+const WL_ALTS = ["Zi Republic frame 1", "Zi Republic frame 2", "Zi Republic frame 3", "Zi Republic frame 4", "Zi Republic frame 5", "Zi Republic frame 6", "Zi Republic frame 7", "Zi Republic frame 8"];
+const wlSky = findImage("waitlist-sky") || findImage("hero-3") || findImage("hero");
+if (wlSky) write(`assets/waitlist-sky.${wlSky.ext}`, fs.readFileSync(wlSky.file));
+const ICON_IG = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r=".6" fill="currentColor"/></svg>`;
+const ICON_TT = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v11.2a3.7 3.7 0 11-3.7-3.7"/><path d="M14 3c.4 2.6 2 4.2 5 4.4"/></svg>`;
+function waitlistPage() {
+  const tiles = WL_TILES.map((n, i) => {
+    const hit = findImage(n);
+    if (hit) write(`assets/media/${n}.${hit.ext}`, fs.readFileSync(hit.file));
+    return `<div class="mu-tile mu-t${i + 1}">${hit ? `<img src="/assets/media/${n}.${hit.ext}" alt="${esc(WL_ALTS[i])}" loading="lazy" draggable="false">` : `<div class="ph-empty"></div>`}</div>`;
+  }).join("");
+  return bare({
+    title: TR("waitlist.meta-title", "Zibura | Coming soon"),
+    description: TR("waitlist.meta-description", "Zi Republic is about to open its borders. Join the Zibura waitlist for first word on the capsule collection."),
     page: "waitlist",
+    body: `<div class="mu">
+<header class="mu-top">
+  <a class="mu-logo" href="/" aria-label="Zibura home"><img src="/assets/logo-wordmark-sky.png" alt="Zibura" width="636" height="120"></a>
+  <nav class="mu-soc" aria-label="Social">
+    <a href="${LINKS.instagram || "https://www.instagram.com/thezibura/"}" target="_blank" rel="noopener" aria-label="Zibura on Instagram">${ICON_IG}</a>
+    <a href="${LINKS.tiktok || "https://www.tiktok.com/@thezibura"}" target="_blank" rel="noopener" aria-label="Zibura on TikTok">${ICON_TT}</a>
+  </nav>
+</header>
+<main>
+<section class="mu-hero" id="top">
+  <div class="mu-sky">${wlSky ? `<img src="/assets/waitlist-sky.${wlSky.ext}" alt="" fetchpriority="high">` : ""}</div>
+  <div class="mu-hero-in">
+    <h1 class="mu-h1 mu-in" style="--d:.5s">${T("waitlist.headline", "Zi Republic is about to open its borders&hellip;")}</h1>
+    <div class="mu-count mu-in" style="--d:.8s" data-jn-count data-date="${TR("join.count-date", "2027-04-18")}" role="timer" aria-label="${esc(TR("join.count-label", "Countdown to 18 April 2027"))}">
+      <div class="mu-count-row">
+        <div><b data-u="d">00</b><span>${T("join.count-days", "Days")}</span></div><i>:</i>
+        <div><b data-u="h">00</b><span>${T("join.count-hours", "Hours")}</span></div><i>:</i>
+        <div><b data-u="m">00</b><span>${T("join.count-minutes", "Minutes")}</span></div><i>:</i>
+        <div><b data-u="s">00</b><span>${T("join.count-seconds", "Seconds")}</span></div>
+      </div>
+      <p class="mu-count-done" hidden>${T("join.count-done", "The doors are open.")}</p>
+    </div>
+    <a class="mu-btn mu-in" style="--d:1.1s" href="#waitlist" data-mu-go>${T("join.button", "Join the waitlist")}</a>
+  </div>
+  <a class="mu-down mu-in" style="--d:1.5s" href="#waitlist" data-mu-go aria-label="${esc(TR("join.scroll-label", "Scroll down"))}">&darr;</a>
+</section>
+<div class="mu-blend" aria-hidden="true"></div>
+<section class="mu-zoom" id="waitlist" data-mu-zoom>
+  <div class="mu-stage">
+    <div class="mu-grid" aria-hidden="false">${tiles}</div>
+    <div class="mu-core">
+      <img class="mu-mark" src="/assets/logo-wordmark-navy.png" alt="Zibura" width="636" height="120">
+      <p class="mu-tag">${T("waitlist.tagline", "Be the first through the door when the capsule collection opens.")}</p>
+      <form class="mu-mail" novalidate data-mu-mail>
+        <label class="sr" for="mu-email">${T("forms.email", "Email")}</label>
+        <input id="mu-email" type="email" name="email" autocomplete="email" placeholder="${esc(TR("waitlist.placeholder", "your@email.com"))}" required>
+        <button type="submit">${T("join.button", "Join the waitlist")}</button>
+        <p class="mu-err" role="status"></p>
+      </form>
+    </div>
+  </div>
+</section>
+<section class="mu-after">
+  <h2>${T("waitlist.after-title", "While you wait")}</h2>
+  <div class="mu-cards">
+    <a href="/style-compass/"><b>${T("join.next1-title", "Take the Style Compass")}</b><span>${T("join.next1-text", "Eighteen questions to find your style leaning.")}</span></a>
+    <a href="/looks/"><b>${T("join.next3-title", "Wander Zi Looks")}</b><span>${T("join.next3-text", "See complete outfits and every piece in them.")}</span></a>
+    <a href="/zi-card/"><b>${T("join.next2-title", "Apply for Zi Residency")}</b><span>${T("join.next2-text", "Anyone may apply. Residents receive a Zi Card.")}</span></a>
+  </div>
+  <p class="mu-foot"><a href="/">${T("join.enter", "Enter Zibura")}</a> <span>${T("legal_line", "&copy; 2026 Zibura. Official business. Unofficial personalities.")}</span></p>
+</section>
+</main>
+<dialog class="mu-dialog" id="mu-dialog" aria-label="${esc(TR("waitlist.dialog-label", "Join the waitlist"))}">
+  <button class="mu-x" type="button" aria-label="Close" data-mu-close>&times;</button>
+  <div class="mu-form" data-mu-form>${arrivalCard("w")}</div>
+  <div class="mu-done" data-mu-done hidden tabindex="-1">
+    <img src="/assets/zi-card-seal.png" alt="" width="304" height="300">
+    <h2><span data-mu-name>${T("join.done-title", "You are on the list.")}</span></h2>
+    <p>${T("join.done-text", "A confirmation is on its way to your inbox. While you wait, three things to do.")}</p>
+    <div class="mu-cards">
+      <a href="/style-compass/"><b>${T("join.next1-title", "Take the Style Compass")}</b><span>${T("join.next1-text", "Eighteen questions to find your style leaning.")}</span></a>
+      <a href="/looks/"><b>${T("join.next3-title", "Wander Zi Looks")}</b><span>${T("join.next3-text", "See complete outfits and every piece in them.")}</span></a>
+      <a href="/zi-card/"><b>${T("join.next2-title", "Apply for Zi Residency")}</b><span>${T("join.next2-text", "Anyone may apply. Residents receive a Zi Card.")}</span></a>
+    </div>
+  </div>
+</dialog>
+</div>
+<script src="/assets/waitlist.js?v=${BUILD_V}" defer></script>`
+  });
+}
+write("waitlist/index.html", waitlistPage());
+write("assets/waitlist.js", fs.readFileSync(find("waitlist.js")));
+
+// Breadcrumbs: [[label, url], ..., [current label]]
+function crumbs(items) {
+  return `<nav class="crumbs" aria-label="${esc(TR("site.breadcrumb", "Breadcrumb"))}">${items.map((c, i) => (i === items.length - 1 || !c[1] ? `<span aria-current="page">${c[0]}</span>` : `<a href="${c[1]}">${c[0]}</a><span aria-hidden="true">/</span>`)).join(" ")}</nav>`;
+}
+
+// Policy pages (standard wording, editable in the Copy tab)
+const POLICY_DATE = "11 November 2026";
+const P_EMAIL = TR("policy.email", "hello@zibura.com");
+const POLICIES = {
+  privacy: {
+    title: "Privacy policy",
+    intro: "This policy explains what information Zibura collects, why we collect it and the choices you have. Zibura is the fashion and lifestyle brand of Zi Republic, based in Calgary, Alberta, Canada.",
+    sections: [
+      ["Information we collect", "We collect the details you give us: your name, email address, phone number, city, country, birthday month and day, delivery addresses, and the portrait photo you upload when you apply for a Zi Card. We also keep your orders, saved products, size preferences and Style Compass result. When you browse, your device keeps your cart, your chosen currency and your Style Compass progress in its own storage."],
+      ["How we use it", "We use your information to run your account, process and deliver orders, send the confirmations and updates you request, produce your Zi Card, send the Zi Memo and capsule collection announcements when you agree to receive them, answer your questions, and keep the website secure and working well."],
+      ["Who receives it", "We share information with the services that help us operate: Stripe processes payments, Brevo sends our emails, and Cloudflare hosts the website and stores account data. Delivery partners receive the name and address needed to deliver your order. These providers use your information only to carry out their service for us. We do not sell your personal information."],
+      ["Email and text messages", "We send marketing email and text messages only when you give consent. Every email includes an unsubscribe link, and you can reply STOP to any text message to opt out. Order and account messages continue because they relate to your purchases."],
+      ["Cookies and device storage", "Zibura uses small amounts of device storage to keep your cart, currency and session working. We use these items to provide the features you ask for."],
+      ["How long we keep it", "We keep account and order records for as long as your account is open and for the period the law requires for business and tax records. You can ask us to delete your account at any time from your account page."],
+      ["Your choices and rights", "You can view and update your details in your account, ask for a copy of the information we hold about you, ask us to correct it, withdraw your consent to marketing, or ask us to delete your account. We handle these requests in line with Canada's Personal Information Protection and Electronic Documents Act and applicable Alberta law."],
+      ["Security", "We protect your information with encrypted connections, hashed passwords and restricted access to account data. Card details go directly to Stripe, and Zibura does not store them."],
+      ["Children", "Zibura is intended for adults and for young people shopping with a parent or guardian. We do not knowingly collect information from children."],
+      ["Changes to this policy", "We update this policy when our practices change and show the date of the latest update at the top of the page."],
+      ["Contact us", "Questions about privacy go to " + P_EMAIL + "."]
+    ]
+  },
+  terms: {
+    title: "Terms of service",
+    intro: "These terms apply when you browse zibura.com, create an account or place an order. By using the website you agree to them.",
+    sections: [
+      ["Using the website", "You may use Zibura for lawful, personal shopping and to explore Zi Republic. Please give accurate information, keep your password private and tell us if you suspect anyone else has used your account."],
+      ["Products and pricing", "We describe and photograph our products as accurately as we can. Colours can look different on different screens. Prices are shown in the currency you choose. Prices in currencies other than Canadian dollars are converted for your convenience, and the amount confirmed at checkout is the amount you pay. Taxes, shipping and any duties are shown or explained before you pay."],
+      ["Orders and payment", "An order is complete when we send your confirmation email. Payments are handled by Stripe on a secure payment page. We may cancel and refund an order if a product is out of stock, a price was shown in error or we cannot verify the payment."],
+      ["Shipping and returns", "Delivery and returns follow our Shipping and returns page, which forms part of these terms."],
+      ["Zi Residency, Zitizenship and Zi Card", "Zi Residency is open to anyone who applies. Zi Cards are issued after an application is accepted and remain the property of Zibura. Residency, Zitizenship, the Zi Card and Zillar are brand experiences and carry no legal citizenship, identity or government status. We may update, pause or end them with notice on the website."],
+      ["Your content", "When you upload a portrait, write a review or send us other content, you confirm it belongs to you or you have permission to share it. You give Zibura permission to use it to operate the service, including displaying your review and producing your Zi Card. Content that is unlawful, offensive or misleading may be removed."],
+      ["Our content", "The Zibura name, logos, photography, copy, designs and the Zi Republic world belong to Zibura or its licensors. Please ask for written permission before copying or reusing them."],
+      ["Limits on our responsibility", "We provide the website and products with reasonable care. To the extent the law allows, Zibura is responsible only for direct losses that result from our failure to meet these terms, and the total is limited to the amount you paid for the order concerned. Nothing in these terms limits rights that the law gives you as a consumer."],
+      ["Governing law", "These terms are governed by the laws of Alberta and the federal laws of Canada that apply there."],
+      ["Changes", "We may update these terms. The date at the top of the page shows the latest version, and the version in place when you order applies to that order."],
+      ["Contact us", "Questions about these terms go to " + P_EMAIL + "."]
+    ]
+  },
+  "shipping-returns": {
+    title: "Shipping and returns",
+    intro: "Everything you need to know about how Zibura orders travel to you and how to return them.",
+    sections: [
+      ["Processing", "We prepare orders within 5 to 7 business days. You receive an email with tracking details when your order ships."],
+      ["Where we ship", "We ship to the countries available at checkout. Delivery costs and estimated delivery times appear at checkout before you pay."],
+      ["Taxes and duties", "Canadian orders include applicable sales taxes. International orders may carry import duties and taxes that the destination country charges. The carrier or customs authority collects these on delivery."],
+      ["Delivery issues", "If your order arrives damaged, or a different item arrives than the one you ordered, email " + P_EMAIL + " within 7 days of delivery with your order number and a photo. We will replace the item or refund you."],
+      ["Returns", "You can return unworn, unwashed items with their tags attached within 30 days of delivery for a refund to your original payment method."],
+      ["Items for exchange", "Email " + P_EMAIL + " with your order number to exchange an item for another size or colour. We will confirm availability and arrange the exchange."],
+      ["Items that are final sale", "Gift cards, opened fragrance and candles, and personalised items are final sale because of hygiene and the nature of the product."],
+      ["How to start a return", "Email " + P_EMAIL + " with your order number and the items you wish to return. We reply with return instructions and the return address."],
+      ["Refunds", "We process a refund within 7 business days after the returned items reach us. Your bank may take a few more days to show it. Original shipping charges are refunded when the return is due to our error."],
+      ["Questions", "Email " + P_EMAIL + " and we will help."]
+    ]
+  }
+};
+Object.keys(POLICIES).forEach((slug) => {
+  const pol = POLICIES[slug];
+  write(`${slug}/index.html`, layout({
+    title: TR(`policy.${slug}.meta-title`, `${pol.title} | Zibura`),
+    description: TR(`policy.${slug}.meta-description`, pol.intro),
+    page: "policy",
     body: `<main>
 <section class="page-head"><div class="wrap">
-  <h1 class="display rise">${words(TR("waitlist.title", "Join the waitlist."))}</h1>
-  <p class="fade">${T("waitlist.lead", "The Ministry of Communications maintains the waitlist with great seriousness. Register your interest and you will receive an email when the capsule collection launches.")}</p>
+  ${crumbs([[T("site.home", "Home"), "/"], [T(`policy.${slug}.title`, pol.title)]])}
+  <h1 class="display rise">${words(TR(`policy.${slug}.title`, pol.title))}</h1>
+  <p class="fade">${T(`policy.${slug}.intro`, pol.intro)}</p>
+  <p class="policy-date">${T("policy.updated", "Last updated")} ${T("policy.date", POLICY_DATE)}</p>
 </div></section>
-<section class="section" style="padding-top:clamp(16px,3vw,40px)"><div class="wrap">
-  <div class="register-page">${arrivalCard("p")}</div>
-</div></section>
+<section class="section" style="padding-top:clamp(8px,2vw,24px)"><div class="wrap"><div class="policy">
+${pol.sections.map((s, i) => `  <section><h2>${T(`policy.${slug}.s${i + 1}-h`, s[0])}</h2><p>${T(`policy.${slug}.s${i + 1}-p`, s[1])}</p></section>`).join("\n")}
+  <nav class="policy-more" aria-label="${esc(TR("policy.nav-label", "Policies"))}">${Object.keys(POLICIES).filter((k) => k !== slug).map((k) => `<a href="/${k}/">${T(`policy.${k}.title`, POLICIES[k].title)}</a>`).join("")}<a href="/contact/">${T("contact.link", "Contact")}</a></nav>
+</div></div></section>
 </main>`
-  })
-);
+  }));
+});
+
+// Contact
+write("contact/index.html", layout({
+  title: TR("contact.meta-title", "Contact | Zibura"),
+  description: TR("contact.meta-description", "Email Zibura at hello@zibura.com for questions about orders, returns, Zi Residency or anything else."),
+  page: "policy",
+  body: `<main>
+<section class="page-head"><div class="wrap">
+  ${crumbs([[T("site.home", "Home"), "/"], [T("contact.title", "Contact")]])}
+  <h1 class="display rise">${words(TR("contact.title", "Contact"))}</h1>
+  <p class="fade">${T("contact.intro", "Questions about an order, a return, Zi Residency or anything else go to one inbox.")}</p>
+</div></section>
+<section class="section" style="padding-top:clamp(8px,2vw,24px)"><div class="wrap"><div class="policy">
+  <section><h2>${T("contact.email-h", "Email us")}</h2><p><a class="contact-mail" href="mailto:${esc(P_EMAIL)}">${esc(P_EMAIL)}</a></p></section>
+  <section><h2>${T("contact.orders-h", "Orders and returns")}</h2><p>${T("contact.orders-p", "Include your order number in your email. Delivery times and the returns process are on the")} <a href="/shipping-returns/">${T("policy.shipping-link", "Shipping and returns")}</a> ${T("contact.orders-p2", "page.")}</p></section>
+  <section><h2>${T("contact.social-h", "Follow Zibura")}</h2><p><a href="${LINKS.instagram || "https://www.instagram.com/thezibura/"}" target="_blank" rel="noopener">${T("forms.instagram", "Instagram")}</a> &nbsp; <a href="${LINKS.tiktok || "https://www.tiktok.com/@thezibura"}" target="_blank" rel="noopener">${T("forms.tiktok", "TikTok")}</a></p></section>
+  <section><h2>${T("contact.base-h", "Where we are")}</h2><p>${T("contact.base-p", "Zibura is based in Calgary, Alberta, Canada.")}</p></section>
+  <nav class="policy-more" aria-label="${esc(TR("policy.nav-label", "Policies"))}">${Object.keys(POLICIES).map((k) => `<a href="/${k}/">${T(`policy.${k}.title`, POLICIES[k].title)}</a>`).join("")}</nav>
+</div></div></section>
+</main>`
+}));
 
 // Zi Residency
 const RIGHTS = [
@@ -931,6 +1125,7 @@ write(
     page: "zicard",
     body: `<main>
 <section class="page-head"><div class="wrap">
+  ${crumbs([[T("site.home", "Home"), "/"], [T("site.zi-residency", "Zi Residency")]])}
   <p class="small">${T("zi-card.eyebrow", "Residency is open.")}</p>
   <h1 class="display rise">${words(TR("zi-card.title", "Apply for Zi Residency."))}</h1>
   <p class="fade">${T("zi-card.lead", "Completed applications are processed by Republic Administration. Applicants become Zi Residents and receive a Zi Card, the everyday credential of membership.")}</p>
@@ -989,6 +1184,7 @@ write(
     page: "account",
     body: `<main>
 <section class="page-head"><div class="wrap">
+  ${crumbs([[T("site.home", "Home"), "/"], [T("site.your-account", "Your account")]])}
   <h1 class="display rise" id="acct-h">${words(TR("account.title", "Your Zibura account."))}</h1>
   <p class="fade" id="acct-sub">${T("account.create-an-account-to-open", "Create an account to view your orders, save your details and find your Zi Card.")}</p>
 </div></section>
@@ -1010,6 +1206,7 @@ write(
         <div class="full"><label for="s-email">${T("account.email", "Email")}</label><input id="s-email" name="email" type="email" autocomplete="email" required></div>
         <div class="full"><label for="s-pass">${T("account.password-8-characters-or-more", "Password (8 characters or more)")}</label><input id="s-pass" name="password" type="password" minlength="8" autocomplete="new-password" required></div>
       </div>
+      <p class="form-legal">${T("policy.agree-prefix", "By continuing you agree to the")} <a href="/terms/">${T("policy.terms-link", "Terms")}</a> ${T("policy.and", "and")} <a href="/privacy/">${T("policy.privacy-link", "Privacy")}</a>.</p>
       <button class="btn" type="submit">${T("account.create-account-button", "Create account")}</button>
       <div class="msg" role="status"></div>
     </form>
@@ -1107,6 +1304,7 @@ write(
     page: "reset",
     body: `<main>
 <section class="page-head"><div class="wrap">
+  ${crumbs([[T("site.home", "Home"), "/"], [T("reset.choose-a-new-password", "Choose a new password")]])}
   <h1 class="display rise">${words(TR("reset.choose-a-new-password", "Choose a new password."))}</h1>
   <p class="fade">${T("reset.pick-something-of-8-characters", "Pick something of 8 characters or more. Signing in on other devices will be asked again.")}</p>
 </div></section>
@@ -1178,7 +1376,8 @@ write(
     description: TR("shop.meta-description", "Every Zibura product, with filters for audience, department, type, material, colour and size."),
     page: "shop",
     body: `<main class="wrap">
-<div class="page-head" style="padding-left:0;padding-right:0"><h1 class="display rise">${words(TR("shop.title", "Shop the collection."))}</h1><p class="fade">${T("shop.subtitle", "The capsule collection is launching soon. Choose a colour and a size, then add the product to your cart.")}</p></div>
+${crumbs([[T("site.home", "Home"), "/"], [T("shop.shop", "Shop")]])}
+<div class="page-head" style="padding-left:0;padding-top:0;padding-right:0"><h1 class="display rise">${words(TR("shop.title", "Shop the collection."))}</h1><p class="fade">${T("shop.subtitle", "The capsule collection is launching soon. Choose a colour and a size, then add the product to your cart.")}</p></div>
 <div class="lk-switch shop-switch"><a href="/shop/" class="on" aria-current="page">${T("looks.switch-all", "All pieces")}</a><a href="/looks/">${T("looks.switch-looks", "Zi Looks")}</a></div>
 <div class="toolbar">
   <button type="button" class="btn line small-btn" id="open-filters">${T("shop.filters", "Filters")}</button>
@@ -1230,7 +1429,7 @@ products.forEach((p) => {
       description: p.description,
       page: "piece",
       body: `<main class="wrap piece-page" data-slug="${esc(p.slug)}">
-  <nav class="crumbs" aria-label="Breadcrumb"><a href="/shop/">${T("shop.shop", "Shop")}</a> <span>/</span> <a href="/shop/?audience=${esc(p.audience[0])}">${esc(p.audience.join(" and "))}</a> <span>/</span> <a href="/shop/?category=${encodeURIComponent(p.category)}">${esc(p.category)}</a> <span>/</span> <a href="/shop/?category=${encodeURIComponent(p.category)}&amp;type=${encodeURIComponent(p.type)}">${esc(p.type)}</a></nav>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/">${T("site.home", "Home")}</a> <span aria-hidden="true">/</span> <a href="/shop/">${T("shop.shop", "Shop")}</a> <span>/</span> <a href="/shop/?audience=${esc(p.audience[0])}">${esc(p.audience.join(" and "))}</a> <span>/</span> <a href="/shop/?category=${encodeURIComponent(p.category)}">${esc(p.category)}</a> <span>/</span> <a href="/shop/?category=${encodeURIComponent(p.category)}&amp;type=${encodeURIComponent(p.type)}">${esc(p.type)}</a> <span aria-hidden="true">/</span> <span aria-current="page">${esc(p.name)}</span></nav>
   <div class="piece">
     <div class="gallery" aria-label="Photos of ${esc(p.name)}">
       ${[1, 2, 3, 4].map((n) => ({ n, img: photo(`${p.slug}-${n}`, `${p.name}, photo ${n}`) })).filter((x) => x.img || x.n === 1).map((x) => `<div class="ph${x.n === 1 ? " big" : ""}">${x.img}</div>`).join("")}
@@ -1309,7 +1508,8 @@ write(
     description: TR("cart.meta-description", "Your Zibura cart."),
     page: "cart",
     body: `<main class="wrap">
-<div class="page-head" style="padding-left:0;padding-right:0"><h1 class="display rise">${words(TR("cart.title", "Your cart."))}</h1></div>
+${crumbs([[T("site.home", "Home"), "/"], [T("site.your-cart", "Your cart")]])}
+<div class="page-head" style="padding-left:0;padding-top:0;padding-right:0"><h1 class="display rise">${words(TR("cart.title", "Your cart."))}</h1></div>
 <div id="cart"></div>
 <div class="msg" id="cart-msg" role="status"></div>
 <div style="height:clamp(56px,8vw,110px)"></div>
@@ -1379,8 +1579,28 @@ function lookDetail(l) {
       <p class="lk-kicker">${l.pieces.length} ${T("looks.pieces", "pieces")}</p>
       <div class="lk-big">${l.pieces.map((q, k) => `<span class="lk-bigimg${k === 0 ? " on" : ""}" data-piece="${esc(q.p.slug)}">${photo(q.p.slug + "-1", q.p.name) || '<i class="ph-empty"></i>'}</span>`).join("")}</div>
       <ul class="lk-pieces">
-        ${l.pieces.map((q, k) => `<li data-piece="${esc(q.p.slug)}"${k === 0 ? ' class="on"' : ""}><a href="/product/${esc(q.p.slug)}/"><span class="lk-th">${photo(q.p.slug + "-1", q.p.name) || '<i class="ph-empty"></i>'}</span><span class="lk-meta"><b>${esc(q.p.name)}</b><em>${esc(q.p.type)}</em></span><span class="price" data-price-for="${esc(q.p.slug)}"></span></a></li>`).join("")}
+        ${l.pieces.map((q, k) => `<li data-piece="${esc(q.p.slug)}"${k === 0 ? ' class="on"' : ""}>
+          <a href="/product/${esc(q.p.slug)}/"><span class="lk-th">${photo(q.p.slug + "-1", q.p.name) || '<i class="ph-empty"></i>'}</span><span class="lk-meta"><b>${esc(q.p.name)}</b><em>${esc(q.p.type)}</em></span><span class="price" data-price-for="${esc(q.p.slug)}"></span></a>
+          <div class="lk-buy">
+            <select class="lk-col" aria-label="${esc(T("looks.colour", "Colour"))}: ${esc(q.p.name)}">${q.p.colors.map((c) => `<option>${esc(c)}</option>`).join("")}</select>
+            ${(q.p.sizes || []).length ? `<select class="lk-size" aria-label="${esc(T("looks.size", "Size"))}: ${esc(q.p.name)}">${q.p.sizes.length > 1 ? `<option value="">${T("looks.size", "Size")}</option>` : ""}${q.p.sizes.map((s) => `<option>${esc(s)}</option>`).join("")}</select>` : '<span class="lk-nosize"></span>'}
+            <button class="lk-add" type="button">${T("looks.add", "Add to cart")}</button>
+          </div>
+          <p class="lk-msg" role="status"></p>
+        </li>`).join("")}
       </ul>
+      <div class="lk-all">
+        <div class="lk-total"><span>${T("looks.complete", "The complete look")}</span><b data-lk-total></b></div>
+        <button class="btn wide lk-addall" type="button" data-lk-sum-open>${T("looks.add-all", "Add the full look")}</button>
+      </div>
+      <div class="lk-sum" hidden role="group" aria-label="${esc(T("looks.summary", "Look summary"))}">
+        <h3>${T("looks.summary", "Look summary")}</h3>
+        <ul class="lk-sumlist" data-lk-sumlist></ul>
+        <div class="lk-sumtotal"><span>${T("looks.total", "Total")}</span><b data-lk-sumtotal></b></div>
+        <p class="lk-msg" role="status" data-lk-summsg></p>
+        <div class="lk-sumdone" hidden><p>${T("looks.added", "The look is in your cart.")}</p><a class="btn wide" href="/cart/">${T("looks.view-cart", "View cart")}</a><button class="btn line wide" type="button" data-lk-sum-back>${T("looks.keep", "Keep browsing")}</button></div>
+        <div class="lk-sumbtns"><button class="btn line" type="button" data-lk-sum-back>${T("looks.back", "Back")}</button><button class="btn" type="button" data-lk-sum-add>${T("looks.add-all-cart", "Add all to cart")}</button></div>
+      </div>
     </aside>
   </section>`;
 }
@@ -1390,8 +1610,9 @@ write("looks/index.html", layout({
   description: TR("looks.meta-description", "Shop complete outfits. Wander the wall of looks, step closer to one and see every piece in it."),
   page: "looks",
   body: `<main class="looks" data-looks>
+  <h1 class="sr">${T("looks.heading", "Zi Looks")}</h1>
   <div class="lk-bar">
-    <div class="lk-switch" role="tablist" aria-label="Ways to shop">
+    <div class="lk-switch" role="group" aria-label="Ways to shop">
       <a href="/shop/">${T("looks.switch-all", "All pieces")}</a>
       <a href="/looks/" class="on" aria-current="page">${T("looks.switch-looks", "Zi Looks")}</a>
     </div>
@@ -1412,8 +1633,8 @@ ${LOOK_ROWS.map(lookRow).join("\n")}
     </div>
 ${LOOKS.map(lookDetail).join("\n")}
     <nav class="lk-nav" aria-label="Looks">
-      <button type="button" data-lk-prev><svg viewBox="0 0 40 12" width="30" height="12" aria-hidden="true"><path d="M40 6H2M7 1L2 6l5 5" fill="none" stroke="currentColor" stroke-width="1.2"/></svg><span data-lk-prev-name></span></button>
-      <button type="button" data-lk-next><span data-lk-next-name></span><svg viewBox="0 0 40 12" width="30" height="12" aria-hidden="true"><path d="M0 6h38M33 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></button>
+      <button type="button" data-lk-prev aria-label="Previous look"><svg viewBox="0 0 40 12" width="30" height="12" aria-hidden="true"><path d="M40 6H2M7 1L2 6l5 5" fill="none" stroke="currentColor" stroke-width="1.2"/></svg><span data-lk-prev-name></span></button>
+      <button type="button" data-lk-next aria-label="Next look"><span data-lk-next-name></span><svg viewBox="0 0 40 12" width="30" height="12" aria-hidden="true"><path d="M0 6h38M33 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></button>
     </nav>
   </div>
 </main>
@@ -1436,7 +1657,7 @@ function bare({ title, description, page, body }) {
 <link rel="icon" href="/assets/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..700&family=Public+Sans:wght@400;500;600&family=Lexend:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..700&family=Public+Sans:wght@400;500;600&family=Lexend:wght@400;500;600&family=Noto+Serif:ital,wght@0,400;1,400&family=Noto+Sans:wght@300;400;500&display=swap">
 <link rel="stylesheet" href="/assets/styles.css?v=${BUILD_V}">
 <script>document.documentElement.className = "js";</script>
 </head>
@@ -1447,75 +1668,6 @@ ${body}
 </html>
 `;
 }
-const CHARTER = [TR("home.opening-frame", "People are complex."), TR("home.movement", "Every way of existing deserves space."), TR("home.detail", "Expression is personal."), TR("home.group", "Identity can change."), TR("home.still-life", "Belonging does not require conformity."), TR("home.closing-frame", "Structure should serve freedom.")];
-const JOIN_HERO = findImage("hero-3") ? "hero-3" : "hero";
-const joinHero = findImage(JOIN_HERO);
-if (joinHero) write(`assets/join-hero.${joinHero.ext}`, fs.readFileSync(joinHero.file));
-const JOIN_STEPS = [
-  [T("join.step1-title", "Register"), T("join.step1-text", "Add your name and email.")],
-  [T("join.step2-title", "Settle in"), T("join.step2-text", "Tell the Republic where you live and when your birthday falls.")],
-  [T("join.step3-title", "Receive word"), T("join.step3-text", "The Ministry of Communications emails you when the capsule collection launches.")]
-];
-write("join/index.html", bare({
-  title: TR("join.meta-title", "Join the Zibura waitlist"),
-  description: TR("join.meta-description", "Zi Republic is a country with a style of its own. Join the waitlist for first word on the capsule collection."),
-  page: "join",
-  body: `<header class="jn-top"><a class="jn-brand" href="/" aria-label="Zibura home"><img src="/assets/logo-wordmark-sky.png" alt="Zibura" width="636" height="120"></a><a class="jn-enter" href="/">${T("join.enter", "Enter Zibura")}</a></header>
-<main class="join">
-<section class="jn-hero">
-  <div class="jn-bg">${joinHero ? `<img src="/assets/join-hero.${joinHero.ext}" alt="" fetchpriority="high">` : ""}</div>
-  <div class="jn-copy">
-    <p class="jn-tag">${T("join.tag", "Official notice from the Ministry of Communications")}</p>
-    <h1 class="jn-title">${T("join.title", "A country of our own. A style of your own.").replace(". ", ".<br>")}</h1>
-    <p class="jn-lede">${T("join.lede", "Zi Republic is opening its doors with the capsule collection. Join the waitlist to hear first.")}</p>
-    <div class="jn-count" data-jn-count data-date="${TR("join.count-date", "2027-04-18")}" role="timer" aria-label="${esc(TR("join.count-label", "Countdown to 18 April 2027"))}">
-      <p class="jn-count-label">${T("join.count-label", "Countdown to 18 April 2027")}</p>
-      <div class="jn-count-row">
-        <div><b data-u="d">00</b><span>${T("join.count-days", "Days")}</span></div>
-        <div><b data-u="h">00</b><span>${T("join.count-hours", "Hours")}</span></div>
-        <div><b data-u="m">00</b><span>${T("join.count-minutes", "Minutes")}</span></div>
-        <div><b data-u="s">00</b><span>${T("join.count-seconds", "Seconds")}</span></div>
-      </div>
-      <p class="jn-count-done" hidden>${T("join.count-done", "The doors are open.")}</p>
-    </div>
-    <a class="jn-btn" href="#waitlist">${T("join.button", "Join the waitlist")}</a>
-  </div>
-  <a class="jn-down" href="#charter" aria-label="${esc(TR("join.scroll-label", "Scroll down"))}"><i></i></a>
-</section>
-<div class="jn-ticker" aria-hidden="true"><div class="jn-run">${[0, 1].map(() => `<div>${CHARTER.map((c) => `<span>${c}</span>`).join("")}</div>`).join("")}</div></div>
-<section class="jn-charter" id="charter">
-  <div class="jn-head"><h2 class="display">${T("join.charter-title", "The Charter")}</h2><p>${T("join.charter-sub", "Six lines every Zitizen lives by.")}</p></div>
-  <div class="jn-grid">
-${CHARTER.map((c, i) => `    <figure class="jn-tile">${media("collection-1-" + (i + 1), c)}<figcaption>${c}</figcaption></figure>`).join("\n")}
-  </div>
-</section>
-<section class="jn-wl" id="waitlist">
-  <div class="jn-wl-in">
-    <div class="jn-wl-copy">
-      <h2 class="display">${T("join.form-title", "Be the first through the door.")}</h2>
-      <p>${T("join.form-lead", "The capsule collection is launching soon. Waitlist members hear first.")}</p>
-      <ol class="jn-steps">${JOIN_STEPS.map((s, i) => `<li><span>${i + 1}</span><div><b>${s[0]}</b><em>${s[1]}</em></div></li>`).join("")}</ol>
-    </div>
-    <div class="jn-wl-form" data-jn-form>${arrivalCard("j")}</div>
-    <div class="jn-done" data-jn-done hidden tabindex="-1">
-      <img src="/assets/zi-card-seal.png" alt="" width="304" height="300">
-      <h2 class="display"><span data-jn-name>${T("join.done-title", "You are on the list.")}</span></h2>
-      <p>${T("join.done-text", "A confirmation is on its way to your inbox. While you wait, three things to do.")}</p>
-      <div class="jn-next">
-        <a href="/style-compass/"><b>${T("join.next1-title", "Take the Style Compass")}</b><span>${T("join.next1-text", "Eighteen questions to find your style leaning.")}</span></a>
-        <a href="/zi-card/"><b>${T("join.next2-title", "Apply for Zi Residency")}</b><span>${T("join.next2-text", "Anyone may apply. Residents receive a Zi Card.")}</span></a>
-        <a href="/looks/"><b>${T("join.next3-title", "Wander Zi Looks")}</b><span>${T("join.next3-text", "See complete outfits and every piece in them.")}</span></a>
-      </div>
-    </div>
-  </div>
-</section>
-<footer class="jn-foot">
-  <div class="socs">${SOCIAL}</div>
-  <p>${T("legal_line", "&copy; 2026 Zibura. Official business. Unofficial personalities.")}</p>
-</footer>
-</main>`
-}));
-
 // Assets and data
 write("assets/styles.css", fs.readFileSync(find("styles.css")));
 write("assets/app.js", fs.readFileSync(find("app.js")));
@@ -1525,6 +1677,7 @@ for (const f of [
   "logo-wordmark-navy.png",
   "logo-icon-navy.png",
   "favicon.png",
+  "share.png",
   "ruova.jpg",
   "hero.jpg",
   "zi-card-seal.png",
@@ -1548,7 +1701,9 @@ write("_redirects", [
   "/province /style-compass/ 301",
   "/explore/signal-1/arc-1/ /explore/collection-1/capsule-1/ 301",
   "/explore/signal-1/arc-2/ /explore/collection-1/ 301",
-  "/explore/signal-1/ /explore/collection-1/ 301"
+  "/explore/signal-1/ /explore/collection-1/ 301",
+  "/join /waitlist/ 301",
+  "/join/ /waitlist/ 301"
 ].join("\n") + "\n");
 write(
   "404.html",
@@ -1563,6 +1718,26 @@ write(
 </main>`
   })
 );
+
+// Search engine files
+(function () {
+  const skip = /^\/(admin|reset|thanks|join|404\.html)/;
+  const urls = [];
+  (function walk(dir) {
+    for (const n of fs.readdirSync(dir, { withFileTypes: true })) {
+      const f = path.join(dir, n.name);
+      if (n.isDirectory()) walk(f);
+      else if (n.name === "index.html") {
+        const u = "/" + path.relative(dist, path.dirname(f)).split(path.sep).join("/") + "/";
+        const clean = u === "//" ? "/" : u;
+        if (!skip.test(clean)) urls.push(clean);
+      }
+    }
+  })(dist);
+  urls.sort();
+  write("sitemap.xml", `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>https://zibura.com${u}</loc></url>`).join("\n")}\n</urlset>\n`);
+  write("robots.txt", "User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/\nDisallow: /reset/\nDisallow: /thanks/\n\nSitemap: https://zibura.com/sitemap.xml\n");
+})();
 
 console.log("Built " + products.length + " products into dist/");
 

@@ -94,6 +94,8 @@
     view.querySelector("[data-lk-prev-name]").textContent = names[(i - 1 + N) % N] || "";
     view.querySelector("[data-lk-next-name]").textContent = names[(i + 1) % N] || "";
     pick(i, null);
+    details.forEach(function (d) { var sm = d.querySelector(".lk-sum"); if (sm) { sm.hidden = true; d.classList.remove("sum-open"); } });
+    paintTotals();
     try { history.replaceState(null, "", "#look-" + (i + 1)); } catch (e) {}
   }
   function openLook(i, from) {
@@ -141,9 +143,9 @@
   view.querySelector("[data-lk-next]").addEventListener("click", function () { step(1); });
   document.addEventListener("keydown", function (e) {
     if (openIdx < 0) return;
-    if (e.key === "Escape") closeLook(); else if (e.key === "ArrowLeft") step(-1); else if (e.key === "ArrowRight") step(1);
+    if (e.key === "Escape") { var os = details[openIdx].querySelector(".lk-sum:not([hidden])"); if (os) closeSummary(details[openIdx]); else closeLook(); } else if (e.key === "ArrowLeft" && !/^(SELECT|INPUT)$/.test(e.target.tagName)) step(-1); else if (e.key === "ArrowRight" && !/^(SELECT|INPUT)$/.test(e.target.tagName)) step(1);
     else if (e.key === "Tab") {
-      var q = Array.prototype.slice.call(view.querySelectorAll("a[href], button")).filter(function (n) { return n.offsetParent !== null; });
+      var q = Array.prototype.slice.call(view.querySelectorAll("a[href], button, select")).filter(function (n) { return n.offsetParent !== null; });
       if (!q.length) return; var a = q[0], z = q[q.length - 1];
       if (e.shiftKey && document.activeElement === a) { e.preventDefault(); z.focus(); } else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); }
     }
@@ -161,6 +163,100 @@
       li.addEventListener("mouseenter", function () { pick(i, s); }); li.addEventListener("focusin", function () { pick(i, s); });
     });
   });
+  // Buying inside a look: add a single piece, or review and add the whole look.
+  function Z() { return window.ZiCart; }
+  function rowInfo(li) {
+    var col = li.querySelector(".lk-col"), size = li.querySelector(".lk-size");
+    return { li: li, slug: li.getAttribute("data-piece"), name: li.querySelector(".lk-meta b").textContent, color: col ? col.value : "", size: size ? size.value : "", colSel: col, sizeSel: size };
+  }
+  function totalFor(sec) {
+    var z = Z(); if (!z || !z.ready()) return "";
+    var sum = 0; Array.prototype.forEach.call(sec.querySelectorAll(".lk-pieces li"), function (li) { sum += z.price(li.getAttribute("data-piece")) || 0; });
+    return z.money(sum);
+  }
+  function paintTotals() {
+    details.forEach(function (sec) { var t = sec.querySelector("[data-lk-total]"); if (t) t.textContent = totalFor(sec); });
+    var open = openIdx >= 0 && details[openIdx].querySelector(".lk-sum:not([hidden])");
+    if (open) paintSummary(details[openIdx]);
+  }
+  document.addEventListener("zibura:prices", paintTotals);
+  window.addEventListener("load", paintTotals);
+  setTimeout(paintTotals, 600);
+  function flash(li, text, bad) {
+    var m = li.querySelector(".lk-msg"); if (!m) return;
+    m.textContent = text; m.classList.toggle("bad", !!bad);
+    clearTimeout(m._t); if (!bad) m._t = setTimeout(function () { m.textContent = ""; }, 4000);
+  }
+  details.forEach(function (sec) {
+    Array.prototype.forEach.call(sec.querySelectorAll(".lk-pieces li"), function (li) {
+      li.querySelector(".lk-add").addEventListener("click", function () {
+        var z = Z(), r = rowInfo(li);
+        if (!z) return;
+        if (r.sizeSel && !r.size) { flash(li, "Choose a size for " + r.name + ".", true); r.sizeSel.classList.add("bad"); r.sizeSel.focus(); return; }
+        if (r.sizeSel) r.sizeSel.classList.remove("bad");
+        z.add([{ slug: r.slug, color: r.color, size: r.size, qty: 1 }]);
+        z.fly(li.querySelector(".lk-th img"));
+        var btn = this; btn.textContent = "Added"; btn.classList.add("ok");
+        setTimeout(function () { btn.textContent = btn.getAttribute("data-label") || "Add to cart"; btn.classList.remove("ok"); }, 1800);
+        flash(li, r.name + ", " + r.color + (r.size ? ", " + r.size : "") + " is in your cart.");
+      });
+      li.querySelector(".lk-add").setAttribute("data-label", li.querySelector(".lk-add").textContent);
+      var ss = li.querySelector(".lk-size"); if (ss) ss.addEventListener("change", function () { this.classList.remove("bad"); flash(li, ""); });
+    });
+    var sum = sec.querySelector(".lk-sum"), list = sec.querySelector("[data-lk-sumlist]"), msg = sec.querySelector("[data-lk-summsg]");
+    var done = sec.querySelector(".lk-sumdone"), btns = sec.querySelector(".lk-sumbtns");
+    sec.querySelector("[data-lk-sum-open]").addEventListener("click", function () {
+      done.hidden = true; btns.hidden = false; msg.textContent = "";
+      sum.hidden = false; sec.classList.add("sum-open"); paintSummary(sec);
+      var f = sum.querySelector("select, button"); if (f) f.focus({ preventScroll: true });
+      sum.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
+    });
+    Array.prototype.forEach.call(sec.querySelectorAll("[data-lk-sum-back]"), function (b) { b.addEventListener("click", function () { closeSummary(sec); }); });
+    sec.querySelector("[data-lk-sum-add]").addEventListener("click", function () {
+      var z = Z(); if (!z) return;
+      var rows = Array.prototype.map.call(sec.querySelectorAll(".lk-pieces li"), rowInfo);
+      var missing = rows.filter(function (r) { return r.sizeSel && !r.size; });
+      if (missing.length) {
+        msg.textContent = "Choose a size for " + missing.map(function (r) { return r.name; }).join(", ") + ".";
+        msg.classList.add("bad"); paintSummary(sec);
+        var bad = list.querySelector("select.bad"); if (bad) bad.focus();
+        return;
+      }
+      z.add(rows.map(function (r) { return { slug: r.slug, color: r.color, size: r.size, qty: 1 }; }));
+      z.fly(sec.querySelector(".lk-fig img"));
+      msg.textContent = ""; btns.hidden = true; done.hidden = false;
+      var a = done.querySelector("a"); if (a) a.focus({ preventScroll: true });
+    });
+  });
+  function closeSummary(sec) {
+    var sum = sec.querySelector(".lk-sum"); sum.hidden = true; sec.classList.remove("sum-open");
+    var o = sec.querySelector("[data-lk-sum-open]"); if (o) o.focus({ preventScroll: true });
+  }
+  function paintSummary(sec) {
+    var z = Z(), list = sec.querySelector("[data-lk-sumlist]"), msg = sec.querySelector("[data-lk-summsg]"), tot = sec.querySelector("[data-lk-sumtotal]");
+    var rows = Array.prototype.map.call(sec.querySelectorAll(".lk-pieces li"), rowInfo);
+    var keepFocus = document.activeElement && list.contains(document.activeElement) ? document.activeElement.getAttribute("data-k") : null;
+    list.innerHTML = "";
+    rows.forEach(function (r, k) {
+      var li = document.createElement("li");
+      var th = r.li.querySelector(".lk-th"); var thumb = document.createElement("span"); thumb.className = "lk-th"; thumb.innerHTML = th ? th.innerHTML : "";
+      var info = document.createElement("span"); info.className = "lk-sumi";
+      var nm = document.createElement("b"); nm.textContent = r.name; info.appendChild(nm);
+      var pr = document.createElement("em"); pr.textContent = z && z.ready() ? z.money(z.price(r.slug)) : ""; info.appendChild(pr);
+      var sels = document.createElement("span"); sels.className = "lk-sumsel";
+      [["colSel", "col"], ["sizeSel", "size"]].forEach(function (pair) {
+        var src = r[pair[0]]; if (!src) return;
+        var c = src.cloneNode(true); c.value = src.value; c.className = src.className.replace(/\bbad\b/, "").trim(); c.setAttribute("data-k", k + pair[1]);
+        if (pair[1] === "size" && !src.value && msg.classList.contains("bad")) c.classList.add("bad");
+        c.addEventListener("change", function () { src.value = c.value; c.classList.remove("bad"); msg.textContent = ""; msg.classList.remove("bad"); });
+        sels.appendChild(c);
+      });
+      li.appendChild(thumb); li.appendChild(info); li.appendChild(sels); list.appendChild(li);
+    });
+    tot.textContent = totalFor(sec);
+    if (keepFocus) { var f = list.querySelector('[data-k="' + keepFocus + '"]'); if (f) f.focus({ preventScroll: true }); }
+  }
+
   // A link such as /looks/#look-4 opens that look.
   function fromHash() { var m = /^#look-(\d+)$/.exec(location.hash); if (m && Number(m[1]) >= 1 && Number(m[1]) <= N) openLook(Number(m[1]) - 1, null); }
   measure(); fromHash(); raf = requestAnimationFrame(loop);
