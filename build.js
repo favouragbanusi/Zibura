@@ -268,7 +268,6 @@ function layout({ title, description, page, body }) {
       <div class="has-mega"><a href="/shop/">${T("site.shop", "Shop")}</a>${MEGA}</div>
       <a href="/explore/">${T("site.collections", "Zi Archive")}</a>
       <a href="/brand/">${T("site.zi-republic", "Zi Republic")}</a>
-      <a href="/style-compass/">${T("site.style-profile", "Style Compass")}</a>
       <a href="/note/">${T("site.from-the-zi-in-chief", "From the Zi-in-Chief")}</a>
     </nav>
     <a class="brand" href="/" aria-label="Zibura home"><img src="/assets/logo-wordmark-navy.png" alt="Zibura" width="636" height="120"></a>
@@ -296,7 +295,6 @@ function layout({ title, description, page, body }) {
     <div class="d-sub">${TAX.map((c) => `<a href="/shop/?category=${encodeURIComponent(c.name)}">${esc(c.name)}</a>`).join("")}</div>
     <a class="d-link big" href="/explore/">${T("site.collections", "Zi Archive")}</a>
     <a class="d-link big" href="/brand/">${T("site.zi-republic", "Zi Republic")}</a>
-    <a class="d-link big" href="/style-compass/">${T("site.style-profile", "Style Compass")}</a>
     <a class="d-link big" href="/note/">${T("site.from-the-zi-in-chief", "From the Zi-in-Chief")}</a>
     <a class="d-link" href="/account/" id="acct-link-m">${T("site.my-account", "My account")}</a>
     <a class="d-link" href="/cart/">${T("site.cart", "Cart")}</a>
@@ -339,7 +337,6 @@ ${categories.map((c) => `        <a href="/shop/?category=${encodeURIComponent(c
       <div>
         <h3>${T("site.explore-heading", "Explore")}</h3>
         <a href="/explore/">${T("site.collections", "Zi Archive")}</a>
-        <a href="/style-compass/">${T("site.style-profile", "Style Compass")}</a>
         <a href="/note/">${T("site.from-the-zi-in-chief", "From the Zi-in-Chief")}</a>
         <a href="/waitlist/">${T("site.join-the-waitlist", "Join the waitlist")}</a>
         <a href="/account/">${T("site.your-account", "Your account")}</a>
@@ -394,6 +391,7 @@ write(
         <div class="he-actions">
           <a class="he-btn" href="/explore/">${T("home.hero1-button", "Explore Zibura")}</a>
           <a class="he-btn ghost" href="/shop/">${T("home.hero1-button2", "Shop now")}</a>
+          <a class="he-btn ghost" href="/waitlist/">${T("home.hero1-button3", "Join the waitlist")}</a>
         </div>
       </div>
     </article>
@@ -426,16 +424,31 @@ write(
   <a class="he-scroll" href="#products" aria-label="Scroll to products"><span>${T("home.scroll", "Scroll")}</span><i></i></a>
 </section>
 
-<section class="section register-band" id="register">
-  <div class="wrap split">
-    <div data-reveal>
-      <h2 class="display">${T("home.waitlist-title", "Join the waitlist.")}</h2>
-      <p class="reg-lead">${T("home.waitlist-lead", "The Ministry of Communications maintains the waitlist with great seriousness. Register your interest and the Ministry will email you when the capsule collection launches.")}</p>
+
+
+
+<section class="section statement collage-sec">
+  <div class="wrap collage-wrap">
+    <div class="collage" aria-hidden="true">
+      <figure class="cl a" data-parallax="0.12">${media("collection-1-2", "Editorial frame")}</figure>
+      <figure class="cl b" data-parallax="-0.1">${media("collection-1-4", "Editorial frame")}</figure>
+      <figure class="cl c" data-parallax="0.2">${media("collection-1-6", "Editorial frame")}</figure>
     </div>
-    <div data-reveal>${arrivalCard("h")}</div>
+    <p class="scrollwords" data-scrollwords>${T("home.supporting", "A brand built around personal expression. A world with its own identity. Design, individual style and a point of view that leaves room for you to exist in all your dimensions.")}</p>
+    <p style="margin-top:40px" data-reveal><a class="btn line" href="/brand/">${T("home.read-republic-story", "Read the Republic story")}</a></p>
   </div>
 </section>
 
+<section class="hscroll" data-hscroll aria-label="Look book">
+  <div class="hs-pin">
+    <div class="wrap hs-head"><h2>${T("home.the-look-book", "The look book")}</h2><p>${T("home.look-book-sub", "Back to the basics.")}</p></div>
+    <div class="hs-track">
+${[TR("home.opening-frame", "People are complex."), TR("home.movement", "Every way of existing deserves space."), TR("home.detail", "Expression is personal."), TR("home.group", "Identity can change."), TR("home.still-life", "Belonging does not require conformity."), TR("home.closing-frame", "Structure should serve freedom.")].map((c, i) => `      <figure class="hs-card${i % 2 ? " low" : ""}">${media("collection-1-" + (i + 1), c)}<figcaption>${c}</figcaption></figure>`).join("\n")}
+      <a class="hs-end" href="/explore/collection-1/"><span>${T("home.read-about-collection", "Read about the capsule collection")}</span></a>
+    </div>
+    <div class="hs-bar" aria-hidden="true"><i></i></div>
+  </div>
+</section>
 
 <section class="section" id="products">
   <div class="wrap">
@@ -448,17 +461,6 @@ write(
 ${products.slice(0, 8).map(card).join("\n")}
   </div>
   <div class="wrap" style="margin-top:36px"><a class="text-link" href="/shop/">${T("home.see-all-products", "See all products")}</a></div>
-</section>
-
-<section class="hscroll" data-hscroll aria-label="Look book">
-  <div class="hs-pin">
-    <div class="wrap hs-head"><h2>${T("home.the-look-book", "The look book")}</h2><p>${T("home.look-book-sub", "Back to the basics.")}</p></div>
-    <div class="hs-track">
-${[TR("home.opening-frame", "People are complex."), TR("home.movement", "Every way of existing deserves space."), TR("home.detail", "Expression is personal."), TR("home.group", "Identity can change."), TR("home.still-life", "Belonging does not require conformity."), TR("home.closing-frame", "Structure should serve freedom.")].map((c, i) => `      <figure class="hs-card${i % 2 ? " low" : ""}">${media("collection-1-" + (i + 1), c)}<figcaption>${c}</figcaption></figure>`).join("\n")}
-      <a class="hs-end" href="/explore/collection-1/"><span>${T("home.read-about-collection", "Read about the capsule collection")}</span></a>
-    </div>
-    <div class="hs-bar" aria-hidden="true"><i></i></div>
-  </div>
 </section>
 
 <section class="section" style="padding-top:0">
@@ -482,17 +484,10 @@ ${TAX.map((c) => {
   </div>
 </section>
 
-<section class="section statement collage-sec">
-  <div class="wrap collage-wrap">
-    <div class="collage" aria-hidden="true">
-      <figure class="cl a" data-parallax="0.12">${media("collection-1-2", "Editorial frame")}</figure>
-      <figure class="cl b" data-parallax="-0.1">${media("collection-1-4", "Editorial frame")}</figure>
-      <figure class="cl c" data-parallax="0.2">${media("collection-1-6", "Editorial frame")}</figure>
-    </div>
-    <p class="scrollwords" data-scrollwords>${T("home.supporting", "A brand built around personal expression. A world with its own identity. Design, individual style and a point of view that leaves room for you to exist in all your dimensions.")}</p>
-    <p style="margin-top:40px" data-reveal><a class="btn line" href="/brand/">${T("home.read-republic-story", "Read the Republic story")}</a></p>
-  </div>
-</section>
+<section class="section" style="padding-top:0"><div class="wrap cta-row" data-reveal>
+  <p>${T("home.compass-text", "Not sure where to start? Eighteen questions find your style leaning.")}</p>
+  <a class="btn line" href="/style-compass/">${T("home.compass-button", "Take the Style Compass")}</a>
+</div></section>
 
 <section class="wrap" data-reveal style="margin-bottom:clamp(56px,8vw,120px)">
   ${film("collection-1-home-film", TR("home.film-caption", "The capsule collection, in motion."))}
@@ -1377,7 +1372,7 @@ write(
     page: "shop",
     body: `<main class="wrap">
 ${crumbs([[T("site.home", "Home"), "/"], [T("shop.shop", "Shop")]])}
-<div class="page-head" style="padding-left:0;padding-top:0;padding-right:0"><h1 class="display rise">${words(TR("shop.title", "Shop the collection."))}</h1><p class="fade">${T("shop.subtitle", "The capsule collection is launching soon. Choose a colour and a size, then add the product to your cart.")}</p></div>
+<div class="page-head" style="padding-left:0;padding-top:0;padding-right:0"><h1 class="display rise">${words(TR("shop.title", "Shop the collection."))}</h1><p class="fade">${T("shop.subtitle", "The capsule collection is launching soon. Choose a colour and a size, then add the product to your cart.")}</p><p style="margin-top:16px"><a class="btn line small-btn" href="/style-compass/">${T("home.compass-button", "Take the Style Compass")}</a></p></div>
 <div class="lk-switch shop-switch"><a href="/shop/" class="on" aria-current="page">${T("looks.switch-all", "All pieces")}</a><a href="/looks/">${T("looks.switch-looks", "Zi Looks")}</a></div>
 <div class="toolbar">
   <button type="button" class="btn line small-btn" id="open-filters">${T("shop.filters", "Filters")}</button>
