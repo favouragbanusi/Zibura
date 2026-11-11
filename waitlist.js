@@ -25,7 +25,13 @@
     paint();
     raf = Math.abs(target - cur) > 0 ? requestAnimationFrame(loop) : 0;
   }
-  function onScroll() { measure(); if (!raf) raf = requestAnimationFrame(loop); }
+  var hero = document.querySelector(".mu-hero");
+  function skyZoom() {
+    if (!hero || reduce) return;
+    var h = clamp(window.pageYOffset / (hero.offsetHeight * 0.92), 0, 1);
+    root.style.setProperty("--h", h.toFixed(4));
+  }
+  function onScroll() { skyZoom(); measure(); if (!raf) raf = requestAnimationFrame(loop); }
   window.addEventListener("scroll", onScroll, { passive: true });
   window.addEventListener("resize", onScroll);
   window.addEventListener("load", onScroll);

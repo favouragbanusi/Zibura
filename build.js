@@ -180,18 +180,11 @@ function subscribeForm(id) {
 
 function arrivalCard(id) {
   return `<div class="arrival">
-    <div class="arr-head">
-      <img src="/assets/logo-icon-navy.png" alt="" width="434" height="436">
-      <div><b>${T("forms.zi-republic", "Zi Republic")}</b><span>${T("forms.ministry-of-communications", "Ministry of Communications")}</span></div>
-      <span class="arr-tag">${T("forms.waitlist-tag", "Waitlist")}</span>
-    </div>
+    <p class="arr-kicker">${T("forms.ministry-of-communications", "Ministry of Communications")}</p>
+    <h2 class="arr-title">${T("forms.join-the-waitlist", "Join the waitlist")}</h2>
+    <p class="arr-sub">${T("forms.collection-launch", "The capsule collection is launching soon")}</p>
     ${waitlistForm(id)}
     <p class="form-legal">${T("policy.agree-prefix", "By continuing you agree to the")} <a href="/terms/">${T("policy.terms-link", "Terms")}</a> ${T("policy.and", "and")} <a href="/privacy/">${T("policy.privacy-link", "Privacy")}</a>.</p>
-    <div class="arr-foot">
-      <img src="/assets/zi-card-seal.png" alt="" width="304" height="300">
-      <span>${T("forms.collection-launch", "The capsule collection is launching soon")}</span>
-    </div>
-    <p class="mrz" aria-hidden="true">ZI&lt;REPUBLIC&lt;&lt;WAITLIST&lt;&lt;COLLECTION&lt;I&lt;&lt;&lt;&lt;&lt;&lt;</p>
   </div>`;
 }
 
@@ -390,7 +383,6 @@ write(
         <h1 class="he-title">${T("home.hero1-title", "Your expression, your world.")}</h1>
         <div class="he-actions">
           <a class="he-btn" href="/explore/">${T("home.hero1-button", "Explore Zibura")}</a>
-          <a class="he-btn ghost" href="/shop/">${T("home.hero1-button2", "Shop now")}</a>
           <a class="he-btn ghost" href="/waitlist/">${T("home.hero1-button3", "Join the waitlist")}</a>
         </div>
       </div>
@@ -427,29 +419,6 @@ write(
 
 
 
-<section class="section statement collage-sec">
-  <div class="wrap collage-wrap">
-    <div class="collage" aria-hidden="true">
-      <figure class="cl a" data-parallax="0.12">${media("collection-1-2", "Editorial frame")}</figure>
-      <figure class="cl b" data-parallax="-0.1">${media("collection-1-4", "Editorial frame")}</figure>
-      <figure class="cl c" data-parallax="0.2">${media("collection-1-6", "Editorial frame")}</figure>
-    </div>
-    <p class="scrollwords" data-scrollwords>${T("home.supporting", "A brand built around personal expression. A world with its own identity. Design, individual style and a point of view that leaves room for you to exist in all your dimensions.")}</p>
-    <p style="margin-top:40px" data-reveal><a class="btn line" href="/brand/">${T("home.read-republic-story", "Read the Republic story")}</a></p>
-  </div>
-</section>
-
-<section class="hscroll" data-hscroll aria-label="Look book">
-  <div class="hs-pin">
-    <div class="wrap hs-head"><h2>${T("home.the-look-book", "The look book")}</h2><p>${T("home.look-book-sub", "Back to the basics.")}</p></div>
-    <div class="hs-track">
-${[TR("home.opening-frame", "People are complex."), TR("home.movement", "Every way of existing deserves space."), TR("home.detail", "Expression is personal."), TR("home.group", "Identity can change."), TR("home.still-life", "Belonging does not require conformity."), TR("home.closing-frame", "Structure should serve freedom.")].map((c, i) => `      <figure class="hs-card${i % 2 ? " low" : ""}">${media("collection-1-" + (i + 1), c)}<figcaption>${c}</figcaption></figure>`).join("\n")}
-      <a class="hs-end" href="/explore/collection-1/"><span>${T("home.read-about-collection", "Read about the capsule collection")}</span></a>
-    </div>
-    <div class="hs-bar" aria-hidden="true"><i></i></div>
-  </div>
-</section>
-
 <section class="section" id="products">
   <div class="wrap">
     <div class="section-head" data-reveal>
@@ -461,6 +430,17 @@ ${[TR("home.opening-frame", "People are complex."), TR("home.movement", "Every w
 ${products.slice(0, 8).map(card).join("\n")}
   </div>
   <div class="wrap" style="margin-top:36px"><a class="text-link" href="/shop/">${T("home.see-all-products", "See all products")}</a></div>
+</section>
+
+<section class="hscroll" data-hscroll aria-label="Look book">
+  <div class="hs-pin">
+    <div class="wrap hs-head"><h2>${T("home.the-look-book", "The look book")}</h2><p>${T("home.look-book-sub", "Back to the basics.")}</p></div>
+    <div class="hs-track">
+${[TR("home.opening-frame", "People are complex."), TR("home.movement", "Every way of existing deserves space."), TR("home.detail", "Expression is personal."), TR("home.group", "Identity can change."), TR("home.still-life", "Belonging does not require conformity."), TR("home.closing-frame", "Structure should serve freedom.")].map((c, i) => `      <figure class="hs-card${i % 2 ? " low" : ""}">${media("collection-1-" + (i + 1), c)}<figcaption>${c}</figcaption></figure>`).join("\n")}
+      <a class="hs-end" href="/explore/collection-1/"><span>${T("home.read-about-collection", "Read about the capsule collection")}</span></a>
+    </div>
+    <div class="hs-bar" aria-hidden="true"><i></i></div>
+  </div>
 </section>
 
 <section class="section" style="padding-top:0">
@@ -481,6 +461,18 @@ ${TAX.map((c) => {
   return `      <a href="/shop/?category=${encodeURIComponent(c.name)}" data-count="${n} ${n === 1 ? "product" : "products"}">${esc(c.name)}</a>`;
 }).join("\n")}
     </div>
+  </div>
+</section>
+
+<section class="section statement collage-sec">
+  <div class="wrap collage-wrap">
+    <div class="collage" aria-hidden="true">
+      <figure class="cl a" data-parallax="0.12">${media("collection-1-2", "Editorial frame")}</figure>
+      <figure class="cl b" data-parallax="-0.1">${media("collection-1-4", "Editorial frame")}</figure>
+      <figure class="cl c" data-parallax="0.2">${media("collection-1-6", "Editorial frame")}</figure>
+    </div>
+    <p class="scrollwords" data-scrollwords>${T("home.supporting", "A brand built around personal expression. A world with its own identity. Design, individual style and a point of view that leaves room for you to exist in all your dimensions.")}</p>
+    <p style="margin-top:40px" data-reveal><a class="btn line" href="/brand/">${T("home.read-republic-story", "Read the Republic story")}</a></p>
   </div>
 </section>
 
