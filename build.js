@@ -48,6 +48,19 @@ function seoHead(rel, html) {
   if (!priv && !html.includes('rel="canonical"')) add += `<link rel="canonical" href="https://zibura.com${url}">\n`;
   if (!html.includes("og:title")) add += `<meta property="og:title" content="${t}">\n<meta property="og:description" content="${d}">\n`;
   if (!html.includes("og:image")) add += `<meta property="og:type" content="website">\n<meta property="og:site_name" content="Zibura">\n<meta property="og:url" content="https://zibura.com${url}">\n<meta property="og:image" content="https://zibura.com/assets/share.png">\n<meta name="twitter:card" content="summary_large_image">\n`;
+  const IG = (typeof LINKS !== "undefined" && LINKS.instagram) || "https://www.instagram.com/thezibura/";
+  const TT = (typeof LINKS !== "undefined" && LINKS.tiktok) || "https://www.tiktok.com/@thezibura";
+  const ld = [];
+  if (rel === "index.html") {
+    ld.push({ "@context": "https://schema.org", "@type": "Organization", name: "Zibura", url: "https://zibura.com/", logo: "https://zibura.com/assets/share.png", email: "hello@zibura.com", sameAs: [IG, TT] });
+    ld.push({ "@context": "https://schema.org", "@type": "WebSite", name: "Zibura", url: "https://zibura.com/" });
+  }
+  const pm = rel.match(/^product\/([^/]+)\/index\.html$/);
+  if (pm && typeof products !== "undefined") {
+    const p = products.find((x) => x.slug === pm[1]);
+    if (p) ld.push({ "@context": "https://schema.org", "@type": "Product", name: p.name, description: p.description, brand: { "@type": "Brand", name: "Zibura" }, offers: { "@type": "Offer", url: "https://zibura.com" + url, priceCurrency: "CAD", price: String(p.prices.CAD), availability: p.inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock" } });
+  }
+  ld.forEach((o) => { add += `<script type="application/ld+json">${JSON.stringify(o).replace(/</g, "\\u003c")}</script>\n`; });
   if (priv && !html.includes("noindex")) add += `<meta name="robots" content="noindex,nofollow">\n`;
   return html.replace("<head>", "<head>\n" + add);
 }

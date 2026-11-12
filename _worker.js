@@ -609,13 +609,15 @@ async function adminDecide(request, env) {
 }
 
 // Card titles are government and community offices, so a Zi Card reads like a real post in the Republic.
-const OFFICES_OF = ["Minister", "Ambassador", "Counsellor", "Commissioner", "Secretary", "Envoy", "Governor", "Chancellor", "Deputy Minister", "Under-Secretary"];
-const OFFICE_DOMAINS = ["Style", "Colour", "Fit", "Mood", "Light", "Trade", "Culture", "Rhythm", "Texture", "Craft"];
-const OFFICES_ALONE = ["Vice President", "Chief of Staff", "Senator", "Speaker", "Magistrate", "Treasurer", "Attorney General", "Consul", "Counsellor", "Chief Justice", "Mayor", "Registrar", "Chief Whip", "Prime Minister", "Ombudsman"];
+const OFFICES_OF = ["Minister", "Vice President", "Ambassador", "Counsellor", "Commissioner", "Secretary", "Envoy", "Governor", "Chancellor", "Deputy Minister", "Under-Secretary", "Attorney General", "Senator", "Speaker", "Magistrate", "Treasurer", "Consul", "Chief Justice", "Mayor", "Registrar", "Prime Minister", "Director General", "Chief of Staff", "Ombudsman", "Chief Whip", "High Commissioner", "Auditor General", "Minister of State", "Lord Chancellor", "Chief Counsel"];
+const OFFICE_DOMAINS = ["Style", "Colour", "Fit", "Mood", "Light", "Trade", "Culture", "Rhythm", "Texture", "Craft", "Taste", "Silhouette", "Movement", "Music", "Fabric", "Layering", "Accessories", "Denim", "Glamour", "Comfort", "Confidence", "Attitude", "Print", "Tailoring", "Detail", "Streetwear", "Footwear", "Vision", "Nightlife", "Heritage", "Fashion", "Form", "Motion", "Sound", "Hues"];
 function pickTitle() {
-  const r = crypto.getRandomValues(new Uint32Array(3));
-  if (r[0] % 100 < 40) return OFFICES_ALONE[r[1] % OFFICES_ALONE.length];
-  return OFFICES_OF[r[1] % OFFICES_OF.length] + " of " + OFFICE_DOMAINS[r[2] % OFFICE_DOMAINS.length];
+  for (let i = 0; i < 40; i++) {
+    const r = crypto.getRandomValues(new Uint32Array(2));
+    const t = OFFICES_OF[r[0] % OFFICES_OF.length] + " of " + OFFICE_DOMAINS[r[1] % OFFICE_DOMAINS.length];
+    if (t.length <= 26) return t;
+  }
+  return "Minister of Style";
 }
 
 async function approveApplication(env, id, when) {

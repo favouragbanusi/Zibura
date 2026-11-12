@@ -10,6 +10,7 @@
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var fine = window.matchMedia("(pointer: fine)").matches;
   var FACTOR = { far: 0.35, back: 0.6, mid: 1, near: 1.7 };
+  var tx = 0, ty = 0, cx = 0, cy = 0; // pointer position (-1 to 1) and its eased copy
   var rows = [], x = 0, y = 0, vx = 0, raf = 0, openIdx = -1, lastFocus = null, moved = false, dragging = false;
 
   // Each row is repeated three times so it loops without an edge.
@@ -23,10 +24,16 @@
     paint();
   }
   function paint() {
+    var W = stage.clientWidth || 1;
     rows.forEach(function (r) {
       if (!r.p) return;
       var t = (x * r.f) % r.p; if (t > 0) t -= r.p;
-      r.el.style.transform = "translate3d(" + t.toFixed(1) + "px," + (y * r.f * 0.6).toFixed(1) + "px,0)";
+      // Depth: pointer forward (up) brings the near rows toward you and sends the far rows back. Pointer back (down) does the reverse.
+      var depth = (r.f - 0.95) * -cy * 0.16;
+      var sc = reduce ? 1 : 1 + depth;
+      var rot = reduce ? 0 : cx * (r.f - 0.9) * 2.2;
+      r.el.style.transformOrigin = (W / 2 - t).toFixed(0) + "px 50%";
+      r.el.style.transform = "translate3d(" + t.toFixed(1) + "px," + (y * r.f * 0.6).toFixed(1) + "px,0) rotateY(" + rot.toFixed(2) + "deg) scale(" + sc.toFixed(4) + ")";
     });
   }
   function loop() {
@@ -36,6 +43,9 @@
       if (!reduce) x -= 0.22;
       y *= 0.9;
     }
+    cx += (tx - cx) * 0.08; cy += (ty - cy) * 0.08;
+    // Hovering drifts the wall toward the side the pointer is on.
+    if (fine && openIdx < 0 && !dragging && !reduce) x -= cx * 2.4;
     paint();
     raf = requestAnimationFrame(loop);
   }
@@ -51,6 +61,11 @@
   });
   stage.addEventListener("pointermove", function (e) {
     if (fine && cursor) { cursor.style.transform = "translate3d(" + e.clientX + "px," + e.clientY + "px,0)"; }
+    if (fine || (d && e.pointerId === d.id)) {
+      var bb = stage.getBoundingClientRect();
+      tx = Math.max(-1, Math.min(1, ((e.clientX - bb.left) / bb.width - 0.5) * 2));
+      ty = Math.max(-1, Math.min(1, ((e.clientY - bb.top) / bb.height - 0.5) * 2));
+    }
     if (!d || e.pointerId !== d.id) return;
     var dx = e.clientX - d.x, dy = e.clientY - d.y;
     travel += Math.abs(dx) + Math.abs(dy);
@@ -68,6 +83,8 @@
       if (f) openLook(Number(f.getAttribute("data-look")), f);
     }
   }
+  stage.addEventListener("pointerleave", function () { if (!d) { tx = 0; ty = 0; } });
+  stage.addEventListener("pointerup", function () { if (!fine) { tx = 0; ty = 0; } });
   stage.addEventListener("pointerup", end); stage.addEventListener("pointercancel", end);
   stage.addEventListener("wheel", function (e) { if (openIdx >= 0) return; e.preventDefault(); x -= (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY); stage.classList.add("moved"); }, { passive: false });
   stage.addEventListener("keydown", function (e) {
