@@ -1857,3 +1857,23 @@ html { scroll-snap-type: none !important; }
 .mu-mail button { background: var(--navy); color: #fff; border: 0; }
 .mu-mail button:hover { background: #1b2a63; }
 .mu-mail input { background: #fff; border: 1px solid rgba(17, 28, 68, .22); }
+
+/* Brand statement: a long, airy reveal with the photos spread across the section */
+.statement { padding: clamp(120px, 17vw, 280px) 0; }
+.statement .collage-wrap { min-height: clamp(560px, 64vw, 900px); display: flex; flex-direction: column; justify-content: center; }
+.statement .scrollwords { position: relative; z-index: 1; }
+.statement .collage-wrap > p[data-reveal] { position: relative; z-index: 3; margin-top: clamp(40px, 5vw, 72px); }
+.statement .cl.a { top: -14%; right: 0; }
+.statement .cl.b { right: 9%; bottom: -12%; left: auto; }
+.statement .cl.c { left: 40%; bottom: -22%; right: auto; }
+.cta-row { margin-top: clamp(24px, 4vw, 56px); }
+
+/* Waitlist form: bold ministry header */
+.arrival { padding: 0; overflow: hidden; }
+.arr-band { background: var(--navy); color: #fff; padding: clamp(26px, 4vw, 40px) clamp(24px, 4vw, 44px) clamp(24px, 3.4vw, 34px); }
+.arr-republic { margin: 0 0 6px; font: 500 var(--t-xs)/1.2 var(--sans); color: var(--sky); letter-spacing: .02em; }
+.arr-kicker { margin: 0 0 14px; padding-right: 48px; font: 700 clamp(15px, 1.5vw, 18px)/1.2 var(--serif); letter-spacing: .08em; text-transform: uppercase; color: #fff; }
+.arr-title { color: #fff; font-size: clamp(32px, 4vw, 46px); }
+.arr-sub { margin: 10px 0 0; color: var(--sky); }
+.arr-body { padding: clamp(22px, 3vw, 32px) clamp(24px, 4vw, 44px) clamp(26px, 4vw, 40px); }
+.mu-x { background: rgba(210, 234, 255, .16); color: #fff; }

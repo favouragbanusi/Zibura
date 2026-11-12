@@ -180,11 +180,16 @@ function subscribeForm(id) {
 
 function arrivalCard(id) {
   return `<div class="arrival">
-    <p class="arr-kicker">${T("forms.ministry-of-communications", "Ministry of Communications")}</p>
-    <h2 class="arr-title">${T("forms.join-the-waitlist", "Join the waitlist")}</h2>
-    <p class="arr-sub">${T("forms.collection-launch", "The capsule collection is launching soon")}</p>
+    <header class="arr-band">
+      <p class="arr-republic">${T("forms.zi-republic", "Zi Republic")}</p>
+      <p class="arr-kicker">${T("forms.ministry-of-communications", "Ministry of Communications")}</p>
+      <h2 class="arr-title">${T("forms.join-the-waitlist", "Join the waitlist")}</h2>
+      <p class="arr-sub">${T("forms.collection-launch", "The capsule collection is launching soon")}</p>
+    </header>
+    <div class="arr-body">
     ${waitlistForm(id)}
     <p class="form-legal">${T("policy.agree-prefix", "By continuing you agree to the")} <a href="/terms/">${T("policy.terms-link", "Terms")}</a> ${T("policy.and", "and")} <a href="/privacy/">${T("policy.privacy-link", "Privacy")}</a>.</p>
+    </div>
   </div>`;
 }
 
@@ -467,19 +472,19 @@ ${TAX.map((c) => {
 <section class="section statement collage-sec">
   <div class="wrap collage-wrap">
     <div class="collage" aria-hidden="true">
-      <figure class="cl a" data-parallax="0.12">${media("collection-1-2", "Editorial frame")}</figure>
-      <figure class="cl b" data-parallax="-0.1">${media("collection-1-4", "Editorial frame")}</figure>
-      <figure class="cl c" data-parallax="0.2">${media("collection-1-6", "Editorial frame")}</figure>
+      <figure class="cl a" data-parallax="0.22">${media("collection-1-2", "Editorial frame")}</figure>
+      <figure class="cl b" data-parallax="-0.18">${media("collection-1-4", "Editorial frame")}</figure>
+      <figure class="cl c" data-parallax="0.32">${media("collection-1-6", "Editorial frame")}</figure>
     </div>
     <p class="scrollwords" data-scrollwords>${T("home.supporting", "A brand built around personal expression. A world with its own identity. Design, individual style and a point of view that leaves room for you to exist in all your dimensions.")}</p>
     <p style="margin-top:40px" data-reveal><a class="btn line" href="/brand/">${T("home.read-republic-story", "Read the Republic story")}</a></p>
   </div>
 </section>
 
-<section class="section" style="padding-top:0"><div class="wrap cta-row" data-reveal>
+<section class="section" style="padding-top:0"><div class="wrap"><div class="cta-row" data-reveal>
   <p>${T("home.compass-text", "Not sure where to start? Eighteen questions find your style leaning.")}</p>
   <a class="btn line" href="/style-compass/">${T("home.compass-button", "Take the Style Compass")}</a>
-</div></section>
+</div></div></section>
 
 <section class="wrap" data-reveal style="margin-bottom:clamp(56px,8vw,120px)">
   ${film("collection-1-home-film", TR("home.film-caption", "The capsule collection, in motion."))}

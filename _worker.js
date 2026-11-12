@@ -608,12 +608,20 @@ async function adminDecide(request, env) {
   return r ? json({ ok: true, card_id: r }) : json({ error: "Could not assign a card number. Please try again." }, 500);
 }
 
-const SCRIPT_LINES = ["Zi Wanderer", "Zi Dreamer", "Zi Trailblazer", "Zi Daydreamer", "Zi Muse", "Zi Maverick", "Zi Storyteller", "Zi Explorer", "Zi Stylist", "Zi Visionary", "Zi Free Spirit", "Zi Rhythm", "Zi Spark", "Zi Dazzler", "Zi Voyager", "Zi Tastemaker", "Zi Glow Getter", "Zi Moonwalker", "Zi Firefly", "Zi Original"];
+// Card titles are government and community offices, so a Zi Card reads like a real post in the Republic.
+const OFFICES_OF = ["Minister", "Ambassador", "Counsellor", "Commissioner", "Secretary", "Envoy", "Governor", "Chancellor", "Deputy Minister", "Under-Secretary"];
+const OFFICE_DOMAINS = ["Style", "Colour", "Fit", "Mood", "Light", "Trade", "Culture", "Rhythm", "Texture", "Craft"];
+const OFFICES_ALONE = ["Vice President", "Chief of Staff", "Senator", "Speaker", "Magistrate", "Treasurer", "Attorney General", "Consul", "Counsellor", "Chief Justice", "Mayor", "Registrar", "Chief Whip", "Prime Minister", "Ombudsman"];
+function pickTitle() {
+  const r = crypto.getRandomValues(new Uint32Array(3));
+  if (r[0] % 100 < 40) return OFFICES_ALONE[r[1] % OFFICES_ALONE.length];
+  return OFFICES_OF[r[1] % OFFICES_OF.length] + " of " + OFFICE_DOMAINS[r[2] % OFFICE_DOMAINS.length];
+}
 
 async function approveApplication(env, id, when) {
   const row = await env.DB.prepare("SELECT u.email FROM applications a JOIN users u ON u.id = a.user_id WHERE a.id = ?").bind(id).first();
   const founder = env.FOUNDER_EMAIL && row && row.email === String(env.FOUNDER_EMAIL).trim().toLowerCase();
-  const title = founder ? "Zi-in-Chief" : SCRIPT_LINES[crypto.getRandomValues(new Uint32Array(1))[0] % SCRIPT_LINES.length];
+  const title = founder ? "Zi-in-Chief" : pickTitle();
   const now = when || new Date();
   for (let attempt = 0; attempt < 5; attempt++) {
     const last = await env.DB.prepare("SELECT COALESCE(MAX(card_seq), 0) AS m FROM applications").first();

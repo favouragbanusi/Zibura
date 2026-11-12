@@ -293,7 +293,13 @@
     var SPARK = "#2fa8ff";
     var mx = -100, my = -100, rx = -100, ry = -100, parts = [], on = false, lastSpawn = 0;
     root.classList.add("has-cursor");
+    var curEls = [cv, ring, dot, label];
+    function curHost() {
+      var host = document.querySelector("dialog[open]") || body;
+      if (dot.parentNode !== host) curEls.forEach(function (n) { host.appendChild(n); });
+    }
     document.addEventListener("mousemove", function (e) {
+      curHost();
       mx = e.clientX; my = e.clientY;
       if (!on) { on = true; rx = mx; ry = my; body.classList.add("cur-on"); }
       var now = performance.now();
@@ -322,6 +328,7 @@
       g.closePath(); g.fill();
     }
     (function loop(now) {
+      curHost();
       rx += (mx - rx) * 0.18; ry += (my - ry) * 0.18;
       dot.style.transform = "translate(" + mx + "px," + my + "px)";
       ring.style.transform = "translate(" + rx + "px," + ry + "px)";
@@ -988,7 +995,17 @@
     if (document.body.getAttribute("data-page") === "home") {
       var seen = false;
       try { seen = sessionStorage.getItem("zibura_wl_seen") === "1" || localStorage.getItem("zibura_joined") === "1"; } catch (x) {}
-      if (!seen) setTimeout(open, 1800);
+      if (!seen) {
+        // The memo appears after a long visit or once the visitor reaches the bottom, never while the page is first being read.
+        var shown = false;
+        var later = function () { if (shown) return; shown = true; window.removeEventListener("scroll", onDepth); open(); };
+        var onDepth = function () {
+          var max = document.documentElement.scrollHeight - window.innerHeight;
+          if (max > 0 && window.pageYOffset / max > 0.9) later();
+        };
+        window.addEventListener("scroll", onDepth, { passive: true });
+        setTimeout(later, 45000);
+      }
     }
   }
 
@@ -1061,7 +1078,7 @@
       var vh = window.innerHeight;
       swEls.forEach(function (o) {
         var r = o.el.getBoundingClientRect();
-        var p = (vh * 0.85 - r.top) / (r.height + vh * 0.35);
+        var p = (vh * 0.85 - r.top) / (r.height + vh * 0.7);
         p = Math.max(0, Math.min(1, p));
         var n = Math.round(p * o.words.length);
         o.words.forEach(function (s, i) { s.classList.toggle("on", i < n); });
@@ -1284,7 +1301,7 @@
     });
   }
 
-  var SAMPLE_CARD = { name: "YOUR NAME", id: "ZIYYMM000000", status: "ZI RESIDENT", issued: "MONTH YEAR", validity: "MONTH YEAR", title: "Your own title" };
+  var SAMPLE_CARD = { name: "YOUR NAME", id: "ZIYYMM000000", status: "ZI RESIDENT", issued: "MONTH YEAR", validity: "MONTH YEAR", title: "Minister of Style" };
   function initSampleCards() {
     $all("canvas[data-sample]").forEach(function (c) { drawCard(c, SAMPLE_CARD, true); });
   }
