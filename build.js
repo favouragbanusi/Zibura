@@ -66,6 +66,8 @@ function seoHead(rel, html) {
 }
 function write(rel, content) {
   if (typeof content === "string") content = seoHead(rel, content);
+  // The Archive shows full-screen images and capsule tiles that open on a tap, so they load up front.
+  if (rel === "explore/index.html" && typeof content === "string") content = content.replace(/ loading="lazy"/g, ' decoding="async"');
   const file = path.join(dist, rel);
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, content);

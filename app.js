@@ -209,8 +209,8 @@
         sc.classList.toggle("open", on);
         btn.setAttribute("aria-expanded", on ? "true" : "false");
         if (on) {
-          var tgt = sc.querySelector(".sg-arcs");
-          setTimeout(function () { if (tgt && tgt.scrollIntoView) tgt.scrollIntoView({ behavior: "smooth", block: "center" }); }, 420);
+          var tgt = sc.querySelector(".sg-arc-row");
+          requestAnimationFrame(function () { if (tgt && tgt.scrollIntoView) tgt.scrollIntoView({ behavior: "smooth", block: "nearest" }); });
         }
       });
     });

@@ -29,11 +29,12 @@
       if (!r.p) return;
       var t = (x * r.f) % r.p; if (t > 0) t -= r.p;
       // Depth: pointer forward (up) brings the near rows toward you and sends the far rows back. Pointer back (down) does the reverse.
-      var depth = (r.f - 0.95) * -cy * 0.16;
-      var sc = reduce ? 1 : 1 + depth;
-      var rot = reduce ? 0 : cx * (r.f - 0.9) * 2.2;
+      var sc = reduce ? 1 : Math.pow(1.55, -cy * (r.f - 0.95) / 0.75);
+      var rot = reduce ? 0 : cx * (r.f - 0.9) * 3;
+      var H = stage.clientHeight || 1, mid = r.el.offsetTop + r.el.offsetHeight / 2;
+      var lift = (sc - 1) * (H * 0.5 - mid);
       r.el.style.transformOrigin = (W / 2 - t).toFixed(0) + "px 50%";
-      r.el.style.transform = "translate3d(" + t.toFixed(1) + "px," + (y * r.f * 0.6).toFixed(1) + "px,0) rotateY(" + rot.toFixed(2) + "deg) scale(" + sc.toFixed(4) + ")";
+      r.el.style.transform = "translate3d(" + t.toFixed(1) + "px," + (y * r.f * 0.6 + lift).toFixed(1) + "px,0) rotateY(" + rot.toFixed(2) + "deg) scale(" + sc.toFixed(4) + ")";
     });
   }
   function loop() {
@@ -43,7 +44,7 @@
       if (!reduce) x -= 0.22;
       y *= 0.9;
     }
-    cx += (tx - cx) * 0.08; cy += (ty - cy) * 0.08;
+    cx += (tx - cx) * 0.1; cy += (ty - cy) * 0.1;
     // Hovering drifts the wall toward the side the pointer is on.
     if (fine && openIdx < 0 && !dragging && !reduce) x -= cx * 2.4;
     paint();
