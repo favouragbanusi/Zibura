@@ -211,10 +211,8 @@ function subscribeForm(id) {
 function arrivalCard(id) {
   return `<div class="arrival">
     <header class="arr-band">
-      <p class="arr-republic">${T("forms.zi-republic", "Zi Republic")}</p>
       <p class="arr-kicker">${T("forms.ministry-of-communications", "Ministry of Communications")}</p>
       <h2 class="arr-title">${T("forms.join-the-waitlist", "Join the waitlist")}</h2>
-      <p class="arr-sub">${T("forms.collection-launch", "The capsule collection is launching soon")}</p>
     </header>
     <div class="arr-body">
     ${waitlistForm(id)}
@@ -269,7 +267,7 @@ ${c.types.map((t) => `      <a href="/shop/?category=${encodeURIComponent(c.name
   </div>
 </div>`;
 
-const SOCIAL = `<a class="soc" href="${LINKS.instagram || "https://www.instagram.com/thezibura/"}" target="_blank" rel="noopener" aria-label="Zibura on Instagram"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r=".6" fill="currentColor"/></svg><span>${T("forms.instagram", "Instagram")}</span></a><a class="soc" href="${LINKS.tiktok || "https://www.tiktok.com/@thezibura"}" target="_blank" rel="noopener" aria-label="Zibura on TikTok"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v11.2a3.7 3.7 0 11-3.7-3.7"/><path d="M14 3c.4 2.6 2 4.2 5 4.4"/></svg><span>${T("forms.tiktok", "TikTok")}</span></a>`;
+const SOCIAL = `<a class="soc" href="${LINKS.instagram || "https://www.instagram.com/thezibura/"}" target="_blank" rel="noopener" aria-label="Zibura on Instagram"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r=".6" fill="currentColor"/></svg><span>${T("forms.instagram", "Instagram")}</span></a><a class="soc" href="${LINKS.tiktok || "https://www.tiktok.com/@thezibura"}" target="_blank" rel="noopener" aria-label="Zibura on TikTok"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v11.2a3.7 3.7 0 11-3.7-3.7"/><path d="M14 3c.4 2.6 2 4.2 5 4.4"/></svg><span>${T("forms.tiktok", "TikTok")}</span></a>`;
 
 function layout({ title, description, page, body }) {
   return `<!doctype html>
@@ -540,6 +538,30 @@ ${TAX.map((c) => {
 );
 
 // Brand
+const SV = (p) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const MINI_ICONS = [
+  // Creative: paint palette with colour dots
+  SV('<path d="M12 3a9 9 0 100 18c1.4 0 2-1 2-2s-.6-1.6-1-2.3c-.5-.9 0-2.2 1.3-2.2H17a4 4 0 004-4c0-3.9-4-7.5-9-7.5z"/><circle cx="7.5" cy="11.5" r="1" fill="currentColor"/><circle cx="10" cy="7.5" r="1" fill="currentColor"/><circle cx="14.5" cy="7.5" r="1" fill="currentColor"/>'),
+  // Community: heart
+  SV('<path d="M12 20s-7.5-4.6-7.5-10.2A4.1 4.1 0 0112 7.6a4.1 4.1 0 017.5 2.2C19.5 15.4 12 20 12 20z"/><path d="M4 4l1 2M20 4l-1 2M12 2v2"/>'),
+  // Communications: megaphone with sound waves
+  SV('<path d="M3 11v2a1 1 0 001 1h2l6 4V6L6 10H4a1 1 0 00-1 1z"/><path d="M15.5 9a4 4 0 010 6M18.2 6.2a8 8 0 010 11.6"/>'),
+  // Commerce: shopping bag with a smile
+  SV('<path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8V6a3 3 0 016 0v2"/><path d="M9.5 13c1.3 2 3.7 2 5 0"/>'),
+  // Administration: passport with a globe
+  SV('<path d="M7 3h10a2 2 0 012 2v14a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2z"/><circle cx="12" cy="10" r="3.2"/><path d="M8.8 10h6.4M12 6.8c-1.6 2-1.6 4.4 0 6.4M9 17h6"/>')
+];
+const TURN_ICON = SV('<path d="M20 12a8 8 0 11-2.4-5.7"/><path d="M20 4v4h-4"/>');
+const CAL_ICONS = {
+  "Zi Day": SV('<path d="M4 20l4-11 7 7-11 4z"/><path d="M13 5l.5 2M17 8l2-1M16 3l1 2M20 12l-2 .5M10.5 8.5l5 5"/>'),
+  "Ziesta": SV('<path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z"/><path d="M17 3v4M15 5h4"/>'),
+  "Zero Email Day": SV('<rect x="3.5" y="6" width="17" height="12" rx="2.5"/><path d="M4 8l8 6 8-6"/><path d="M5 20L19 4"/>'),
+  "Zigzag Day": SV('<path d="M3 17l4.5-9 4.5 9 4.5-9 4.5 9"/>'),
+  "Zebra Crossing Day": SV('<path d="M5 5v14M9.7 5v14M14.3 5v14M19 5v14" stroke-width="3"/>'),
+  "Zillar Day": SV('<circle cx="12" cy="12" r="8.5"/><path d="M9 9h6l-6 6h6"/>'),
+  "Zany Hour": SV('<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M18 16l.8 2.2L21 19l-2.2.8L18 22l-.8-2.2L15 19l2.2-.8z"/>')
+};
+const CAL_ICON_DEFAULT = SV('<rect x="4" y="5" width="16" height="15" rx="3"/><path d="M8 3v4M16 3v4M4 10h16"/>');
 const MINISTRIES = [
   ["Ministry of Creative and Design", "Responsible for creative direction, design, visual identity and product concepts."],
   ["Ministry of Community and Culture", "Responsible for residents, community programs, cultural initiatives, Republic events, Zi Day and Ziesta."],
@@ -547,14 +569,24 @@ const MINISTRIES = [
   ["Ministry of Commerce and Trade", "Responsible for products, sales, orders, partnerships, Zillar and commercial activity."],
   ["Ministry of Republic Administration", "Responsible for Zi Cards, passports, residency applications, Zitizenship Calls and official records."]
 ].map(([n, d], i) => [TR(`brand.ministry-${i + 1}-name`, n), TR(`brand.ministry-${i + 1}-role`, d)]);
+// PLACEHOLDER EVENTS AND DATES: invented for design. Replace or override in the Copy sheet (keys brand.calendar-<name>-description, -iso, -date).
 const CALENDAR = [
-  ["Zi Day", "Zi Day is the Republic's founding day. Zi Residents and Zitizens mark it each year.", ""],
-  ["Ziesta", "Ziesta is the Republic's festival of rest, a time to slow down and gather.", ""]
+  ["Zero Email Day", "The Ministry of Communications takes the day off. No announcements, no campaigns, just quiet.", "", "2026-12-04"],
+  ["Zigzag Day", "No straight lines allowed. Take the scenic route to everything.", "", "2026-12-19"],
+  ["Zebra Crossing Day", "Residents cross the street like it is a runway. Strutting is encouraged.", "", "2027-01-16"],
+  ["Zillar Day", "A day to celebrate the Republic's currency and everything it can be spent on.", "", "2027-02-05"],
+  ["Ziesta", "Ziesta is the Republic's festival of rest, a time to slow down and gather.", "", "2027-02-20"],
+  ["Zany Hour", "One hour a year when everything is allowed to be a little silly.", "", "2027-03-12"],
+  ["Zi Day", "Zi Day is the Republic's founding day. Zi Residents and Zitizens mark it each year.", "", "2027-03-22"]
 ];
+const CAL_ICON_BY_NAME = {};
 CALENDAR.forEach((c) => {
   c[1] = TR(`brand.calendar-${c[0]}-description`, c[1]);
   if (c[2]) c[2] = TR(`brand.calendar-${c[0]}-date`, c[2]);
+  c[3] = TR(`brand.calendar-${c[0]}-iso`, c[3] || "");
+  if (c[3] && !c[2]) { const p = c[3].split("-").map(Number); c[2] = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][p[1] - 1] + " " + p[2] + ", " + p[0]; }
 });
+CALENDAR.sort((a, b) => (a[3] || "9999").localeCompare(b[3] || "9999"));
 write(
   "brand/index.html",
   layout({
@@ -610,15 +642,31 @@ write(
     <p class="province-intro">${T("brand.ministries-intro", "The Ministries oversee the Republic's public functions, from creative direction and community programs to communications, commerce and administration.")}</p>
   </div>
   <div class="mini-grid" data-reveal>
-${MINISTRIES.map(([n, d]) => `    <button type="button" class="mini" aria-expanded="false"><span class="mn">${n}</span><span class="mx" aria-hidden="true"></span><span class="md"><span>${d}</span></span></button>`).join("\n")}
+${MINISTRIES.map(([n, d], i) => `    <button type="button" class="mini" aria-expanded="false"><span class="fl"><span class="face front"><span class="ic" aria-hidden="true">${MINI_ICONS[i]}</span><span class="foot"><span class="mn">${n}</span><span class="go" aria-hidden="true">${TURN_ICON}</span></span></span><span class="face back"><span class="mn">${n}</span><span class="md">${d}</span><span class="go" aria-hidden="true">${TURN_ICON}</span></span></span></button>`).join("\n")}
   </div>
 </div></section>
 
-<section class="section" id="calendar" style="padding-top:0"><div class="wrap split">
+<section class="section" id="calendar" style="padding-top:0"><div class="wrap">
   <h2 class="display" data-reveal>${T("brand.calendar-title", "The calendar.")}</h2>
-  <dl class="plain-list" data-reveal>
-${CALENDAR.map(([n, d, dt]) => `    <div><dt>${n}</dt><dd>${d}</dd><span class="tag-soon">${dt || T("brand.date-soon", "Coming soon")}</span></div>`).join("\n")}
-  </dl>
+  <div class="cal-ui" data-cal data-events="${esc(JSON.stringify(CALENDAR.map(([n, d, dt, iso], i) => ({ name: n, desc: d, label: dt || "", iso: iso || "", icon: CAL_ICONS[n] || CAL_ICON_DEFAULT }))))}" data-soon="${esc(T("brand.date-soon", "Date coming soon"))}" data-reveal>
+    <div class="cal-card">
+      <div class="cal-top">
+        <button type="button" class="cal-nav" data-prev aria-label="Previous month">${SV('<path d="M15 5l-7 7 7 7"/>')}</button>
+        <h3 class="cal-title" aria-live="polite"><span class="cal-m" data-m></span> <span class="cal-y" data-y></span></h3>
+        <button type="button" class="cal-nav" data-next aria-label="Next month">${SV('<path d="M9 5l7 7-7 7"/>')}</button>
+        <button type="button" class="cal-today" data-today>${T("brand.cal-today", "Today")}</button>
+      </div>
+      <div class="cal-dow" aria-hidden="true"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
+      <div class="cal-grid" data-grid></div>
+    </div>
+    <div class="cal-side">
+      <h3 class="cal-lab">${T("brand.cal-upcoming", "Upcoming in the Republic")}</h3>
+      <div class="cal-detail" data-detail hidden></div>
+      <ul class="cal-up">
+${CALENDAR.map(([n, d, dt, iso], i) => `        <li><button type="button" class="cal-ev" data-ev="${i}" aria-pressed="false"><span class="ic" aria-hidden="true">${CAL_ICONS[n] || CAL_ICON_DEFAULT}</span><span class="cal-ev-t"><b>${n}</b></span><span class="cal-when">${dt || T("brand.date-soon", "Date coming soon")}</span></button></li>`).join("\n")}
+      </ul>
+    </div>
+  </div>
 </div></section>
 
 <section class="hscroll" data-hscroll aria-label="Residency, Zitizenship and Zillar"><div class="hs-pin">
@@ -959,7 +1007,7 @@ function waitlistPage() {
 <section class="mu-hero" id="top">
   <div class="mu-sky">${wlSky ? `<img src="/assets/waitlist-sky.${wlSky.ext}" alt="" fetchpriority="high">` : ""}</div>
   <div class="mu-hero-in">
-    <h1 class="sr">${T("waitlist.headline", "Zi Republic is about to open its borders&hellip;")}</h1>
+    <h1 class="mu-h1 mu-in" style="--d:.5s">${T("waitlist.headline", "Zi Republic is about to open its borders&hellip;")}</h1>
     <div class="mu-count mu-in" style="--d:.8s" data-jn-count data-date="${TR("join.count-date", "2027-04-18")}" role="timer" aria-label="${esc(TR("join.count-label", "Countdown to 18 April 2027"))}">
       <div class="mu-count-row">
         <div><b data-u="d">00</b><span>${T("join.count-days", "Days")}</span></div><i>:</i>
@@ -980,6 +1028,7 @@ function waitlistPage() {
     <div class="mu-core">
       <img class="mu-mark" src="/assets/logo-wordmark-navy.png" alt="Zibura" width="636" height="120">
       <form class="mu-mail" novalidate data-mu-mail>
+      <p class="mu-tag">${T("waitlist.tagline", "Be the first through the door when the capsule collection opens.")}</p>
         <label class="sr" for="mu-email">${T("forms.email", "Email")}</label>
         <input id="mu-email" type="email" name="email" autocomplete="email" placeholder="${esc(TR("waitlist.placeholder", "your@email.com"))}" required>
         <button type="submit">${T("join.button", "Join the waitlist")}</button>

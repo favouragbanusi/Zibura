@@ -2141,9 +2141,6 @@ main p a:not(.btn):hover, main li a:not(.btn):hover, main dd a:hover, .text-link
 .he-title.two { font-size: clamp(22px, 5.4vw, 84px); }
 
 /* Boxes carry the tint. Page sections stay plain. */
-.mini { background: var(--honey-t); border: 1px solid var(--tint-line); color: var(--navy); }
-.mini:hover, .mini:focus-visible { background: var(--white); border-color: var(--navy); }
-.mini[aria-expanded="true"] { background: var(--white); border: 2px solid var(--navy); }
 .plain-list > div { background: var(--honey-t); border: 1px solid var(--tint-line); border-radius: 22px; padding: 22px 26px; }
 .plain-list.light > div { background: transparent; border: 0; border-radius: 0; padding: 0; }
 .plain-list .tag-soon { display: inline-block; margin-top: 12px; padding: 7px 12px; font-size: var(--t-xs); }
@@ -2210,10 +2207,6 @@ body[data-page="join"] { background: var(--navy); color: var(--white); }
    Contrast pass. Every state pairs navy on light or white on navy. No honey on progress, no tinted labels over photos.
    ========================================================================== */
 /* Ministries: rest is tint with navy text. Hover, focus and open are navy with white text (text colour is set on the parts too). */
-.mini { background: var(--honey-t); color: var(--navy); border: 1px solid var(--tint-line); }
-.mini:hover, .mini:focus-visible, .mini.on, .mini[aria-expanded="true"] { background: var(--navy); color: var(--white); border-color: var(--navy); }
-.mini:hover *, .mini:focus-visible *, .mini.on *, .mini[aria-expanded="true"] * { color: var(--white); }
-.mini[aria-expanded="true"] { border-width: 1px; }
 /* Close buttons: white disc, navy cross. Hover: pale grey disc, navy cross. */
 .mu-x, .close-pane, dialog .close, dialog#wl-modal .close { background: var(--white); color: var(--navy); border: 1px solid var(--navy); opacity: 1; }
 .mu-x:hover, .mu-x:focus-visible, .close-pane:hover, dialog .close:hover, dialog .close:focus-visible, dialog#wl-modal .close:hover { background: #e7e9f0; color: var(--navy); opacity: 1; }
@@ -2246,3 +2239,141 @@ body[data-page="join"] { background: var(--navy); color: var(--white); }
 
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .sg-tag, .memo-tag { margin: 0 0 16px; }
+
+/* Ministries and calendar: no tinted fill. White cards with a neutral hairline; calendar as ruled rows. */
+:root { --rule: #dfe2ea; }
+.plain-list > div { background: none; border: 0; border-top: 1px solid var(--rule); border-radius: 0; padding: 26px 0; }
+.plain-list > div:last-child { border-bottom: 1px solid var(--rule); }
+.plain-list.light > div { border: 0; padding: 0; }
+.plain-list .tag-soon { background: var(--white); }
+
+/* Ministries: five distinct turn cards. Front shows an icon and the name. Hover, focus or tap turns the card to show what the ministry looks after.
+   Each card has its own Z family corner pattern. */
+.mini-grid { align-items: stretch; gap: 16px; }
+.mini-grid .mini { position: relative; display: block; height: 280px; padding: 0; background: none; border: 0; color: var(--navy); text-align: left; cursor: pointer; perspective: 1000px; border-radius: 0; font: inherit; }
+.mini .fl { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .7s var(--play); }
+.mini .face { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; padding: 24px; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: var(--r); }
+.mini .front { background: var(--white); border: 1.5px solid var(--navy); color: var(--navy); }
+.mini .back { background: var(--navy); border: 1.5px solid var(--navy); color: var(--white); transform: rotateY(180deg); gap: 12px; justify-content: flex-start; }
+.mini { --r: 8px 56px 56px 56px; }
+.mini .ic { width: 52px; height: 52px; display: grid; place-items: center; border-radius: 50%; background: var(--navy); color: var(--white); }
+.mini .ic svg { width: 26px; height: 26px; }
+.mini .mn { display: block; font-family: var(--serif); font-weight: 600; font-size: var(--t-lg); line-height: 1.15; letter-spacing: -.01em; }
+.mini .foot { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.mini .go { flex: none; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; border: 1.5px solid currentColor; transition: transform .5s var(--play); }
+.mini .go svg { width: 20px; height: 20px; }
+.mini .back .mn { font-size: var(--t-sm); font-family: var(--sans); font-weight: 600; letter-spacing: .02em; }
+.mini .back .md { font-size: var(--t-md); line-height: 1.5; }
+.mini .back .go { margin-top: auto; align-self: flex-end; }
+.mini:hover .front .ic, .mini:focus-visible .front .ic { transform: rotate(-12deg) scale(1.08); }
+.mini .ic { transition: transform .5s var(--play); }
+.mini:focus-visible { outline: 3px solid var(--navy); outline-offset: 4px; border-radius: 28px; }
+.mini.on .fl, .mini:focus-visible .fl { transform: rotateY(180deg); }
+@media (hover: hover) and (pointer: fine) { .mini:hover .fl { transform: rotateY(180deg); } .mini:hover .go { transform: rotate(180deg); } }
+@media (max-width: 640px) { .mini-grid .mini { height: 240px; } }
+@media (prefers-reduced-motion: reduce) {
+  .mini .fl, .mini .ic, .mini .go { transition: none; }
+  .mini .fl { transform: none !important; transform-style: flat; }
+  .mini .back { transform: none; opacity: 0; } .mini .front { opacity: 1; }
+  .mini.on .back, .mini:hover .back, .mini:focus-visible .back { opacity: 1; } .mini.on .front, .mini:hover .front, .mini:focus-visible .front { opacity: 0; }
+}
+.mini .front .go { position: absolute; top: 24px; right: 24px; }
+.mini .front .foot { display: block; }
+.mini .front .mn { font-size: clamp(17px, 1.4vw + 2px, 21px); overflow-wrap: anywhere; }
+.mini .ic { width: 60px; height: 60px; } .mini .ic svg { width: 32px; height: 32px; }
+.mini:hover .front .ic, .mini:focus-visible .front .ic { transform: rotate(-14deg) scale(1.12); }
+
+/* Calendar: same card language as the Ministries. Sharp top left corner, icon, name, description, tag. */
+.plain-list.cal { gap: 16px; }
+.plain-list.cal > div { background: var(--white); border: 1.5px solid var(--navy); border-radius: 8px 56px 56px 56px; padding: 26px 30px 28px; transition: transform .5s var(--play), background-color .25s, color .25s; }
+.plain-list.cal > div:last-child { border-bottom: 1.5px solid var(--navy); }
+.plain-list.cal dt { display: flex; flex-direction: column; align-items: flex-start; gap: 16px; font-weight: 600; }
+.plain-list.cal .ic { width: 60px; height: 60px; display: grid; place-items: center; border-radius: 50%; background: var(--navy); color: var(--white); transition: transform .5s var(--play), background-color .25s, color .25s; }
+.plain-list.cal .ic svg { width: 32px; height: 32px; }
+@media (hover: hover) and (pointer: fine) {
+  .plain-list.cal > div:hover { background: var(--navy); color: var(--white); transform: translateY(-4px); }
+  .plain-list.cal > div:hover dt, .plain-list.cal > div:hover dd { color: var(--white); }
+  .plain-list.cal > div:hover .ic { background: var(--white); color: var(--navy); transform: rotate(-14deg) scale(1.1); }
+  .plain-list.cal > div:hover .tag-soon { background: var(--white); color: var(--navy); border-color: var(--white); }
+}
+@media (prefers-reduced-motion: reduce) { .plain-list.cal > div, .plain-list.cal .ic { transition: none; } .plain-list.cal > div:hover, .plain-list.cal > div:hover .ic { transform: none; } }
+
+/* ==========================================================================
+   Calendar. A month grid you can page through, plus upcoming event cards.
+   Sharp top left corner on every card, navy and white only, play easing on hover.
+   ========================================================================== */
+.cal-ui { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: clamp(20px, 3vw, 40px); align-items: start; margin-top: clamp(24px, 4vw, 48px); }
+.cal-card { border: 1.5px solid var(--navy); border-radius: 8px 56px 56px 56px; padding: clamp(18px, 3vw, 34px); background: var(--white); min-width: 0; }
+.cal-top { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+.cal-title { flex: 1; min-width: 0; margin: 0; font-family: var(--serif); font-weight: 600; font-size: clamp(24px, 3vw, 38px); letter-spacing: -.03em; line-height: 1.1; color: var(--navy); }
+.cal-y { font-weight: 400; }
+.cal-nav { flex: none; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; border: 1.5px solid var(--navy); background: var(--white); color: var(--navy); cursor: pointer; transition: transform .4s var(--play), background-color .2s, color .2s; }
+.cal-nav svg { width: 20px; height: 20px; }
+.cal-nav:hover, .cal-nav:focus-visible { background: var(--navy); color: var(--white); transform: scale(1.1); }
+.cal-nav:active { transform: scale(.94); }
+.cal-today { height: 44px; padding: 0 18px; border-radius: 999px; border: 1.5px solid var(--navy); background: var(--white); color: var(--navy); font: 600 var(--t-sm)/1 var(--sans); cursor: pointer; transition: background-color .2s, color .2s, transform .4s var(--play); }
+.cal-today:hover, .cal-today:focus-visible { background: var(--navy); color: var(--white); transform: translateY(-2px); }
+.cal-dow, .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: clamp(4px, 1vw, 8px); }
+.cal-dow span { text-align: center; font-size: var(--t-xs); font-weight: 600; letter-spacing: .04em; color: var(--navy); padding-bottom: 8px; }
+.cal-pad { aspect-ratio: 1; }
+.cal-d { position: relative; aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border: 0; border-radius: 50%; background: transparent; color: var(--navy); font: 500 clamp(14px, 1.6vw, 18px)/1 var(--sans); cursor: pointer; transition: transform .45s var(--play), background-color .2s, color .2s, border-radius .3s; }
+.cal-d i { display: block; width: 45%; max-width: 22px; line-height: 0; }
+.cal-d i svg { width: 100%; height: auto; }
+.cal-d:hover, .cal-d:focus-visible { background: var(--navy); color: var(--white); border-radius: 8px 50% 50% 50%; transform: scale(1.14) rotate(-5deg); z-index: 1; }
+.cal-d.today { box-shadow: inset 0 0 0 2px var(--navy); font-weight: 700; animation: cal-bob 2.4s var(--play) infinite; }
+.cal-d.has { background: var(--navy); color: var(--white); border-radius: 8px 50% 50% 50%; }
+.cal-d.has:hover, .cal-d.has:focus-visible { background: var(--white); color: var(--navy); box-shadow: inset 0 0 0 2px var(--navy); }
+.cal-d.sel { outline: 3px solid var(--navy); outline-offset: 3px; }
+@keyframes cal-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+.cal-grid.slide-l { animation: cal-in-l .45s var(--play); } .cal-grid.slide-r { animation: cal-in-r .45s var(--play); }
+@keyframes cal-in-l { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+@keyframes cal-in-r { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
+.cal-side { display: grid; gap: 16px; min-width: 0; }
+.cal-lab { margin: 0; font-family: var(--serif); font-weight: 600; font-size: var(--t-lg); letter-spacing: -.02em; }
+.cal-up { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.cal-ev { width: 100%; display: grid; grid-template-columns: 60px minmax(0, 1fr); gap: 4px 16px; align-items: center; text-align: left; padding: 20px 22px; border: 1.5px solid var(--navy); border-radius: 8px 56px 56px 56px; background: var(--white); color: var(--navy); font: inherit; cursor: pointer; transition: transform .45s var(--play), background-color .2s, color .2s; }
+.cal-ev .ic { grid-row: span 2; width: 60px; height: 60px; display: grid; place-items: center; border-radius: 50%; background: var(--navy); color: var(--white); transition: transform .5s var(--play), background-color .2s, color .2s; }
+.cal-ev .ic svg { width: 32px; height: 32px; }
+.cal-ev-t { display: grid; gap: 4px; min-width: 0; }
+.cal-ev-t b { font-family: var(--serif); font-weight: 600; font-size: var(--t-lg); line-height: 1.15; }
+.cal-ev-t span { font-size: var(--t-sm); line-height: 1.5; }
+.cal-ev .tag-soon { grid-column: 2; justify-self: start; margin: 6px 0 0; }
+.cal-ev:hover, .cal-ev:focus-visible, .cal-ev[aria-pressed="true"] { background: var(--navy); color: var(--white); transform: translateY(-4px); }
+.cal-ev:hover .ic, .cal-ev:focus-visible .ic, .cal-ev[aria-pressed="true"] .ic { background: var(--white); color: var(--navy); transform: rotate(-14deg) scale(1.1); }
+.cal-ev:hover .tag-soon, .cal-ev:focus-visible .tag-soon, .cal-ev[aria-pressed="true"] .tag-soon { background: var(--white); color: var(--navy); border-color: var(--white); }
+.cal-detail { display: grid; grid-template-columns: 60px minmax(0, 1fr); gap: 16px; padding: 24px; background: var(--navy); color: var(--white); border-radius: 8px 56px 56px 56px; }
+.cal-detail[hidden] { display: none; }
+.cal-detail .ic { width: 60px; height: 60px; display: grid; place-items: center; border-radius: 50%; background: var(--white); color: var(--navy); }
+.cal-detail .ic svg { width: 32px; height: 32px; }
+.cal-detail h4 { margin: 0 0 6px; font-family: var(--serif); font-weight: 600; font-size: var(--t-h3); letter-spacing: -.02em; color: var(--white); }
+.cal-detail p { margin: 0; line-height: 1.5; color: var(--white); }
+.cal-detail .cal-dt { font-weight: 600; font-size: var(--t-sm); margin-bottom: 4px; }
+.cal-detail .cal-note { margin-top: 10px; font-size: var(--t-sm); }
+.cal-detail.pop { animation: cal-pop .5s var(--play); }
+@keyframes cal-pop { from { opacity: 0; transform: translateY(14px) scale(.97); } to { opacity: 1; transform: none; } }
+.cal-conf { position: absolute; width: 10px; height: 10px; background: var(--navy); border-radius: 2px 10px 10px 10px; pointer-events: none; z-index: 70; }
+@media (max-width: 900px) { .cal-ui { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 480px) { .cal-card { border-radius: 8px 40px 40px 40px; } .cal-ev, .cal-detail { border-radius: 8px 40px 40px 40px; padding: 18px; } .cal-today { padding: 0 14px; } }
+@media (prefers-reduced-motion: reduce) { .cal-d.today { animation: none; } .cal-d, .cal-nav, .cal-ev, .cal-ev .ic, .cal-today { transition: none; } .cal-d:hover, .cal-nav:hover, .cal-ev:hover { transform: none; } }
+
+/* Calendar colour roles. Navy: text, outlines and interaction. Honey: marks something to notice (event days, event icons). White: surfaces.
+   One meaning per colour, no tags, no second shade. */
+.cal-card, .cal-ev { border: 1px solid var(--rule); }
+.cal-ev:hover, .cal-ev:focus-visible { background: var(--white); color: var(--navy); border-color: var(--navy); transform: translateY(-4px); box-shadow: 0 14px 30px rgba(17, 28, 68, .10); }
+.cal-ev[aria-pressed="true"] { background: var(--white); color: var(--navy); border-color: var(--navy); box-shadow: inset 0 0 0 1px var(--navy); }
+.cal-ev .ic, .cal-detail .ic { background: var(--honey); color: var(--navy); }
+.cal-ev:hover .ic, .cal-ev:focus-visible .ic, .cal-ev[aria-pressed="true"] .ic { background: var(--honey); color: var(--navy); }
+.cal-when { grid-column: 2; margin-top: 6px; font-size: var(--t-sm); font-weight: 600; color: var(--navy); }
+.cal-d:hover, .cal-d:focus-visible { background: #eef0f6; color: var(--navy); }
+.cal-d.has { background: var(--honey); color: var(--navy); }
+.cal-d.has:hover, .cal-d.has:focus-visible { background: var(--honey); color: var(--navy); box-shadow: inset 0 0 0 2px var(--navy); }
+.cal-d.sel, .cal-d.has.sel { background: var(--navy); color: var(--white); outline: none; box-shadow: none; }
+.cal-detail { background: var(--white); color: var(--navy); border: 1px solid var(--navy); }
+.cal-detail h4, .cal-detail p { color: var(--navy); }
+.cal-conf { background: var(--honey); border: 1px solid var(--navy); }
+.cal-conf:nth-child(even) { background: var(--navy); }
+
+.cal-ev { padding: 14px 20px; grid-template-columns: 52px minmax(0, 1fr); border-radius: 8px 40px 40px 40px; }
+.cal-ev .ic { width: 52px; height: 52px; grid-row: span 2; } .cal-ev .ic svg { width: 28px; height: 28px; }
+.cal-ev .cal-when { margin-top: 0; }
+.cal-up { gap: 10px; }

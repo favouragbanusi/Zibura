@@ -255,6 +255,80 @@
       });
     });
   }
+  function initCalendar() {
+    var root = document.querySelector("[data-cal]");
+    if (!root) return;
+    var ev = [];
+    try { ev = JSON.parse(root.getAttribute("data-events") || "[]"); } catch (e) {}
+    var soon = root.getAttribute("data-soon") || "Coming soon";
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var grid = root.querySelector("[data-grid]"), mEl = root.querySelector("[data-m]"), yEl = root.querySelector("[data-y]"), detail = root.querySelector("[data-detail]");
+    var months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    var days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+    function pad(n) { return (n < 10 ? "0" : "") + n; }
+    function iso(y, m, d) { return y + "-" + pad(m + 1) + "-" + pad(d); }
+    function nice(s) { var p = s.split("-"); var dt = new Date(+p[0], +p[1] - 1, +p[2]); return days[dt.getDay()] + ", " + months[dt.getMonth()] + " " + dt.getDate() + ", " + dt.getFullYear(); }
+    var byDate = {};
+    ev.forEach(function (e, i) { if (/^\d{4}-\d{2}-\d{2}$/.test(e.iso)) { (byDate[e.iso] = byDate[e.iso] || []).push(i); } });
+    var now = new Date(), todayIso = iso(now.getFullYear(), now.getMonth(), now.getDate());
+    var upcoming = Object.keys(byDate).sort().filter(function (k) { return k >= todayIso; })[0];
+    var start = upcoming ? new Date(+upcoming.slice(0, 4), +upcoming.slice(5, 7) - 1, 1) : new Date(now.getFullYear(), now.getMonth(), 1);
+    var cur = { y: start.getFullYear(), m: start.getMonth() };
+    var selectedEv = -1;
+    function render(dir) {
+      mEl.textContent = months[cur.m]; yEl.textContent = cur.y;
+      var first = new Date(cur.y, cur.m, 1).getDay(), count = new Date(cur.y, cur.m + 1, 0).getDate(), h = "";
+      for (var i = 0; i < first; i++) h += '<span class="cal-pad"></span>';
+      for (var d = 1; d <= count; d++) {
+        var k = iso(cur.y, cur.m, d), hits = byDate[k], cls = "cal-d" + (k === todayIso ? " today" : "") + (hits ? " has" : "");
+        var label = nice(k) + (k === todayIso ? ", today" : "") + (hits ? ", " + hits.map(function (j) { return ev[j].name; }).join(" and ") : "");
+        h += '<button type="button" class="' + cls + '" data-d="' + k + '" aria-label="' + label + '"><span>' + d + "</span>" + (hits ? '<i aria-hidden="true">' + ev[hits[0]].icon + "</i>" : "") + "</button>";
+      }
+      grid.innerHTML = h;
+      grid.classList.remove("slide-l", "slide-r");
+      if (dir && !reduce) { void grid.offsetWidth; grid.classList.add(dir > 0 ? "slide-l" : "slide-r"); }
+    }
+    function show(i, k) {
+      var e = ev[i]; if (!e) return;
+      selectedEv = i;
+      root.querySelectorAll(".cal-ev").forEach(function (b) { b.setAttribute("aria-pressed", String(+b.getAttribute("data-ev") === i)); });
+      var when = k ? nice(k) : (e.label || soon);
+      detail.innerHTML = '<span class="ic" aria-hidden="true">' + e.icon + '</span><div><p class="cal-dt">' + when + "</p><h4>" + e.name + "</h4><p>" + e.desc + "</p>" + (k ? "" : '<p class="cal-note">The date will appear on this calendar.</p>') + "</div>";
+      detail.hidden = false;
+      if (!reduce) { detail.classList.remove("pop"); void detail.offsetWidth; detail.classList.add("pop"); }
+    }
+    function burst(btn) {
+      if (reduce) return;
+      var r = btn.getBoundingClientRect(), host = document.body;
+      for (var n = 0; n < 12; n++) {
+        var s = document.createElement("span"); s.className = "cal-conf"; s.setAttribute("aria-hidden", "true");
+        s.style.left = (r.left + r.width / 2 + window.scrollX) + "px"; s.style.top = (r.top + r.height / 2 + window.scrollY) + "px";
+        host.appendChild(s);
+        var a = (Math.PI * 2 * n) / 12, dist = 40 + Math.random() * 40;
+        s.animate([{ transform: "translate(-50%,-50%) scale(1) rotate(0)", opacity: 1 }, { transform: "translate(" + (Math.cos(a) * dist - 5) + "px," + (Math.sin(a) * dist - 5) + "px) scale(.4) rotate(" + (n % 2 ? 160 : -160) + "deg)", opacity: 0 }], { duration: 700, easing: "cubic-bezier(.2,.8,.2,1)" }).onfinish = (function (el) { return function () { el.remove(); }; })(s);
+      }
+    }
+    root.addEventListener("click", function (e) {
+      var t = e.target.closest("button"); if (!t || !root.contains(t)) return;
+      if (t.hasAttribute("data-prev")) { cur.m--; if (cur.m < 0) { cur.m = 11; cur.y--; } render(-1); }
+      else if (t.hasAttribute("data-next")) { cur.m++; if (cur.m > 11) { cur.m = 0; cur.y++; } render(1); }
+      else if (t.hasAttribute("data-today")) { cur = { y: now.getFullYear(), m: now.getMonth() }; render(0); }
+      else if (t.classList.contains("cal-d")) {
+        var hits = byDate[t.getAttribute("data-d")];
+        grid.querySelectorAll(".cal-d.sel").forEach(function (x) { x.classList.remove("sel"); });
+        t.classList.add("sel");
+        if (hits) { show(hits[0], t.getAttribute("data-d")); burst(t); }
+        else { detail.hidden = false; detail.innerHTML = '<span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M8 3v4M16 3v4M4 10h16"/></svg></span><div><p class="cal-dt">' + nice(t.getAttribute("data-d")) + "</p><h4>Nothing marked yet</h4><p>Marked days show what is happening in the Republic.</p></div>"; selectedEv = -1; root.querySelectorAll(".cal-ev").forEach(function (b) { b.setAttribute("aria-pressed", "false"); }); }
+      } else if (t.classList.contains("cal-ev")) {
+        var i = +t.getAttribute("data-ev"), e2 = ev[i];
+        if (/^\d{4}-/.test(e2.iso)) { cur = { y: +e2.iso.slice(0, 4), m: +e2.iso.slice(5, 7) - 1 }; render(0); var cell = grid.querySelector('[data-d="' + e2.iso + '"]'); if (cell) { cell.classList.add("sel"); burst(cell); } show(i, e2.iso); }
+        else { show(i, ""); }
+      }
+    });
+    render(0);
+    var first = -1; ev.forEach(function (e, i) { if (first < 0 && /^\d{4}-/.test(e.iso) && e.iso >= todayIso) first = i; });
+    if (first >= 0) { show(first, ev[first].iso); var c0 = grid.querySelector('[data-d="' + ev[first].iso + '"]'); if (c0) c0.classList.add("sel"); detail.classList.remove("pop"); }
+  }
   function initHeroSlides() {
     var root = document.querySelector("[data-hero-ed]");
     if (!root) return;
@@ -1890,7 +1964,7 @@
     initModal();
     initJoin();
     initFx();
-    initUx(); initMinistries(); initHeroSlides(); initScrollFx(); initSignalScenes(); initFounderReel();
+    initUx(); initMinistries(); initCalendar(); initHeroSlides(); initScrollFx(); initSignalScenes(); initFounderReel();
     initSampleCards();
     var select = $("#currency");
 

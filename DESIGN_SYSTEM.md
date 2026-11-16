@@ -65,3 +65,13 @@ Accent colours (honey layer)
 Navy #111c44 core. Honey #f0b04a accent (buttons, notice link). Tint #fff8e9 with line #f3e6c9. White and navy for all text.
 Primary button: honey, hover navy with white text. Secondary: outline, hover filled. Focus: 3px ring. Text links underlined at rest; nav and footer links underlined on hover.
 Shapes: pills for buttons and inputs, 24px for photos, Z shape (6px 56px 56px 56px) for product pictures only.
+
+## Colour roles
+Navy (#111c44): text, outlines, and every interactive state (hover border, focus ring, selected fill, filled hover on buttons).
+Honey (#f0b04a): marks something to notice or act on. Primary buttons, the top notice link, event days and event icons in the calendar.
+White: surfaces and text on navy.
+Faint tint (#fff8e9): footer only. Neutral grey (#e7e9f0, #dfe2ea): tracks and hairlines.
+Each colour has one meaning. A second shade of the same colour is not used for a second state.
+
+## Shape rule
+Every card, tag and panel uses the Z corner: sharp top left, all other corners round. Buttons and inputs are full pills. Circles are used for icons and avatars.

@@ -65,3 +65,13 @@ Format: file and location | old | new | reason
 ## 39. Waitlist and tags
 - Waitlist: removed the "Zi Republic is about to open its borders" line and the capsule collection caption. The headline remains as screen reader text. Countdown size restored.
 - Tag shape A (Z corner) confirmed: square top left corner, other corners round. Used by every non clickable label.
+
+## 40. Waitlist copy restored, yellow removed from Ministries and calendar
+- Waitlist page hero text and caption restored. The form header now shows only "Ministry of Communications" and "Join the waitlist".
+- Ministries cards are white with a neutral hairline and turn navy on hover and open. Calendar entries are ruled rows with no fill.
+
+## 41. Ministries turn cards and interactive calendar
+- Ministries: five cards with one shared shape (sharp top left corner, like the Z). Each has its own icon. Hover, focus or tap turns the card to show what the ministry looks after. Reduced motion uses a fade.
+- Calendar: month grid with previous, next and Today. Event days are honey. Today has a navy ring. Selected day is navy. Event cards list upcoming days and open a detail panel. Dated days burst with small confetti.
+- Colour roles: navy for text, outlines and interaction. Honey for things to notice (event days, event icons, primary buttons). No tags in the calendar.
+- PLACEHOLDER CONTENT: Zero Email Day, Zigzag Day, Zebra Crossing Day, Zillar Day, Zany Hour and all seven dates are invented for design. Real copy and dates go in the Copy tab: brand.calendar-<name>-description, brand.calendar-<name>-iso (YYYY-MM-DD).
