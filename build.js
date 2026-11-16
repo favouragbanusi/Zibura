@@ -344,7 +344,7 @@ ${body}
     </div>
     <div class="top">
       <div class="f-brand">
-        <img class="word" src="/assets/logo-wordmark-sky.png" alt="Zibura" width="636" height="120">
+        <img class="word" src="/assets/logo-wordmark-navy.png" alt="Zibura" width="636" height="120">
         <p class="s">${T("footer_about", "Zibura is a lifestyle brand built around personal expression. Zi Republic is its country, and anyone may apply to join.")}</p>
       </div>
       <div>

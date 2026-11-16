@@ -54,3 +54,9 @@ Bright blue (#2FA8FF) or any colour outside the palette for interface elements.
 Light blue fills on many surfaces at once.
 Solid dark panels for secondary content.
 New font families outside the Zi Card.
+
+Accent colours (honey layer)
+- Core brand colour: Zibura Blue #111c44 (navy).
+- Honey #f0b04a for buttons and tags. Honey deep #d9952c for hover. Honey tint #fcefd3 inside boxes and the footer. Paper #fffbf2.
+- Button text on honey is always navy.
+- Shapes: pill for buttons, 24px for photos, Z icon shape (6px 56px 56px 56px) for product pictures only.

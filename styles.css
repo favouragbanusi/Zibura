@@ -2061,3 +2061,64 @@ img { -webkit-user-drag: none; }
 .lk-sumsel select { width: 100%; min-width: 0; }
 .lk-all { box-shadow: none; }
 @media (max-width: 700px) { .lk-all { position: static; margin-top: 16px; } .lk-sum { position: static; } .lk-detail { padding-bottom: 24px; } }
+
+@media (prefers-reduced-motion: reduce) { body[data-page="home"] .he-btn, body[data-page="home"] .rail .card .plate { transition: none; transform: none !important; } }
+@media (max-width: 700px) { body[data-page="home"] { --shape: 6px 36px 36px 36px; } body[data-page="home"] .rail .card:nth-child(even) { margin-top: 24px; } }
+
+
+/* Honey accent layer. Blue (navy) stays the core brand colour. Honey is the accent for actions, tags and small highlights.
+   Pale tints appear inside boxes and in the footer, never as full page backgrounds. */
+:root {
+  --honey: #f0b04a;
+  --honey-deep: #d9952c;
+  --honey-t: #fcefd3;
+  --paper: #fffbf2;
+  --play: cubic-bezier(.34, 1.56, .64, 1);
+  --shape: 6px 56px 56px 56px;
+  --mist: #fffbf2;
+}
+/* Buttons: pill shape, honey fill, navy text. Hover deepens the honey. */
+.btn, .he-btn, .nav-cta { border-radius: 999px; }
+.btn { background: var(--honey); border-color: var(--honey); color: var(--navy); font-weight: 600; transition: transform .45s var(--play), background-color .2s ease, border-color .2s ease, color .2s ease; }
+.btn:hover { background: var(--honey-deep); border-color: var(--honey-deep); color: var(--navy); transform: translateY(-2px) scale(1.03); }
+.btn.line { background: transparent; border-color: var(--navy); color: var(--navy); }
+.btn.line:hover { background: var(--navy); border-color: var(--navy); color: var(--white); }
+.btn.light { background: var(--honey); border-color: var(--honey); color: var(--navy); }
+.btn.light:hover { background: var(--honey-deep); border-color: var(--honey-deep); color: var(--navy); }
+.btn.ghost-light { background: transparent; color: var(--white); border-color: rgba(255, 255, 255, .6); }
+.btn.ghost-light:hover { background: var(--white); border-color: var(--white); color: var(--navy); }
+.he-btn { background: var(--honey); border-color: var(--honey); color: var(--navy); text-transform: none; letter-spacing: 0; font-weight: 600; transition: transform .45s var(--play), background-color .2s ease, border-color .2s ease; }
+.he-btn:hover { background: var(--honey-deep); border-color: var(--honey-deep); transform: translateY(-3px) scale(1.04); }
+.he-btn.ghost { background: transparent; color: var(--white); border-color: rgba(255, 255, 255, .7); }
+.he-btn.ghost:hover { background: var(--white); border-color: var(--white); color: var(--navy); }
+.he-title { font-family: var(--serif); font-weight: 600; text-transform: none; letter-spacing: -.04em; line-height: .98; }
+/* Tags, chips and highlights use the honey tint inside their own boxes. */
+.badge, details.facet > summary em, .r-sw, .r-stretch, .tile, .d-sub a, .to-top, .icon-btn.signed, .dash-avatar { background: var(--honey-t); }
+.card:hover .plate { background: var(--honey-t); }
+.icon-btn:hover, .who a:hover, #dash .dash-nav button:hover, .sg-open:hover { background: var(--honey-t); }
+.r-bar div, .wl-track, .r-bi .t { background: var(--honey-t); }
+/* Product pictures carry the Z icon shape: one square corner, the rest soft. */
+.card .plate { border-radius: var(--shape); overflow: hidden; transition: transform .6s var(--play), background-color .3s; }
+.card:hover .plate { transform: rotate(-1.5deg) scale(1.02); }
+.rail .card:nth-child(even) { margin-top: 40px; }
+.rail { padding-bottom: 56px; }
+.hs-card, .cl, .cl.b, .cl.c { border-radius: 24px; overflow: hidden; }
+/* Boxes carry the tint. Page sections stay plain. */
+.mini { background: var(--honey-t); }
+.mini:hover, .mini[aria-expanded="true"] { background: var(--honey); }
+.plain-list > div { background: var(--honey-t); border-radius: 22px; padding: 22px 26px; }
+.plain-list.light > div { background: transparent; padding: 0; border-radius: 0; }
+.tag-soon { background: var(--honey); color: var(--navy); border-radius: 999px; }
+/* Footer: the one full band of honey tint. */
+.site-footer { background: var(--honey-t); color: var(--navy); }
+.site-footer a, .site-footer .s, .site-footer .legal, .f-cta p, .site-footer h3, .f-big, .site-footer .top .s, .site-footer .top p.s { color: var(--navy) !important; }
+.site-footer a { opacity: .85; }
+.site-footer .legal-row { border-top-color: rgba(17, 28, 68, .2); }
+.site-footer .soc { border-color: rgba(17, 28, 68, .35); color: var(--navy); }
+.site-footer .soc:hover { background: var(--navy); color: var(--white) !important; }
+.site-footer a.btn { opacity: 1; }
+.site-footer a.btn.ghost-light { color: var(--navy) !important; border-color: var(--navy); background: transparent; }
+.site-footer a.btn.ghost-light:hover { background: var(--navy); color: var(--white) !important; }
+.site-footer .to-top { background: var(--navy); color: var(--white); }
+@media (prefers-reduced-motion: reduce) { .btn, .he-btn, .card .plate { transition: none; } .btn:hover, .he-btn:hover, .card:hover .plate { transform: none; } }
+.site-footer h2, .site-footer .foot-h, .site-footer h3 { color: var(--navy) !important; }

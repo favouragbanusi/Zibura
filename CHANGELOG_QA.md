@@ -37,3 +37,5 @@ Format: file and location | old | new | reason
 32. Type scale: hero titles, capsule titles, lead text and skip link now use scale tokens.
 33. Looks detail columns fixed at 380px and 440px so Safari and Chrome lay it out the same. Look summary replaces the piece list while open.
 34. Looks detail on phones: the total bar no longer covers the piece list. Checked at 320 to 2576px wide.
+35. Home play layer (trial): logo-shaped corners, Cream and Peach and Coral from the palette, mixed-case hero title, staggered product tiles, bouncy hover. Scoped to the home page only.
+36. Honey accent applied site wide. Blue (navy) stays the core brand colour. Honey is the accent for buttons, tags and small highlights. Pale honey tint sits inside boxes (Ministries, calendar, chips) and in the footer. Page sections stay plain. Buttons are pills. The Z icon shape (one square corner) is used on product pictures only. Footer wordmark is navy.
