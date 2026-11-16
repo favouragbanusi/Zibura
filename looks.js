@@ -30,11 +30,10 @@
       var t = (x * r.f) % r.p; if (t > 0) t -= r.p;
       // Depth: pointer forward (up) brings the near rows toward you and sends the far rows back. Pointer back (down) does the reverse.
       var sc = reduce ? 1 : Math.pow(1.55, -cy * (r.f - 0.95) / 0.75);
-      var rot = reduce ? 0 : cx * (r.f - 0.9) * 3;
       var H = stage.clientHeight || 1, mid = r.el.offsetTop + r.el.offsetHeight / 2;
       var lift = (sc - 1) * (H * 0.5 - mid);
       r.el.style.transformOrigin = (W / 2 - t).toFixed(0) + "px 50%";
-      r.el.style.transform = "translate3d(" + t.toFixed(1) + "px," + (y * r.f * 0.6 + lift).toFixed(1) + "px,0) rotateY(" + rot.toFixed(2) + "deg) scale(" + sc.toFixed(4) + ")";
+      r.el.style.transform = "translate3d(" + t.toFixed(1) + "px," + (y * r.f * 0.6 + lift).toFixed(1) + "px,0) scale(" + sc.toFixed(4) + ")";
     });
   }
   function loop() {

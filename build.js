@@ -41,7 +41,7 @@ function seoHead(rel, html) {
   if (!/\.html$/.test(rel) || !html.includes("<head>")) return html;
   let url = "/" + rel.replace(/index\.html$/, "").replace(/\.html$/, "");
   if (rel === "404.html") url = "/404";
-  const priv = /^(admin|reset|thanks|join)\//.test(rel) || rel === "404.html";
+  const priv = /^(admin|reset|thanks|join|account|cart)\//.test(rel) || rel === "404.html";
   const t = (html.match(/<title>([^<]*)<\/title>/) || [])[1] || "Zibura";
   const d = (html.match(/<meta name="description" content="([^"]*)"/) || [])[1] || "";
   let add = "";
@@ -60,12 +60,26 @@ function seoHead(rel, html) {
     const p = products.find((x) => x.slug === pm[1]);
     if (p) ld.push({ "@context": "https://schema.org", "@type": "Product", name: p.name, description: p.description, brand: { "@type": "Brand", name: "Zibura" }, offers: { "@type": "Offer", url: "https://zibura.com" + url, priceCurrency: "CAD", price: String(p.prices.CAD), availability: p.inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock" } });
   }
+  if (!priv && rel !== "index.html") {
+    const segs = url.split("/").filter(Boolean);
+    const names = { shop: "Shop", looks: "Zi Looks", explore: "Zi Archive", product: "Shop", about: "About", faq: "FAQ" };
+    const items = [{ "@type": "ListItem", position: 1, name: "Home", item: "https://zibura.com/" }];
+    segs.forEach((sg, i) => { if (sg === "product" && i === 0) return; items.push({ "@type": "ListItem", position: items.length + 1, name: i === segs.length - 1 ? t.split(" | ")[0] : (names[sg] || sg), item: "https://zibura.com/" + segs.slice(0, i + 1).join("/") + "/" }); });
+    ld.push({ "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: items });
+  }
+  const faq = [...html.matchAll(/<details><summary>([\s\S]*?)<\/summary><p>([\s\S]*?)<\/p><\/details>/g)].map((m) => ({ "@type": "Question", name: m[1].replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&#39;|&apos;/g, "'").replace(/&quot;/g, '"'), acceptedAnswer: { "@type": "Answer", text: m[2].replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&#39;|&apos;/g, "'").replace(/&quot;/g, '"') } }));
+  if (faq.length) ld.push({ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faq });
   ld.forEach((o) => { add += `<script type="application/ld+json">${JSON.stringify(o).replace(/</g, "\\u003c")}</script>\n`; });
   if (priv && !html.includes("noindex")) add += `<meta name="robots" content="noindex,nofollow">\n`;
-  return html.replace("<head>", "<head>\n" + add);
+  else if (!priv && !html.includes('name="robots"')) add += `<meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">\n`;
+  if (!html.includes("og:locale")) add += `<meta property="og:locale" content="en_CA">\n`;
+  if (!html.includes('name="theme-color"')) add += `<meta name="theme-color" content="#111c44">\n`;
+  if (!html.includes('name="google-site-verification"') && process.env.GOOGLE_VERIFY) add += `<meta name="google-site-verification" content="${process.env.GOOGLE_VERIFY}">\n`;
+  if (!html.includes('name="msvalidate.01"') && process.env.BING_VERIFY) add += `<meta name="msvalidate.01" content="${process.env.BING_VERIFY}">\n`;
+  return /<meta charset="utf-8">\n?/.test(html) ? html.replace(/(<meta charset="utf-8">\n?)/, (m) => m + add) : html.replace("<head>", "<head>\n" + add);
 }
 function write(rel, content) {
-  if (typeof content === "string") content = seoHead(rel, content);
+  if (typeof content === "string") content = seoHead(rel, content).replace(/<main(?![^>]*id=)/, '<main id="main"');
   // The Archive shows full-screen images and capsule tiles that open on a tap, so they load up front.
   if (rel === "explore/index.html" && typeof content === "string") content = content.replace(/ loading="lazy"/g, ' decoding="async"');
   const file = path.join(dist, rel);
@@ -258,14 +272,18 @@ const SOCIAL = `<a class="soc" href="${LINKS.instagram || "https://www.instagram
 
 function layout({ title, description, page, body }) {
   return `<!doctype html>
-<html lang="en">
+<html lang="en-CA">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}">
 <meta name="theme-color" content="#ffffff">
-<link rel="icon" href="/assets/favicon.png">
+<link rel="icon" href="/assets/favicon.png" type="image/png" sizes="64x64">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="mask-icon" href="/assets/favicon.png" color="#111c44">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..700&family=Public+Sans:wght@400;500;600&family=Lexend:wght@400;500;600&family=Lexend+Zetta:wght@700&family=Yellowtail&family=Mrs+Saint+Delafield&display=swap">
@@ -273,6 +291,7 @@ function layout({ title, description, page, body }) {
 <script>document.documentElement.className = "js";</script>
 </head>
 <body data-page="${page}">
+<a class="skip" href="#main">${T("site.skip", "Skip to content")}</a>
 <div class="notice">${T("notice_text", "Official notice: The capsule collection is launching soon.")} <a href="/waitlist/">${T("notice_link", "Join the waitlist")}</a></div>
 <header class="site-header" id="top">
   <div class="wrap">
@@ -1064,7 +1083,7 @@ Object.keys(POLICIES).forEach((slug) => {
   const pol = POLICIES[slug];
   write(`${slug}/index.html`, layout({
     title: TR(`policy.${slug}.meta-title`, `${pol.title} | Zibura`),
-    description: TR(`policy.${slug}.meta-description`, pol.intro),
+    description: TR(`policy.${slug}.meta-description`, (pol.intro.match(/^.*?\.(?=\s|$)/) || [pol.intro])[0]),
     page: "policy",
     body: `<main>
 <section class="page-head"><div class="wrap">
@@ -1444,7 +1463,7 @@ products.forEach((p) => {
     <div class="buy">
       <p class="crumb">${esc(p.collection)}, ${esc(p.capsule)}</p>
       <h1 class="display">${esc(p.name)}</h1>
-      <a class="rate-line" href="#reviews" data-rating-for="${esc(p.slug)}" data-long="1"></a>
+      <a class="rate-line" href="#reviews" data-rating-for="${esc(p.slug)}" data-long="1"><span>${T("product.be-first", "Be the first to review")}</span></a>
       <span class="price" data-price-for="${esc(p.slug)}"></span>
       <p class="desc">${esc(p.description)}</p>
       <form id="add-form">
@@ -1541,7 +1560,7 @@ write(
 );
 
 // ---------- Zi Looks: the outfit shop ----------
-const LOOK_POS = { Outerwear: [50, 36], Topwear: [50, 32], Fullwear: [56, 52], Bottomwear: [50, 64], Shoes: [50, 91], Totes: [22, 62], Jewelry: [60, 20], Scarves: [42, 25], Perfume: [80, 76], "Tech Accessories": [78, 70], Stationery: [78, 70], Candles: [80, 76] };
+const LOOK_POS = { Outerwear: [50, 36], Topwear: [50, 32], Fullwear: [56, 52], Bottomwear: [50, 64], Shoes: [50, 91], Totes: [22, 62], Jewellery: [60, 20], Scarves: [42, 25], Perfume: [80, 76], "Tech Accessories": [78, 70], Stationery: [78, 70], Candles: [80, 76] };
 const DEFAULT_LOOKS = [
   ["Women", "halo,tidal,cove,orbit"], ["Men", "ember,meridian,stride,pocket"], ["Women", "tidal,kite,cove"], ["Men", "ember,meridian,stride,orbit"],
   ["Women", "halo,tidal,kite,rumour"], ["Men", "meridian,ember,kite,stride"], ["Women", "halo,cove,orbit"], ["Men", "ember,meridian,stride,kite"],
@@ -1577,14 +1596,11 @@ function lookRow(r) {
 function lookDetail(l) {
   return `<section class="lk-detail" data-detail="${l.n - 1}" hidden aria-label="${esc(l.name)}">
     <div class="lk-info">
-      <p class="lk-aud">${esc(l.audience)}</p>
+      <p class="lk-aud">${esc(l.audience)}<span class="lk-tag">${l.pieces.length} ${T("looks.pieces", "pieces")}</span></p>
       <h2 class="lk-name">${esc(l.name)}</h2>
-      <p class="lk-blurb">${esc(lookBlurb(l))}</p>
     </div>
     <div class="lk-fig">${lookImg(l)}</div>
     <aside class="lk-panel">
-      <p class="lk-kicker">${l.pieces.length} ${T("looks.pieces", "pieces")}</p>
-      <div class="lk-big">${l.pieces.map((q, k) => `<span class="lk-bigimg${k === 0 ? " on" : ""}" data-piece="${esc(q.p.slug)}">${photo(q.p.slug + "-1", q.p.name) || '<i class="ph-empty"></i>'}</span>`).join("")}</div>
       <ul class="lk-pieces">
         ${l.pieces.map((q, k) => `<li data-piece="${esc(q.p.slug)}"${k === 0 ? ' class="on"' : ""}>
           <a href="/product/${esc(q.p.slug)}/"><span class="lk-th">${photo(q.p.slug + "-1", q.p.name) || '<i class="ph-empty"></i>'}</span><span class="lk-meta"><b>${esc(q.p.name)}</b><em>${esc(q.p.type)}</em></span><span class="price" data-price-for="${esc(q.p.slug)}"></span></a>
@@ -1652,7 +1668,7 @@ ${LOOKS.map(lookDetail).join("\n")}
 // ---------- Waitlist landing page (stands alone, for Instagram and other links) ----------
 function bare({ title, description, page, body }) {
   return `<!doctype html>
-<html lang="en">
+<html lang="en-CA">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -1661,7 +1677,11 @@ function bare({ title, description, page, body }) {
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(description)}">
 <meta name="theme-color" content="#111c44">
-<link rel="icon" href="/assets/favicon.png">
+<link rel="icon" href="/assets/favicon.png" type="image/png" sizes="64x64">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="mask-icon" href="/assets/favicon.png" color="#111c44">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..700&family=Public+Sans:wght@400;500;600&family=Lexend:wght@400;500;600&family=Noto+Serif:ital,wght@0,400;1,400&family=Noto+Sans:wght@300;400;500&display=swap">
@@ -1669,6 +1689,7 @@ function bare({ title, description, page, body }) {
 <script>document.documentElement.className = "js";</script>
 </head>
 <body data-page="${page}">
+<a class="skip" href="#main">${T("site.skip", "Skip to content")}</a>
 ${body}
 <script src="/assets/app.js?v=${BUILD_V}" defer></script>
 </body>
@@ -1684,6 +1705,10 @@ for (const f of [
   "logo-wordmark-navy.png",
   "logo-icon-navy.png",
   "favicon.png",
+  "favicon-dark.png",
+  "apple-touch-icon.png",
+  "icon-192.png",
+  "icon-512.png",
   "share.png",
   "ruova.jpg",
   "hero.jpg",
@@ -1728,7 +1753,7 @@ write(
 
 // Search engine files
 (function () {
-  const skip = /^\/(admin|reset|thanks|join|404\.html)/;
+  const skip = /^\/(admin|reset|thanks|join|account|cart|404\.html)/;
   const urls = [];
   (function walk(dir) {
     for (const n of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -1742,8 +1767,12 @@ write(
     }
   })(dist);
   urls.sort();
-  write("sitemap.xml", `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>https://zibura.com${u}</loc></url>`).join("\n")}\n</urlset>\n`);
+  write("sitemap.xml", `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>https://zibura.com${u}</loc><lastmod>${new Date().toISOString().slice(0, 10)}</lastmod></url>`).join("\n")}\n</urlset>\n`);
+  write("_headers", "/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  X-Frame-Options: SAMEORIGIN\n  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(self)\n\n/assets/*\n  Cache-Control: public, max-age=86400\n\n/*.html\n  Cache-Control: public, max-age=0, must-revalidate\n");
+  write("site.webmanifest", JSON.stringify({ name: "Zibura", short_name: "Zibura", start_url: "/", display: "standalone", background_color: "#ffffff", theme_color: "#111c44", icons: [{ src: "/assets/icon-192.png", sizes: "192x192", type: "image/png" }, { src: "/assets/icon-512.png", sizes: "512x512", type: "image/png" }] }, null, 2));
+  write("favicon.ico", fs.readFileSync(find("favicon.ico")));
   write("robots.txt", "User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/\nDisallow: /reset/\nDisallow: /thanks/\n\nSitemap: https://zibura.com/sitemap.xml\n");
+  write("llms.txt", "# Zibura\n\n> Zibura is a fashion and lifestyle brand. The site at zibura.com holds the shop, Zi Looks, the Archive and the Zi Republic residency.\n\n- [Shop](https://zibura.com/shop/)\n- [Zi Looks](https://zibura.com/looks/)\n- [Archive](https://zibura.com/explore/)\n- [Sitemap](https://zibura.com/sitemap.xml)\n");
 })();
 
 console.log("Built " + products.length + " products into dist/");

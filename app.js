@@ -637,11 +637,13 @@
     function render() {
       var list = sorted(catalog.filter(matches));
       count.textContent = list.length + (list.length === 1 ? " product" : " products");
+      grid.style.minHeight = grid.offsetHeight + "px";
       grid.innerHTML = list.length ? list.map(cardHtml).join("") : '<p class="grid-empty">No results for these filters. Try a different word or browse the collection at /shop/.</p>';
       applyPrices();
       paintRatings();
       renderChips();
       sync();
+      requestAnimationFrame(function () { requestAnimationFrame(function () { grid.style.minHeight = ""; }); });
     }
 
     function refresh() { renderFacets(); render(); }
