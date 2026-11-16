@@ -2377,3 +2377,18 @@ body[data-page="join"] { background: var(--navy); color: var(--white); }
 .cal-ev .ic { width: 52px; height: 52px; grid-row: span 2; } .cal-ev .ic svg { width: 28px; height: 28px; }
 .cal-ev .cal-when { margin-top: 0; }
 .cal-up { gap: 10px; }
+
+/* Ministries: smooth fade instead of a 3D turn. Back face leads with a bold name, then smaller text with room around it. */
+.mini .fl { transform: none !important; transform-style: flat !important; transition: none; }
+.mini .face { transition: opacity .35s ease, transform .5s var(--play); -webkit-backface-visibility: visible; backface-visibility: visible; }
+.mini .front { opacity: 1; }
+.mini .back { transform: translateY(12px) scale(.98); opacity: 0; pointer-events: none; padding: 30px 28px; gap: 14px; justify-content: flex-start; }
+.mini .back .mn { font-family: var(--serif); font-weight: 600; font-size: clamp(21px, 1.5vw + 6px, 27px); line-height: 1.12; letter-spacing: -.02em; color: var(--white); }
+.mini .back .md { font-size: var(--t-sm); line-height: 1.6; font-weight: 400; color: var(--white); max-width: 30ch; }
+.mini.on .front, .mini:focus-visible .front { opacity: 0; }
+.mini.on .back, .mini:focus-visible .back { opacity: 1; transform: none; }
+@media (hover: hover) and (pointer: fine) { .mini:hover .front { opacity: 0; } .mini:hover .back { opacity: 1; transform: none; } .mini:hover .fl { transform: none !important; } }
+.mini .go { display: none; }
+/* Waitlist: caption sits above the email row, centred. Scroll arrow is a crisp SVG disc. */
+.mu-tag { text-align: center; margin: 0 auto; }
+.mu-down svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }

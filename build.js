@@ -543,7 +543,7 @@ const MINI_ICONS = [
   // Creative: paint palette with colour dots
   SV('<path d="M12 3a9 9 0 100 18c1.4 0 2-1 2-2s-.6-1.6-1-2.3c-.5-.9 0-2.2 1.3-2.2H17a4 4 0 004-4c0-3.9-4-7.5-9-7.5z"/><circle cx="7.5" cy="11.5" r="1" fill="currentColor"/><circle cx="10" cy="7.5" r="1" fill="currentColor"/><circle cx="14.5" cy="7.5" r="1" fill="currentColor"/>'),
   // Community: heart
-  SV('<path d="M12 20s-7.5-4.6-7.5-10.2A4.1 4.1 0 0112 7.6a4.1 4.1 0 017.5 2.2C19.5 15.4 12 20 12 20z"/><path d="M4 4l1 2M20 4l-1 2M12 2v2"/>'),
+  SV('<path d="M12 20s-7.5-4.6-7.5-10.2A4.1 4.1 0 0112 7.6a4.1 4.1 0 017.5 2.2C19.5 15.4 12 20 12 20z"/>'),
   // Communications: megaphone with sound waves
   SV('<path d="M3 11v2a1 1 0 001 1h2l6 4V6L6 10H4a1 1 0 00-1 1z"/><path d="M15.5 9a4 4 0 010 6M18.2 6.2a8 8 0 010 11.6"/>'),
   // Commerce: shopping bag with a smile
@@ -553,13 +553,13 @@ const MINI_ICONS = [
 ];
 const TURN_ICON = SV('<path d="M20 12a8 8 0 11-2.4-5.7"/><path d="M20 4v4h-4"/>');
 const CAL_ICONS = {
-  "Zi Day": SV('<path d="M4 20l4-11 7 7-11 4z"/><path d="M13 5l.5 2M17 8l2-1M16 3l1 2M20 12l-2 .5M10.5 8.5l5 5"/>'),
-  "Ziesta": SV('<path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z"/><path d="M17 3v4M15 5h4"/>'),
-  "Zero Email Day": SV('<rect x="3.5" y="6" width="17" height="12" rx="2.5"/><path d="M4 8l8 6 8-6"/><path d="M5 20L19 4"/>'),
-  "Zigzag Day": SV('<path d="M3 17l4.5-9 4.5 9 4.5-9 4.5 9"/>'),
-  "Zebra Crossing Day": SV('<path d="M5 5v14M9.7 5v14M14.3 5v14M19 5v14" stroke-width="3"/>'),
-  "Zillar Day": SV('<circle cx="12" cy="12" r="8.5"/><path d="M9 9h6l-6 6h6"/>'),
-  "Zany Hour": SV('<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M18 16l.8 2.2L21 19l-2.2.8L18 22l-.8-2.2L15 19l2.2-.8z"/>')
+  "Zi Day": SV('<path d="M4 20l4.5-12 7.5 7.5L4 20z"/><path d="M14 4.5v2M19.5 10h-2M17.5 6l-1.3 1.3M10.5 3.5l.5 1.5M20 15.5l-1.5-.5"/>'),
+  "Ziesta": SV('<path d="M20 14.2A8.2 8.2 0 019.8 4a8.2 8.2 0 1010.2 10.2z"/><path d="M16.5 3.5v3M15 5h3"/>'),
+  "Zero Email Day": SV('<rect x="3.5" y="5.5" width="17" height="13" rx="2.5"/><path d="M8.5 12.2l2.4 2.4 4.6-4.8"/>'),
+  "Zigzag Day": SV('<path d="M3.5 17.5l5-9 5 7 7-10"/><circle cx="20.5" cy="5.5" r="1.2" fill="currentColor"/>'),
+  "Zebra Crossing Day": SV('<circle cx="13.5" cy="4.5" r="1.8"/><path d="M13 8.5l-2.5 4.5 3.5 2.5-1 5M13 8.5l3.5 2 2 3M10.5 13L7 14.5"/>'),
+  "Zillar Day": SV('<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="5.8"/><path d="M10 10h4l-4 4h4"/>'),
+  "Zany Hour": SV('<path d="M12 3.5l2 5.5 5.5 2-5.5 2-2 5.5-2-5.5-5.5-2 5.5-2z"/><path d="M19 3.5v3M17.5 5h3"/>')
 };
 const CAL_ICON_DEFAULT = SV('<rect x="4" y="5" width="16" height="15" rx="3"/><path d="M8 3v4M16 3v4M4 10h16"/>');
 const MINISTRIES = [
@@ -572,12 +572,12 @@ const MINISTRIES = [
 // PLACEHOLDER EVENTS AND DATES: invented for design. Replace or override in the Copy sheet (keys brand.calendar-<name>-description, -iso, -date).
 const CALENDAR = [
   ["Zero Email Day", "The Ministry of Communications takes the day off. No announcements, no campaigns, just quiet.", "", "2026-12-04"],
-  ["Zigzag Day", "No straight lines allowed. Take the scenic route to everything.", "", "2026-12-19"],
-  ["Zebra Crossing Day", "Residents cross the street like it is a runway. Strutting is encouraged.", "", "2027-01-16"],
+  ["Zigzag Day", "No straight lines allowed. Take the scenic route to everything.", "", "2027-01-09"],
+  ["Zebra Crossing Day", "Residents cross the street like it is a runway. Strutting is encouraged.", "", "2027-03-12"],
   ["Zillar Day", "A day to celebrate the Republic's currency and everything it can be spent on.", "", "2027-02-05"],
-  ["Ziesta", "Ziesta is the Republic's festival of rest, a time to slow down and gather.", "", "2027-02-20"],
-  ["Zany Hour", "One hour a year when everything is allowed to be a little silly.", "", "2027-03-12"],
-  ["Zi Day", "Zi Day is the Republic's founding day. Zi Residents and Zitizens mark it each year.", "", "2027-03-22"]
+  ["Ziesta", "Ziesta is the Republic's festival of rest, a time to slow down and gather.", "", "2027-06-12"],
+  ["Zany Hour", "One hour a year when everything is allowed to be a little silly.", "", "2027-05-14"],
+  ["Zi Day", "Zi Day is the Republic's founding day. Zi Residents and Zitizens mark it each year.", "", "2027-04-18"]
 ];
 const CAL_ICON_BY_NAME = {};
 CALENDAR.forEach((c) => {
@@ -642,7 +642,7 @@ write(
     <p class="province-intro">${T("brand.ministries-intro", "The Ministries oversee the Republic's public functions, from creative direction and community programs to communications, commerce and administration.")}</p>
   </div>
   <div class="mini-grid" data-reveal>
-${MINISTRIES.map(([n, d], i) => `    <button type="button" class="mini" aria-expanded="false"><span class="fl"><span class="face front"><span class="ic" aria-hidden="true">${MINI_ICONS[i]}</span><span class="foot"><span class="mn">${n}</span><span class="go" aria-hidden="true">${TURN_ICON}</span></span></span><span class="face back"><span class="mn">${n}</span><span class="md">${d}</span><span class="go" aria-hidden="true">${TURN_ICON}</span></span></span></button>`).join("\n")}
+${MINISTRIES.map(([n, d], i) => `    <button type="button" class="mini" aria-expanded="false"><span class="fl"><span class="face front"><span class="ic" aria-hidden="true">${MINI_ICONS[i]}</span><span class="foot"><span class="mn">${n}</span></span></span><span class="face back"><span class="mn">${n}</span><span class="md">${d}</span></span></span></button>`).join("\n")}
   </div>
 </div></section>
 
@@ -1019,7 +1019,7 @@ function waitlistPage() {
     </div>
     <a class="mu-btn mu-in" style="--d:1.1s" href="#waitlist" data-mu-go>${T("join.button", "Join the waitlist")}</a>
   </div>
-  <a class="mu-down mu-in" style="--d:1.5s" href="#waitlist" data-mu-go aria-label="${esc(TR("join.scroll-label", "Scroll down"))}">&darr;</a>
+  <a class="mu-down mu-in" style="--d:1.5s" href="#waitlist" data-mu-go aria-label="${esc(TR("join.scroll-label", "Scroll down"))}">${SV('<path d="M12 5v14M6 13l6 6 6-6"/>')}</a>
 </section>
 <div class="mu-blend" aria-hidden="true"></div>
 <section class="mu-zoom" id="waitlist" data-mu-zoom>
@@ -1027,8 +1027,8 @@ function waitlistPage() {
     <div class="mu-grid" aria-hidden="false">${tiles}</div>
     <div class="mu-core">
       <img class="mu-mark" src="/assets/logo-wordmark-navy.png" alt="Zibura" width="636" height="120">
-      <form class="mu-mail" novalidate data-mu-mail>
       <p class="mu-tag">${T("waitlist.tagline", "Be the first through the door when the capsule collection opens.")}</p>
+      <form class="mu-mail" novalidate data-mu-mail>
         <label class="sr" for="mu-email">${T("forms.email", "Email")}</label>
         <input id="mu-email" type="email" name="email" autocomplete="email" placeholder="${esc(TR("waitlist.placeholder", "your@email.com"))}" required>
         <button type="submit">${T("join.button", "Join the waitlist")}</button>

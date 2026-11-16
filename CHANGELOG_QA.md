@@ -75,3 +75,8 @@ Format: file and location | old | new | reason
 - Calendar: month grid with previous, next and Today. Event days are honey. Today has a navy ring. Selected day is navy. Event cards list upcoming days and open a detail panel. Dated days burst with small confetti.
 - Colour roles: navy for text, outlines and interaction. Honey for things to notice (event days, event icons, primary buttons). No tags in the calendar.
 - PLACEHOLDER CONTENT: Zero Email Day, Zigzag Day, Zebra Crossing Day, Zillar Day, Zany Hour and all seven dates are invented for design. Real copy and dates go in the Copy tab: brand.calendar-<name>-description, brand.calendar-<name>-iso (YYYY-MM-DD).
+
+## 42. Cleaner cards and calendar
+- Ministries: turn button removed. Cards fade between front and back (no 3D turn, so text stays crisp). Back face leads with a bold ministry name, then smaller text with room around it.
+- Calendar: one event per month. Zi Day is on April 18, 2027. Other days remain placeholders. New icons for the upcoming days.
+- Waitlist: caption sits above the email row. Scroll arrow is an SVG.
