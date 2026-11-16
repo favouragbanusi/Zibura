@@ -60,3 +60,8 @@ Accent colours (honey layer)
 - Honey #f0b04a for buttons and tags. Honey deep #d9952c for hover. Honey tint #fcefd3 inside boxes and the footer. Paper #fffbf2.
 - Button text on honey is always navy.
 - Shapes: pill for buttons, 24px for photos, Z icon shape (6px 56px 56px 56px) for product pictures only.
+
+## Colour and states (current)
+Navy #111c44 core. Honey #f0b04a accent (buttons, notice link). Tint #fff8e9 with line #f3e6c9. White and navy for all text.
+Primary button: honey, hover navy with white text. Secondary: outline, hover filled. Focus: 3px ring. Text links underlined at rest; nav and footer links underlined on hover.
+Shapes: pills for buttons and inputs, 24px for photos, Z shape (6px 56px 56px 56px) for product pictures only.

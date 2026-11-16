@@ -78,6 +78,7 @@ function seoHead(rel, html) {
   if (!html.includes('name="msvalidate.01"') && process.env.BING_VERIFY) add += `<meta name="msvalidate.01" content="${process.env.BING_VERIFY}">\n`;
   return /<meta charset="utf-8">\n?/.test(html) ? html.replace(/(<meta charset="utf-8">\n?)/, (m) => m + add) : html.replace("<head>", "<head>\n" + add);
 }
+function lines(s) { return String(s).split(/(?<=[,.])\s+/).map((x) => `<span class="ln">${x}</span>`).join(""); }
 function write(rel, content) {
   if (typeof content === "string") content = seoHead(rel, content).replace(/<main(?![^>]*id=)/, '<main id="main"');
   // The Archive shows full-screen images and capsule tiles that open on a tap, so they load up front.
@@ -419,7 +420,7 @@ write(
     <article class="he-slide on">
       <img src="/assets/hero.jpg" alt="Editorial portrait for Zibura" width="1500" height="2249" fetchpriority="high">
       <div class="he-copy">
-        <h1 class="he-title">${T("home.hero1-title", "Your expression, your world.")}</h1>
+        <h1 class="he-title">${lines(T("home.hero1-title", "Your expression, your world."))}</h1>
         <div class="he-actions">
           <a class="he-btn" href="/explore/">${T("home.hero1-button", "Explore Zibura")}</a>
           <a class="he-btn ghost" href="/waitlist/">${T("home.hero1-button3", "Join the waitlist")}</a>

@@ -39,3 +39,16 @@ Format: file and location | old | new | reason
 34. Looks detail on phones: the total bar no longer covers the piece list. Checked at 320 to 2576px wide.
 35. Home play layer (trial): logo-shaped corners, Cream and Peach and Coral from the palette, mixed-case hero title, staggered product tiles, bouncy hover. Scoped to the home page only.
 36. Honey accent applied site wide. Blue (navy) stays the core brand colour. Honey is the accent for buttons, tags and small highlights. Pale honey tint sits inside boxes (Ministries, calendar, chips) and in the footer. Page sections stay plain. Buttons are pills. The Z icon shape (one square corner) is used on product pictures only. Footer wordmark is navy.
+
+## 37. One colour and state system
+- Honey is one hex, #f0b04a. No dark honey. Honey fills one primary action per section and the top notice link. It is never used for body text.
+- Faint tint is #fff8e9 with a #f3e6c9 hairline. It appears inside boxes, chips and the footer. Page backgrounds are white.
+- Text is navy (#111c44) or pure white. All light blue text and borders on navy are now white.
+- Primary buttons: honey fill, navy text. Hover and keyboard focus: navy fill, white text. On navy or photos: white fill, navy text. Press: shrinks to 97%. Disabled: 45% opacity.
+- Secondary buttons: outline at rest, filled on hover and focus.
+- Links: text links are underlined at rest and thicker on hover. Navigation and footer links are plain at rest and underlined on hover.
+- Focus ring: 3px navy on light, white on navy.
+- Waitlist page uses the site fonts, white page, pill input and button, tinted cards, 24px tiles and a smaller centre logo.
+- Home hero title breaks into "Your expression," and "your world." on every width. Verified at 320 to 1920 px.
+- Icons, favicons and share image regenerated with the mark at about 46 to 58% of the tile so the boundary shows.
+- Checks: no horizontal overflow on 15 pages at 11 widths; regression passes; accessibility 0 violations on tested pages. Safari not tested.
