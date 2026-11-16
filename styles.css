@@ -2050,3 +2050,14 @@ img { -webkit-user-drag: none; }
 @media (max-width: 640px) { .he-title.two { font-size: clamp(20px, 6.4vw, 34px); } }
 .d-cur { flex-wrap: wrap; }
 @media (max-width: 1000px) { .lk-view { overflow-y: auto; -webkit-overflow-scrolling: touch; } .lk-detail { flex: none; align-content: start; padding-top: 8px; padding-bottom: 16px; } .lk-sum { bottom: 8px; } }
+
+/* Zi Looks detail: fixed column widths so every browser lays it out the same way */
+@media (min-width: 1001px) {
+  .lk-detail { grid-template-columns: minmax(0, 380px) minmax(0, 440px); justify-content: center; }
+  .lk-fig { width: 100%; height: auto; aspect-ratio: 2 / 3; max-height: calc(100svh - 230px); align-self: center; }
+}
+.lk-detail.sum-open .lk-pieces { display: none; }
+.lk-sum { min-width: 0; }
+.lk-sumsel select { width: 100%; min-width: 0; }
+.lk-all { box-shadow: none; }
+@media (max-width: 700px) { .lk-all { position: static; margin-top: 16px; } .lk-sum { position: static; } .lk-detail { padding-bottom: 24px; } }

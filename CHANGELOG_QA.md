@@ -35,3 +35,5 @@ Format: file and location | old | new | reason
 30. Site icon: one navy icon that reads on light and dark tabs, 32px ico, apple touch icon, web manifest, theme colour.
 31. SEO: robots preview directives, og:locale, theme-color, BreadcrumbList on inner pages, llms.txt, optional Google and Bing verification (set GOOGLE_VERIFY and BING_VERIFY at build).
 32. Type scale: hero titles, capsule titles, lead text and skip link now use scale tokens.
+33. Looks detail columns fixed at 380px and 440px so Safari and Chrome lay it out the same. Look summary replaces the piece list while open.
+34. Looks detail on phones: the total bar no longer covers the piece list. Checked at 320 to 2576px wide.
