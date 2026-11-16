@@ -2205,3 +2205,44 @@ body[data-page="join"] { background: var(--navy); color: var(--white); }
 .mu-x:hover, .mu-x:focus-visible { opacity: .8; }
 @media (max-width: 800px) { .mu-tile { border-radius: 16px; } .mu-mail input { padding: 0 16px; } }
 #dash .tile:hover { background: var(--white); border-color: var(--navy); }
+
+/* ==========================================================================
+   Contrast pass. Every state pairs navy on light or white on navy. No honey on progress, no tinted labels over photos.
+   ========================================================================== */
+/* Ministries: rest is tint with navy text. Hover, focus and open are navy with white text (text colour is set on the parts too). */
+.mini { background: var(--honey-t); color: var(--navy); border: 1px solid var(--tint-line); }
+.mini:hover, .mini:focus-visible, .mini.on, .mini[aria-expanded="true"] { background: var(--navy); color: var(--white); border-color: var(--navy); }
+.mini:hover *, .mini:focus-visible *, .mini.on *, .mini[aria-expanded="true"] * { color: var(--white); }
+.mini[aria-expanded="true"] { border-width: 1px; }
+/* Close buttons: white disc, navy cross. Hover: pale grey disc, navy cross. */
+.mu-x, .close-pane, dialog .close, dialog#wl-modal .close { background: var(--white); color: var(--navy); border: 1px solid var(--navy); opacity: 1; }
+.mu-x:hover, .mu-x:focus-visible, .close-pane:hover, dialog .close:hover, dialog .close:focus-visible, dialog#wl-modal .close:hover { background: #e7e9f0; color: var(--navy); opacity: 1; }
+/* Progress: navy fill on a neutral light track. */
+.r-bar div, .wl-track, .r-bi .t { background: #e7e9f0; }
+.r-bar i, .wl-track i, .progress { background: var(--navy); }
+/* Avatar: white disc, navy initials. */
+.dash-avatar, #dash .dash-avatar { background: var(--white); color: var(--navy); }
+/* Tier labels sit directly on photos as plain white text. */
+.hs-card.tier .what { background: none; border: 0; border-radius: 0; padding: 0; color: var(--white); }
+/* Tags carry the Z shape: one square corner, the rest rounded. Buttons stay pills. Tags are never clickable. */
+.badge, details.facet > summary em, .tag-soon, .memo-tag, .sg-tag, .tag-z {
+  display: inline-block; background: var(--white); color: var(--navy); border: 1px solid var(--navy); border-radius: var(--shape);
+  padding: 4px 12px; font-size: var(--t-xs); font-weight: 600; letter-spacing: .02em; line-height: 1.4; text-transform: none;
+}
+.badge.paid { background: var(--white); }
+.tint .tag-soon, .plain-list > div .tag-soon { background: var(--white); }
+.hs-card .tag-soon, .ap-txt .tag-soon, .sg-sealed .tag-soon { background: var(--white); color: var(--navy); border-color: var(--white); }
+/* Waitlist page: lighter headline and caption, logo grows with the scroll and is full size by the middle. */
+.mu-count-row span { font-size: 13px; }
+.mu-core { --mw: calc(clamp(72px, 6.5vw, 104px) * (1 + 2.1 * min(var(--p) * 2, 1))); --mh: calc(var(--mw) * .19); }
+.mu-mark { width: var(--mw); max-width: calc(100vw - 80px); }
+/* Active tabs and filters stay navy with white text in every state. */
+.d-sub a.on, .d-sub a.on:hover, .d-sub a.on:focus-visible, .cats a.on, .cats a.on:hover, .cats a.on:focus-visible, a.on:hover, a.on:focus-visible { background: var(--navy); color: var(--white); }
+/* Waitlist scroll arrow: white disc, navy arrow, readable over the photo and over white. */
+.mu-down { display: grid; place-items: center; width: 48px; height: 48px; padding: 0; border-radius: 50%; background: var(--white); color: var(--navy); border: 1px solid var(--navy); }
+.mu-down:hover, .mu-down:focus-visible { background: var(--navy); color: var(--white); }
+/* Footer buttons: hover and focus are navy with white text for every variant. */
+.site-footer a.btn:hover, .site-footer a.btn:focus-visible, .site-footer a.btn.light:hover, .site-footer a.btn.light:focus-visible { background: var(--navy); border-color: var(--navy); color: var(--white) !important; }
+
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.sg-tag, .memo-tag { margin: 0 0 16px; }

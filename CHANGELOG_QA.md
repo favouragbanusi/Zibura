@@ -52,3 +52,16 @@ Format: file and location | old | new | reason
 - Home hero title breaks into "Your expression," and "your world." on every width. Verified at 320 to 1920 px.
 - Icons, favicons and share image regenerated with the mark at about 46 to 58% of the tile so the boundary shows.
 - Checks: no horizontal overflow on 15 pages at 11 widths; regression passes; accessibility 0 violations on tested pages. Safari not tested.
+
+## 38. Contrast pass
+- Audit script hovers, focuses and opens every interactive element on the main pages and measures text against its real background. Result: 0 failures after fixes.
+- Fixed: Ministries cards (hover, focus, open are navy with white text), modal close buttons (light disc, navy cross), active tabs (stay navy with white text on hover), waitlist scroll arrow (white disc, navy arrow), footer buttons (navy with white text on hover).
+- Progress bars and tracks: navy fill on neutral light grey. No honey on any progress. Avatar is a white disc with navy initials.
+- Tier labels on photos are plain white text, no background.
+- Tags (non clickable labels) use the Z shape: white fill, navy text, navy border, one square corner. Buttons remain pills.
+- Waitlist: logo grows with scroll and is full size by the middle of the scroll. Headline, countdown and caption are lighter.
+- Icons, favicons and share image: mark reduced to 38 to 46% of the tile for more space around it.
+
+## 39. Waitlist and tags
+- Waitlist: removed the "Zi Republic is about to open its borders" line and the capsule collection caption. The headline remains as screen reader text. Countdown size restored.
+- Tag shape A (Z corner) confirmed: square top left corner, other corners round. Used by every non clickable label.

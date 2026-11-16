@@ -959,7 +959,7 @@ function waitlistPage() {
 <section class="mu-hero" id="top">
   <div class="mu-sky">${wlSky ? `<img src="/assets/waitlist-sky.${wlSky.ext}" alt="" fetchpriority="high">` : ""}</div>
   <div class="mu-hero-in">
-    <h1 class="mu-h1 mu-in" style="--d:.5s">${T("waitlist.headline", "Zi Republic is about to open its borders&hellip;")}</h1>
+    <h1 class="sr">${T("waitlist.headline", "Zi Republic is about to open its borders&hellip;")}</h1>
     <div class="mu-count mu-in" style="--d:.8s" data-jn-count data-date="${TR("join.count-date", "2027-04-18")}" role="timer" aria-label="${esc(TR("join.count-label", "Countdown to 18 April 2027"))}">
       <div class="mu-count-row">
         <div><b data-u="d">00</b><span>${T("join.count-days", "Days")}</span></div><i>:</i>
@@ -979,7 +979,6 @@ function waitlistPage() {
     <div class="mu-grid" aria-hidden="false">${tiles}</div>
     <div class="mu-core">
       <img class="mu-mark" src="/assets/logo-wordmark-navy.png" alt="Zibura" width="636" height="120">
-      <p class="mu-tag">${T("waitlist.tagline", "Be the first through the door when the capsule collection opens.")}</p>
       <form class="mu-mail" novalidate data-mu-mail>
         <label class="sr" for="mu-email">${T("forms.email", "Email")}</label>
         <input id="mu-email" type="email" name="email" autocomplete="email" placeholder="${esc(TR("waitlist.placeholder", "your@email.com"))}" required>
