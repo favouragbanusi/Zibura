@@ -80,3 +80,12 @@ Format: file and location | old | new | reason
 - Ministries: turn button removed. Cards fade between front and back (no 3D turn, so text stays crisp). Back face leads with a bold ministry name, then smaller text with room around it.
 - Calendar: one event per month. Zi Day is on April 18, 2027. Other days remain placeholders. New icons for the upcoming days.
 - Waitlist: caption sits above the email row. Scroll arrow is an SVG.
+
+## 43. Spacing pass and calendar edits
+- Ministries back face: smaller title, more padding, taller card, so "Communications" and the longest description keep clear space inside the card.
+- Explore sealed collection titles scale down on narrow screens so "Collection II" and "Collection III" stay inside the page at 390px.
+- "While you wait" cards: white surface, hairline border, Z corner, wider right padding, outlined arrow circle that text never touches.
+- Calendar: Zero Email Day and Zany Hour removed. "Zebra Crossing Day" renamed "Zibra Crossing Day".
+- Waitlist scroll arrow is centred with margin and only fades in, so it no longer moves after load.
+- Explore: the tag "The first collection. Launching soon." removed.
+- Padding audit (pad.py) and overflow audit (fit.py) show no real findings at 1280, 820, 390.

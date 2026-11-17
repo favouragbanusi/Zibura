@@ -557,7 +557,7 @@ const CAL_ICONS = {
   "Ziesta": SV('<path d="M20 14.2A8.2 8.2 0 019.8 4a8.2 8.2 0 1010.2 10.2z"/><path d="M16.5 3.5v3M15 5h3"/>'),
   "Zero Email Day": SV('<rect x="3.5" y="5.5" width="17" height="13" rx="2.5"/><path d="M8.5 12.2l2.4 2.4 4.6-4.8"/>'),
   "Zigzag Day": SV('<path d="M3.5 17.5l5-9 5 7 7-10"/><circle cx="20.5" cy="5.5" r="1.2" fill="currentColor"/>'),
-  "Zebra Crossing Day": SV('<circle cx="13.5" cy="4.5" r="1.8"/><path d="M13 8.5l-2.5 4.5 3.5 2.5-1 5M13 8.5l3.5 2 2 3M10.5 13L7 14.5"/>'),
+  "Zibra Crossing Day": SV('<circle cx="13.5" cy="4.5" r="1.8"/><path d="M13 8.5l-2.5 4.5 3.5 2.5-1 5M13 8.5l3.5 2 2 3M10.5 13L7 14.5"/>'),
   "Zillar Day": SV('<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="5.8"/><path d="M10 10h4l-4 4h4"/>'),
   "Zany Hour": SV('<path d="M12 3.5l2 5.5 5.5 2-5.5 2-2 5.5-2-5.5-5.5-2 5.5-2z"/><path d="M19 3.5v3M17.5 5h3"/>')
 };
@@ -571,12 +571,10 @@ const MINISTRIES = [
 ].map(([n, d], i) => [TR(`brand.ministry-${i + 1}-name`, n), TR(`brand.ministry-${i + 1}-role`, d)]);
 // PLACEHOLDER EVENTS AND DATES: invented for design. Replace or override in the Copy sheet (keys brand.calendar-<name>-description, -iso, -date).
 const CALENDAR = [
-  ["Zero Email Day", "The Ministry of Communications takes the day off. No announcements, no campaigns, just quiet.", "", "2026-12-04"],
   ["Zigzag Day", "No straight lines allowed. Take the scenic route to everything.", "", "2027-01-09"],
-  ["Zebra Crossing Day", "Residents cross the street like it is a runway. Strutting is encouraged.", "", "2027-03-12"],
+  ["Zibra Crossing Day", "Residents cross the street like it is a runway. Yes, we spell it \"Zibra\".", "", "2027-03-12"],
   ["Zillar Day", "A day to celebrate the Republic's currency and everything it can be spent on.", "", "2027-02-05"],
   ["Ziesta", "Ziesta is the Republic's festival of rest, a time to slow down and gather.", "", "2027-06-12"],
-  ["Zany Hour", "One hour a year when everything is allowed to be a little silly.", "", "2027-05-14"],
   ["Zi Day", "Zi Day is the Republic's founding day. Zi Residents and Zitizens mark it each year.", "", "2027-04-18"]
 ];
 const CAL_ICON_BY_NAME = {};
@@ -851,7 +849,6 @@ write(
 ${COLLECTIONS.filter((x) => !x.soon).map((x) => `  <article class="sg-scene" data-sg>
     <div class="sg-bg" data-drift>${media(x.id + "-cover", x.name + " cover image")}</div>
     <div class="sg-body">
-      <p class="sg-tag">${esc(x.tag)}. ${esc(x.status)}.</p>
       <h2 class="sg-title">${x.name}</h2>
       <p class="sg-lead">${esc(x.lead)}</p>
       <div class="sg-actions">

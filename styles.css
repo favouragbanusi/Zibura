@@ -2392,3 +2392,25 @@ body[data-page="join"] { background: var(--navy); color: var(--white); }
 /* Waitlist: caption sits above the email row, centred. Scroll arrow is a crisp SVG disc. */
 .mu-tag { text-align: center; margin: 0 auto; }
 .mu-down svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Waitlist scroll arrow: centred by margin, fades in, never moves after load. */
+.mu-down { left: 0; right: 0; margin-inline: auto; transform: none; }
+.mu-down.mu-in { animation: mu-fade .6s ease var(--d, 0s) backwards; transform: none; }
+@keyframes mu-fade { from { opacity: 0; } to { opacity: 1; } }
+
+/* Spacing pass: text always keeps room from the edges of its box. */
+.mini-grid .mini { height: 300px; }
+.mini .back { padding: 30px 28px; }
+.mini .back .mn { font-size: clamp(18px, 1.1vw + 6px, 22px); overflow-wrap: anywhere; hyphens: auto; }
+.mini .back .md { max-width: none; }
+.mini .front .mn { overflow-wrap: anywhere; }
+@media (max-width: 640px) { .mini-grid .mini { height: 260px; } }
+.sg-sealed .sg-title { font-size: clamp(36px, 10vw, 170px); overflow-wrap: anywhere; }
+/* While you wait: white cards with a hairline, Z corner, text clear of the arrow. */
+.mu-cards a { background: var(--white); color: var(--navy); border: 1px solid var(--rule); border-radius: 8px 40px 40px 40px; box-shadow: none; min-height: 150px; justify-content: center; padding: 28px 96px 28px 32px; }
+.mu-cards a::after { top: 50%; margin-top: -22px; right: 28px; background: var(--white); color: var(--navy); border: 1.5px solid var(--navy); }
+.mu-cards a:hover, .mu-cards a:focus-visible { border-color: var(--navy); box-shadow: 0 14px 30px rgba(17, 28, 68, .10); }
+.mu-cards a:hover::after, .mu-cards a:focus-visible::after { background: var(--navy); color: var(--white); transform: translateX(4px); }
+.mu-cards b, .mu-cards span { color: var(--navy); }
+@media (max-width: 640px) { .mu-cards a { padding: 24px 84px 24px 24px; border-radius: 8px 32px 32px 32px; } .mu-cards a::after { right: 20px; } }
+.mu-done .mu-cards a { background: var(--white); padding: 22px 84px 22px 26px; }
