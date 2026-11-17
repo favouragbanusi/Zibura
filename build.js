@@ -413,6 +413,7 @@ write(
     description: TR("home.meta-description", "Zibura is a lifestyle brand built around personal expression. Zi Republic is its country, and anyone may apply to join."),
     page: "home",
     body: `<main>
+<div class="hero-track" data-hero-track style="--n:${SLIDE_N}">
 <section class="hero-ed" data-hero-ed>
   <div class="he-slides">
     <article class="he-slide on">
@@ -426,7 +427,7 @@ write(
       </div>
     </article>
     ${HERO3 ? `<article class="he-slide">
-      <img src="/assets/hero-3.${HERO3.ext}" alt="Editorial image for Zi Republic" width="1500" height="1000" loading="lazy">
+      <img src="/assets/hero-3.${HERO3.ext}" alt="Editorial image for Zi Republic" width="1500" height="1000" decoding="async">
       <div class="he-copy">
         <h2 class="he-title two">${T("home.hero2-title", "A country of our own. A style of your own.").replace(". ", ".<br>")}</h2>
         <p class="he-lede">${T("home.hero2-sub", "Welcome to Zibura and Zi Republic.")}</p>
@@ -434,7 +435,7 @@ write(
       </div>
     </article>` : ""}
     ${HERO2 ? `<article class="he-slide">
-      <img src="/assets/hero-2.${HERO2.ext}" alt="Capsule collection editorial" width="1500" height="1000" loading="lazy">
+      <img src="/assets/hero-2.${HERO2.ext}" alt="Capsule collection editorial" width="1500" height="1000" decoding="async">
       <div class="he-copy">
         <h2 class="he-title">${T("home.hero3-title", "Back to the basics.")}</h2>
         <p class="he-lede">${T("home.hero3-sub", "Our capsule collection is launching soon. A capsule just for you, carefully created to bring you back to the basics.")}</p>
@@ -451,8 +452,9 @@ write(
   <div class="he-ctrl">
     ${SLIDE_N > 1 ? `<button type="button" class="he-prev" aria-label="Previous slide"><svg viewBox="0 0 40 12" width="40" height="12" aria-hidden="true"><path d="M40 6H2M7 1L2 6l5 5" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></button><span class="he-count"><b>1</b> / ${SLIDE_N}</span><button type="button" class="he-next" aria-label="Next slide"><svg viewBox="0 0 40 12" width="40" height="12" aria-hidden="true"><path d="M0 6h38M33 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></button>` : ""}
   </div>
-  <a class="he-scroll" href="#products" aria-label="Scroll to products"><span>${T("home.scroll", "Scroll")}</span><i></i></a>
+  <a class="he-scroll" href="#products" data-he-scroll aria-label="Scroll to see more"><span>${T("home.scroll", "Scroll")}</span><i></i></a>
 </section>
+</div>
 
 
 
@@ -1035,12 +1037,6 @@ function waitlistPage() {
   </div>
 </section>
 <section class="mu-after">
-  <h2>${T("waitlist.after-title", "While you wait")}</h2>
-  <div class="mu-cards">
-    <a href="/style-compass/"><b>${T("join.next1-title", "Take the Style Compass")}</b><span>${T("join.next1-text", "Eighteen questions to find your style leaning.")}</span></a>
-    <a href="/looks/"><b>${T("join.next3-title", "Wander Zi Looks")}</b><span>${T("join.next3-text", "See complete outfits and every piece in them.")}</span></a>
-    <a href="/zi-card/"><b>${T("join.next2-title", "Apply for Zi Residency")}</b><span>${T("join.next2-text", "Anyone may apply. Residents receive a Zi Card.")}</span></a>
-  </div>
   <p class="mu-foot"><a href="/">${T("join.enter", "Enter Zibura")}</a> <span>${T("legal_line", "&copy; 2026 Zibura. Official business. Unofficial personalities.")}</span></p>
 </section>
 </main>
@@ -1050,12 +1046,7 @@ function waitlistPage() {
   <div class="mu-done" data-mu-done hidden tabindex="-1">
     <img src="/assets/zi-card-seal.png" alt="" width="304" height="300">
     <h2><span data-mu-name>${T("join.done-title", "You are on the list.")}</span></h2>
-    <p>${T("join.done-text", "A confirmation is on its way to your inbox. While you wait, three things to do.")}</p>
-    <div class="mu-cards">
-      <a href="/style-compass/"><b>${T("join.next1-title", "Take the Style Compass")}</b><span>${T("join.next1-text", "Eighteen questions to find your style leaning.")}</span></a>
-      <a href="/looks/"><b>${T("join.next3-title", "Wander Zi Looks")}</b><span>${T("join.next3-text", "See complete outfits and every piece in them.")}</span></a>
-      <a href="/zi-card/"><b>${T("join.next2-title", "Apply for Zi Residency")}</b><span>${T("join.next2-text", "Anyone may apply. Residents receive a Zi Card.")}</span></a>
-    </div>
+    <p>${T("join.done-text", "A confirmation is on its way to your inbox.")}</p>
   </div>
 </dialog>
 </div>
@@ -1311,7 +1302,7 @@ write(
       <button type="button" data-sec="card">${T("account.zi-card", "Zi Card")}</button>
       <button type="button" data-sec="orders">${T("account.orders", "Orders")}</button>
       <button type="button" data-sec="style">${T("account.style", "Style Compass")}</button>
-      <button type="button" data-sec="saved">${T("account.saved", "Saved")}</button>
+      <button type="button" data-sec="saved">${T("account.saved", "Wish list")}</button>
       <button type="button" data-sec="addresses">${T("account.addresses", "Addresses")}</button>
       <button type="button" data-sec="profile">${T("account.profile", "Profile")}</button>
       <button type="button" data-sec="prefs">${T("account.sizes", "Sizes")}</button>
@@ -1526,7 +1517,7 @@ products.forEach((p) => {
           </div>
         </fieldset>` : ""}
         <button class="btn wide" type="submit">${T("shop.add-to-cart", "Add to cart")}</button>
-        <button class="btn line wide" type="button" id="save-btn" data-slug="${p.slug}">${T("shop.save", "Save")}</button>
+        <button class="btn line wide" type="button" id="save-btn" data-slug="${p.slug}">${T("shop.save", "Add to wish list")}</button>
         <div class="msg" id="msg" role="status"></div>
       </form>
     </div>

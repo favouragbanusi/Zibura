@@ -128,7 +128,8 @@ async function account(request, env) {
   const db = env.DB;
   const full = await db.prepare("SELECT birth_day, birth_month, created_at FROM users WHERE id = ?").bind(user.id).first();
   const prof = (await db.prepare("SELECT * FROM profiles WHERE user_id = ?").bind(user.id).first()) || {};
-  const orders = (await db.prepare("SELECT id, status, currency, total, items_json, ship_json, created_at FROM orders WHERE user_id = ? ORDER BY id DESC LIMIT 100").bind(user.id).all()).results || [];
+  try { await db.prepare("DELETE FROM orders WHERE user_id = ? AND status = 'pending' AND created_at < ?").bind(user.id, new Date(Date.now() - 36e5 * 24).toISOString()).run(); } catch (e) {}
+  const orders = (await db.prepare("SELECT id, status, currency, total, items_json, ship_json, created_at FROM orders WHERE user_id = ? AND status = 'paid' ORDER BY id DESC LIMIT 100").bind(user.id).all()).results || [];
   const addresses = (await db.prepare("SELECT * FROM addresses WHERE user_id = ? ORDER BY is_default DESC, id DESC").bind(user.id).all()).results || [];
   const saved = ((await db.prepare("SELECT slug FROM saved WHERE user_id = ? ORDER BY created_at DESC").bind(user.id).all()).results || []).map((r) => r.slug);
   let style = null, prefs = {};

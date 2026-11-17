@@ -333,23 +333,40 @@
     var root = document.querySelector("[data-hero-ed]");
     if (!root) return;
     var slides = $all(".he-slide", root);
-    if (slides.length < 2) return;
-    var i = 0, timer = null, count = root.querySelector(".he-count b");
-    function go(n) {
+    var track = document.querySelector("[data-hero-track]");
+    var count = root.querySelector(".he-count b");
+    var i = 0;
+    function show(n) {
+      if (n === i) return;
       slides[i].classList.remove("on");
-      i = (n + slides.length) % slides.length;
+      i = n;
       slides[i].classList.add("on");
       if (count) count.textContent = i + 1;
     }
-    function play() { stop(); timer = setInterval(function () { go(i + 1); }, 8000); }
-    function stop() { if (timer) clearInterval(timer); timer = null; }
-    var prev = root.querySelector(".he-prev"), next = root.querySelector(".he-next");
-    if (prev) prev.addEventListener("click", function () { go(i - 1); play(); });
-    if (next) next.addEventListener("click", function () { go(i + 1); play(); });
-    root.addEventListener("focusin", stop);
-    root.addEventListener("focusout", play);
-    document.addEventListener("visibilitychange", function () { if (document.hidden) stop(); else play(); });
-    play();
+    if (slides.length < 2 || !track) return;
+    function range() { return Math.max(1, track.offsetHeight - window.innerHeight); }
+    function trackTop() { return track.getBoundingClientRect().top + window.scrollY; }
+    var notice = document.querySelector(".notice");
+    function onScroll() {
+      var nb = notice ? Math.max(0, notice.getBoundingClientRect().bottom) : 0;
+      root.style.setProperty("--nb", nb + "px");
+      var p = Math.min(1, Math.max(0, (window.scrollY - trackTop()) / range()));
+      show(Math.min(slides.length - 1, Math.floor(p * slides.length)));
+    }
+    function goTo(n) {
+      n = Math.max(0, Math.min(slides.length - 1, n));
+      var y = trackTop() + range() * ((n + 0.5) / slides.length);
+      window.scrollTo({ top: n === 0 ? trackTop() : y, behavior: "smooth" });
+    }
+    var prev = root.querySelector(".he-prev"), next = root.querySelector(".he-next"), cue = root.querySelector("[data-he-scroll]");
+    if (prev) prev.addEventListener("click", function () { goTo(i - 1); });
+    if (next) next.addEventListener("click", function () { goTo(i + 1); });
+    if (cue) cue.addEventListener("click", function (e) {
+      if (i < slides.length - 1) { e.preventDefault(); goTo(i + 1); }
+    });
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    onScroll();
   }
   function initCursor() {
     var fine = window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
@@ -782,7 +799,7 @@
     var btn = document.getElementById("save-btn");
     if (!btn) return;
     var slug = btn.getAttribute("data-slug"), signed = false, saved = false;
-    function paint() { btn.textContent = saved ? "Saved" : "Save"; btn.setAttribute("aria-pressed", saved); }
+    function paint() { btn.textContent = saved ? "In your wish list" : "Add to wish list"; btn.setAttribute("aria-pressed", saved); }
     api("/api/account").then(function (d) { if (d.user) { signed = true; saved = d.saved.indexOf(slug) !== -1; paint(); } }).catch(function () {});
     btn.addEventListener("click", function () {
       if (!signed) { location.href = "/account/"; return; }
@@ -1458,7 +1475,7 @@
     }
     function loadDash(me) {
       Promise.all([api("/api/account"), taxCache ? Promise.resolve(taxCache) : fetch("/taxonomy.json").then(function (r) { return r.json(); }).catch(function () { return []; })]).then(function (r) {
-        acct = r[0]; taxCache = r[1];
+        acct = r[0]; taxCache = r[1]; acct.orders = (acct.orders || []).filter(function (o) { return o.status === "paid"; });
         if (!acct.user) return;
         // A quiz taken before signing in is kept and saved to the account.
         var localStyle = null;
@@ -1487,7 +1504,7 @@
       meta.push("Zi Resident since " + fmtDate(u.since));
       document.getElementById("d-meta").textContent = meta.join(", ");
       document.getElementById("acct-who").textContent = u.email;
-      document.getElementById("acct-sub").textContent = "Your orders, Zi Card, Style Compass and saved details.";
+      document.getElementById("acct-sub").textContent = "Your orders, Zi Card, Style Compass, wish list and saved details.";
 
       // Overview
       var cardState = me.card ? "Issued" : (me.application ? (me.application.status === "pending" ? "In review" : me.application.status === "declined" ? "Declined" : "In review") : "Not applied");
@@ -1495,7 +1512,7 @@
       var ov = '<div class="tiles">' +
         '<button type="button" class="tile" data-go="card"><b>' + cardState + '</b><span>Zi Card</span></button>' +
         '<button type="button" class="tile" data-go="orders"><b>' + acct.orders.length + '</b><span>' + (acct.orders.length === 1 ? "Order" : "Orders") + '</span></button>' +
-        '<button type="button" class="tile" data-go="saved"><b>' + acct.saved.length + '</b><span>Saved products</span></button>' +
+        '<button type="button" class="tile" data-go="saved"><b>' + acct.saved.length + '</b><span>Wish list</span></button>' +
         '<button type="button" class="tile" data-go="style"><b>' + esc(prov ? legName(prov) : "Not set") + '</b><span>Style Compass</span></button></div>';
       var todo = [];
       if (!me.card && !me.application) todo.push(['Apply for Zi Residency', "card"]);
@@ -1517,7 +1534,7 @@
         }).join("");
         var ship = o.ship && o.ship.address ? '<p class="small">Ships to ' + esc(o.ship.name || "") + ", " + [o.ship.address.line1, o.ship.address.city, o.ship.address.postal_code, o.ship.address.country].filter(Boolean).map(esc).join(", ") + ".</p>" : "";
         return '<details class="order"><summary><span><b>' + o.number + "</b> " + fmtDate(o.at) + '</span><span class="badge ' + o.status + '">' + (o.status === "paid" ? "Paid" : "Awaiting payment") + "</span><em>" + fmtMoney(o.total, o.currency) + "</em></summary><ul>" + rows + "</ul>" + ship + '<p class="small">' + (o.status === "paid" ? "The Ministry of Commerce and Trade is preparing your order. Tracking appears here when it is available." : "This order has not been paid. Return to your cart to complete it.") + "</p></details>";
-      }).join("") : empty("No orders yet. Orders appear here once placed.", "/shop/", "Shop the collection");
+      }).join("") : empty("No orders yet. Paid orders appear here.", "/shop/", "Shop the collection");
       panel("orders").innerHTML = '<h2 class="display h2">Orders</h2>' + ord;
 
       // Style
@@ -1566,7 +1583,7 @@
     }
     function drawSaved() {
       var list = acct.saved.map(piece).filter(Boolean);
-      panel("saved").innerHTML = '<h2 class="display h2">Saved products</h2>' + (list.length ? '<div class="r-picks">' + list.map(function (p) { return '<div class="saved-it">' + cardHtml(p) + '<button type="button" class="linkbtn" data-unsave="' + esc(p.slug) + '">Remove</button></div>'; }).join("") + "</div>" : empty("Select Save on any product page and it appears here.", "/shop/", "Shop the collection"));
+      panel("saved").innerHTML = '<h2 class="display h2">Wish list</h2>' + (list.length ? '<div class="r-picks">' + list.map(function (p) { return '<div class="saved-it">' + cardHtml(p) + '<button type="button" class="linkbtn" data-unsave="' + esc(p.slug) + '">Remove</button></div>'; }).join("") + "</div>" : empty("Select Add to wish list on any product page and it appears here.", "/shop/", "Shop the collection"));
       applyPrices();
     }
     function drawAddresses(editId) {

@@ -89,3 +89,12 @@ Format: file and location | old | new | reason
 - Waitlist scroll arrow is centred with margin and only fades in, so it no longer moves after load.
 - Explore: the tag "The first collection. Launching soon." removed.
 - Padding audit (pad.py) and overflow audit (fit.py) show no real findings at 1280, 820, 390.
+
+## 44. Orders, wish list, hero scroll, hairlines, calendar, speed
+- Account Orders lists paid orders only. Unpaid checkout attempts no longer appear, and the server clears unpaid attempts older than a day.
+- Saved products is now the Wish list: account section, overview tile, and the product page button (Add to wish list, In your wish list).
+- Waitlist: the "While you wait" section and the cards in the confirmation window are removed. The page ends with the Enter Zibura line.
+- Home hero is a pinned stage. Scrolling moves through the three slides, the counter updates, the arrows and the Scroll cue move one slide at a time, and the page continues after the last slide. Automatic timed rotation is removed. All slide images load without lazy loading. Regression script herotest.py checks this at 1280, 820 and 390 and is first in runall.sh.
+- Borders: every border is 1px. Cards, tags, status badges and dividers use one faint colour (--edge #d9dce6, --line and --rule #e6e9f1). Inputs use a slightly stronger 1px edge (#c9cddb).
+- Calendar: event list is hairline rows with plain navy icons and no fills. The selected event shows in the detail card above the list with a faint border. Event days in the grid have a thin navy ring, the selected day is navy, and honey is no longer used in the calendar.
+- Speed: scroll reveals 0.35s with a 12px rise (was 0.8s and 22px), hero title and fade delays cut, waitlist entrance delays cut to a quarter.
