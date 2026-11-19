@@ -20,6 +20,10 @@ try { require("child_process").execFileSync(process.execPath, [path.join(__dirna
 const fromSheet = (name) => { const f = path.join(__dirname, "content", name); return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, "utf8")) : null; };
 const COPY = fromSheet("copy.json") || {};
 const LINKS = fromSheet("links.json") || {};
+// Visibility tab of the sheet: a row with show = no hides that page or section (keys are listed on the Visibility tab).
+const VIS = fromSheet("visibility.json") || {};
+const isHidden = (k) => VIS[k] === false;
+let HIDDEN_PREFIXES = [];
 const REG = [];
 const reg = (key, text) => { if (!REG.some((r) => r.key === key)) REG.push({ key, text }); };
 const T = (key, fallback) => { reg(key, fallback); return COPY[key] ? esc(COPY[key]) : fallback; };
@@ -459,7 +463,7 @@ write(
 
 
 
-<section class="section" id="products">
+<!--vis:home.capsule--><section class="section" id="products">
   <div class="wrap">
     <div class="section-head" data-reveal>
       <h2>${T("home.collection-capsule", "The capsule collection")}</h2>
@@ -470,9 +474,9 @@ write(
 ${products.slice(0, 8).map(card).join("\n")}
   </div>
   <div class="wrap" style="margin-top:36px"><a class="text-link" href="/shop/">${T("home.see-all-products", "See all products")}</a></div>
-</section>
+</section><!--/vis:home.capsule-->
 
-<section class="hscroll" data-hscroll aria-label="Look book">
+<!--vis:home.look-book--><section class="hscroll" data-hscroll aria-label="Look book">
   <div class="hs-pin">
     <div class="wrap hs-head"><h2>${T("home.the-look-book", "The look book")}</h2><p>${T("home.look-book-sub", "Back to the basics.")}</p></div>
     <div class="hs-track">
@@ -481,18 +485,18 @@ ${[TR("home.opening-frame", "People are complex."), TR("home.movement", "Every w
     </div>
     <div class="hs-bar" aria-hidden="true"><i></i></div>
   </div>
-</section>
+</section><!--/vis:home.look-book-->
 
-<section class="section" style="padding-top:0">
+<!--vis:home.shop-by-audience--><section class="section" style="padding-top:0">
   <div class="wrap">
     <div class="section-head" data-reveal><h2>${T("home.shop-by-audience", "Shop by audience")}</h2></div>
     <div class="who" data-reveal>
 ${AUDIENCES.map((a) => `      <a href="/shop/?audience=${a}">${media("audience-" + a.toLowerCase(), a)}<span>${a}</span></a>`).join("\n")}
     </div>
   </div>
-</section>
+</section><!--/vis:home.shop-by-audience-->
 
-<section class="section" style="padding-top:0">
+<!--vis:home.shop-by-department--><section class="section" style="padding-top:0">
   <div class="wrap">
     <div class="section-head" data-reveal><h2>${T("home.shop-by-department", "Shop by department")}</h2></div>
     <div class="cats" data-cats>
@@ -502,9 +506,9 @@ ${TAX.map((c) => {
 }).join("\n")}
     </div>
   </div>
-</section>
+</section><!--/vis:home.shop-by-department-->
 
-<section class="section statement collage-sec">
+<!--vis:home.brand-statement--><section class="section statement collage-sec">
   <div class="wrap collage-wrap">
     <div class="collage" aria-hidden="true">
       <figure class="cl a" data-parallax="0.22">${media("collection-1-2", "Editorial frame")}</figure>
@@ -514,18 +518,18 @@ ${TAX.map((c) => {
     <p class="scrollwords" data-scrollwords>${T("home.supporting", "A brand built around personal expression. A world with its own identity. Design, individual style and a point of view that leaves room for you to exist in all your dimensions.")}</p>
     <p style="margin-top:40px" data-reveal><a class="btn line" href="/brand/">${T("home.read-republic-story", "Read the Republic story")}</a></p>
   </div>
-</section>
+</section><!--/vis:home.brand-statement-->
 
-<section class="section" style="padding-top:0"><div class="wrap"><div class="cta-row" data-reveal>
+<!--vis:home.style-compass--><section class="section" style="padding-top:0"><div class="wrap"><div class="cta-row" data-reveal>
   <p>${T("home.compass-text", "Not sure where to start? Eighteen questions find your style leaning.")}</p>
   <a class="btn line" href="/style-compass/">${T("home.compass-button", "Take the Style Compass")}</a>
-</div></div></section>
+</div></div></section><!--/vis:home.style-compass-->
 
-<section class="wrap" data-reveal style="margin-bottom:clamp(56px,8vw,120px)">
+<!--vis:home.film--><section class="wrap" data-reveal style="margin-bottom:clamp(56px,8vw,120px)">
   ${film("collection-1-home-film", TR("home.film-caption", "The capsule collection, in motion."))}
-</section>
+</section><!--/vis:home.film-->
 
-<section class="section navy-band">
+<!--vis:home.residency--><section class="section navy-band">
   <div class="wrap split">
     <div data-reveal>${flipCard()}</div>
     <div data-reveal>
@@ -534,7 +538,7 @@ ${TAX.map((c) => {
       <p class="cta-pair" style="margin-top:32px"><a class="btn light" href="/zi-card/">${T("home.residency-button", "Apply for Zi Residency")}</a><a class="btn ghost-light" href="/zi-card/#rights">${T("home.residency-button2", "How residency works")}</a></p>
     </div>
   </div>
-</section>
+</section><!--/vis:home.residency-->
 </main>`
   })
 );
@@ -600,11 +604,11 @@ write(
   <p class="fade">${T("brand.about", "Zi Republic is Zibura's country. It has its own identity, membership, public institutions, calendar and rewards system. The Republic gives the brand's central idea a public identity and gives people a way to take part.")}</p>
 </div></section>
 
-<section class="wrap" data-reveal>
+<!--vis:brand.film--><section class="wrap" data-reveal>
   ${film("republic-film", TR("brand.film-caption", "Zi Republic, introduced."))}
-</section>
+</section><!--/vis:brand.film-->
 
-<section class="section"><div class="wrap split">
+<!--vis:brand.story--><section class="section"><div class="wrap split">
   <h2 class="display" data-reveal>${T("brand.story-title", "We didn't start a brand. We started a country.")}</h2>
   <div class="prose" data-reveal>
     <p class="big">${T("brand.story-1", "Not a company with a flag on the side. A country. With a name, a currency, a population and all the official business that comes with it.")}</p>
@@ -613,17 +617,17 @@ write(
     <p>${T("brand.story-4", "Zi Republic gives that belief a public life. It has its own identity, membership, institutions and traditions. It is a country built around an idea that leaves room for more than one way to be.")}</p>
     <p><a class="btn line" href="/explore/">${T("brand.explore-collections", "Explore the collections")}</a></p>
   </div>
-</div></section>
+</div></section><!--/vis:brand.story-->
 
-<section class="section" id="the-box" style="padding-top:0"><div class="wrap split">
+<!--vis:brand.box--><section class="section" id="the-box" style="padding-top:0"><div class="wrap split">
   <h2 class="display" data-reveal>${T("brand.box-title", "The Box was never the whole picture.")}</h2>
   <div class="prose" data-reveal>
     <p class="big">${T("brand.box-1", "The Box is the pressure to fit one look, one label or one version of yourself.")}</p>
     <p>${T("brand.box-2", "People are often sorted into categories that make them easier to describe, market to or understand. One look. One label. One lane. Zibura exists to make room for people and forms of expression that do not fit neatly inside it.")}</p>
   </div>
-</div></section>
+</div></section><!--/vis:brand.box-->
 
-<section class="hscroll" data-hscroll aria-label="The Charter"><div class="hs-pin">
+<!--vis:brand.charter--><section class="hscroll" data-hscroll aria-label="The Charter"><div class="hs-pin">
   <div class="wrap hs-head"><h2>${T("brand.charter", "The Charter")}</h2><p>${T("brand.charter-sub", "What Zibura and Zi Republic stand on.")}</p></div>
   <div class="hs-track">
     <div class="hs-card text"><div class="hs-bg">${media("charter-1", "")}</div><b>${T("brand.charter-1-head", "People are complex.")}</b><span>${T("brand.charter-1-body", "That complexity deserves to be respected, and no one should have to reduce themselves to fit a category.")}</span></div>
@@ -634,9 +638,9 @@ write(
     <div class="hs-card text low"><div class="hs-bg">${media("charter-6", "")}</div><b>${T("brand.charter-6-head", "Structure should serve freedom.")}</b><span>${T("brand.charter-6-body", "The Republic's systems should support expression, participation and community.")}</span></div>
   </div>
   <div class="hs-bar" aria-hidden="true"><i></i></div>
-</div></section>
+</div></section><!--/vis:brand.charter-->
 
-<section class="section" id="ministries"><div class="wrap">
+<!--vis:brand.ministries--><section class="section" id="ministries"><div class="wrap">
   <div class="mini-head" data-reveal>
     <h2 class="display">${T("brand.ministries-title", "The Ministries.")}</h2>
     <p class="province-intro">${T("brand.ministries-intro", "The Ministries oversee the Republic's public functions, from creative direction and community programs to communications, commerce and administration.")}</p>
@@ -644,9 +648,9 @@ write(
   <div class="mini-grid" data-reveal>
 ${MINISTRIES.map(([n, d], i) => `    <button type="button" class="mini" aria-expanded="false"><span class="fl"><span class="face front"><span class="ic" aria-hidden="true">${MINI_ICONS[i]}</span><span class="foot"><span class="mn">${n}</span></span></span><span class="face back"><span class="mn">${n}</span><span class="md">${d}</span></span></span></button>`).join("\n")}
   </div>
-</div></section>
+</div></section><!--/vis:brand.ministries-->
 
-<section class="section" id="calendar" style="padding-top:0"><div class="wrap">
+<!--vis:brand.calendar--><section class="section" id="calendar" style="padding-top:0"><div class="wrap">
   <h2 class="display" data-reveal>${T("brand.calendar-title", "The calendar.")}</h2>
   <div class="cal-ui" data-cal data-events="${esc(JSON.stringify(CALENDAR.map(([n, d, dt, iso], i) => ({ name: n, desc: d, label: dt || "", iso: iso || "", icon: CAL_ICONS[n] || CAL_ICON_DEFAULT }))))}" data-soon="${esc(T("brand.date-soon", "Date coming soon"))}" data-reveal>
     <div class="cal-card">
@@ -667,9 +671,9 @@ ${CALENDAR.map(([n, d, dt, iso], i) => `        <li><button type="button" class=
       </ul>
     </div>
   </div>
-</div></section>
+</div></section><!--/vis:brand.calendar-->
 
-<section class="hscroll" data-hscroll aria-label="Residency, Zitizenship and Zillar"><div class="hs-pin">
+<!--vis:brand.membership--><section class="hscroll" data-hscroll aria-label="Residency, Zitizenship and Zillar"><div class="hs-pin">
   <div class="wrap hs-head"><h2>${T("brand.tiers-title", "Residency, Zitizenship and Zillar.")}</h2><p>${T("brand.tiers-sub", "Three parts of membership in Zi Republic.")}</p></div>
   <div class="hs-track">
     <div class="hs-card tier" id="residency"><div class="hs-bg">${media("tier-resident", "")}</div><h3>${T("brand.zi-residency", "Zi Residency")}</h3><p class="what">${T("brand.zi-residency-what", "The Republic's membership")}</p><p>${T("brand.zi-residency-text", "Anyone may apply. Republic Administration processes each completed application. Applicants become Zi Residents and receive a Zi Card, the everyday credential of membership.")}</p></div>
@@ -677,15 +681,15 @@ ${CALENDAR.map(([n, d, dt, iso], i) => `        <li><button type="button" class=
     <div class="hs-card tier" id="zillar"><div class="hs-bg">${media("tier-zillar", "")}</div><h3>${T("brand.zillar", "Zillar")}</h3><p class="what">${T("brand.zillar-what", "Currency and rewards")}</p><p>${T("brand.zillar-text", "Zillar is Zi Republic's official currency and rewards system. It can be earned through eligible purchases and selected participation, then redeemed for designated rewards, benefits and experiences. Product prices remain listed in standard currencies.")}</p></div>
   </div>
   <div class="hs-bar" aria-hidden="true"><i></i></div>
-</div></section>
+</div></section><!--/vis:brand.membership-->
 
-<section class="section navy-band"><div class="wrap split">
+<!--vis:brand.apply--><section class="section navy-band"><div class="wrap split">
   <h2 class="display" data-reveal>${T("brand.cta-title", "Apply for Zi Residency.")}</h2>
   <div class="prose" data-reveal>
     <p class="big">${T("brand.cta-lead", "Anyone may apply. Join the waitlist to hear when the capsule collection launches.")}</p>
     <p style="margin-top:28px"><a class="btn light" href="/zi-card/">${T("brand.cta-apply", "Apply for Zi Residency")}</a> <a class="btn light" href="/waitlist/">${T("brand.cta-waitlist", "Join the waitlist")}</a></p>
   </div>
-</div></section>
+</div></section><!--/vis:brand.apply-->
 </main>`
   })
 );
@@ -1788,6 +1792,41 @@ write(
   })
 );
 
+// Visibility: remove hidden pages and sections, and every link to them, from the finished site.
+(function applyVisibility() {
+  const PAGES = { looks: "/looks/", explore: "/explore/", brand: "/brand/", note: "/note/", "style-compass": "/style-compass/", "zi-card": "/zi-card/", contact: "/contact/" };
+  const ANCHORS = { "brand.calendar": "/brand/#calendar" };
+  const hiddenPages = Object.keys(PAGES).filter((k) => isHidden("page." + k));
+  const hiddenSections = Object.keys(VIS).filter((k) => !/^page\./.test(k) && VIS[k] === false);
+  const add = (k) => { if (!hiddenSections.includes(k)) hiddenSections.push(k); };
+  if (hiddenPages.includes("style-compass")) add("home.style-compass");
+  if (hiddenPages.includes("zi-card")) { add("home.residency"); add("brand.apply"); }
+  HIDDEN_PREFIXES = hiddenPages.map((k) => PAGES[k]);
+  const unknown = Object.keys(VIS).filter((k) => VIS[k] === false && /^page\./.test(k) && !PAGES[k.slice(5)]);
+  const seen = new Set();
+  const esc = (x) => x.replace(/[.*+?^${}()|[\]\\\/]/g, "\\$&");
+  const links = [...HIDDEN_PREFIXES.map((p) => p), ...hiddenSections.map((k) => ANCHORS[k]).filter(Boolean)];
+  hiddenPages.forEach((k) => fs.rmSync(path.join(dist, k), { recursive: true, force: true }));
+  (function walk(dir) {
+    for (const n of fs.readdirSync(dir, { withFileTypes: true })) {
+      const f = path.join(dir, n.name);
+      if (n.isDirectory()) { if (n.name !== "assets") walk(f); continue; }
+      if (!/\.html$/.test(n.name)) continue;
+      let h = fs.readFileSync(f, "utf8");
+      const before = h;
+      for (const m of h.matchAll(/<!--vis:([^>]+?)-->/g)) seen.add(m[1]);
+      for (const k of hiddenSections) h = h.replace(new RegExp("<!--vis:" + esc(k) + "-->[\\s\\S]*?<!--/vis:" + esc(k) + "-->", "g"), "");
+      for (const p of links) h = h.replace(new RegExp('<a\\b[^>]*\\bhref="(?:https://zibura\\.com)?' + esc(p) + '[^"]*"[^>]*>[\\s\\S]*?</a>', "g"), "");
+      if (links.length) h = h.replace(/<(p|li)\b[^>]*>\s*<\/\1>/g, "");
+      h = h.replace(/<!--\/?vis:[^>]*-->/g, "");
+      if (h !== before) fs.writeFileSync(f, h);
+    }
+  })(dist);
+  hiddenSections.filter((k) => !seen.has(k)).forEach((k) => console.log("Visibility: no section is named " + k + ", check the spelling on the Visibility tab."));
+  unknown.forEach((k) => console.log("Visibility: no page is named " + k + ", check the spelling on the Visibility tab."));
+  console.log("Visibility: hidden pages [" + hiddenPages.join(", ") + "], hidden sections [" + hiddenSections.join(", ") + "]");
+})();
+
 // Search engine files
 (function () {
   const skip = /^\/(admin|reset|thanks|join|account|cart|404\.html)/;
@@ -1809,7 +1848,7 @@ write(
   write("site.webmanifest", JSON.stringify({ name: "Zibura", short_name: "Zibura", start_url: "/", display: "standalone", background_color: "#ffffff", theme_color: "#111c44", icons: [{ src: "/assets/icon-192.png", sizes: "192x192", type: "image/png" }, { src: "/assets/icon-512.png", sizes: "512x512", type: "image/png" }] }, null, 2));
   write("favicon.ico", fs.readFileSync(find("favicon.ico")));
   write("robots.txt", "User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/\nDisallow: /reset/\nDisallow: /thanks/\n\nSitemap: https://zibura.com/sitemap.xml\n");
-  write("llms.txt", "# Zibura\n\n> Zibura is a fashion and lifestyle brand. The site at zibura.com holds the shop, Zi Looks, the Archive and the Zi Republic residency.\n\n- [Shop](https://zibura.com/shop/)\n- [Zi Looks](https://zibura.com/looks/)\n- [Archive](https://zibura.com/explore/)\n- [Sitemap](https://zibura.com/sitemap.xml)\n");
+  write("llms.txt", ("# Zibura\n\n> Zibura is a fashion and lifestyle brand. The site at zibura.com holds the shop, Zi Looks, the Archive and the Zi Republic residency.\n\n- [Shop](https://zibura.com/shop/)\n- [Zi Looks](https://zibura.com/looks/)\n- [Archive](https://zibura.com/explore/)\n- [Sitemap](https://zibura.com/sitemap.xml)\n").split("\n").filter((l) => !HIDDEN_PREFIXES.some((p) => l.includes("https://zibura.com" + p))).join("\n"));
 })();
 
 console.log("Built " + products.length + " products into dist/");

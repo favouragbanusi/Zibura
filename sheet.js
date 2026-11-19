@@ -95,6 +95,13 @@ const normCap = (v) => String(v || '').replace(/^Arc/, 'Capsule');
     console.log("sheet.js: Looks", looks.length);
   } catch (e) { console.log("sheet.js: Looks skipped,", e.message); }
   try {
+    // Visibility tab: one row per page or section. show = no hides it, anything else (or a missing row) shows it.
+    const vis = {};
+    (await tab("Visibility")).forEach((r) => { if (r.key) vis[r.key.toLowerCase()] = !/^(no|false|hide|hidden|off|0)$/i.test(r.show); });
+    fs.writeFileSync(path.join(out, "visibility.json"), JSON.stringify(vis));
+    console.log("sheet.js: Visibility", Object.keys(vis).length, "rows,", Object.values(vis).filter((v) => !v).length, "hidden");
+  } catch (e) { console.log("sheet.js: Visibility skipped, everything stays visible.", e.message); }
+  try {
     let n = 0;
     for (const r of await tab("Images")) {
       if (!r.name || !r.url) continue;

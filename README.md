@@ -7,7 +7,7 @@ Secrets and bindings: STRIPE_SECRET_KEY, D1 database DB (zibura), R2 bucket PHOT
 
 PAGES AND LOGIC
 build.js: builds every page, sitemap, robots, headers, manifest and redirects into dist.
-sheet.js: reads the Google Sheet tabs (Pieces, Copy, Images, Links, Looks) during the build.
+sheet.js: reads the Google Sheet tabs (Pieces, Copy, Images, Links, Looks, Visibility) during the build.
 _worker.js: handles /api routes (checkout, accounts, waitlist, reviews, Zi Cards, admin).
 app.js: shared behaviour (menu, cart, cursor, reveals, Zi Card).
 looks.js: Zi Looks wall.
